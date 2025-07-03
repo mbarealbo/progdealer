@@ -10,11 +10,16 @@ def estrai_eventi_songkick():
     eventi = soup.select("li.concert")
     print(f"Numero eventi trovati: {len(eventi)}")
 
-    for e in eventi:
+    for evento in eventi:
         try:
-            nome = e.select_one("strong.summary").text.strip()
-            data = e.select_one("time").text.strip()
-            luogo = e.select_one("span.location").text.strip()
+            nome_tag = evento.select_one("strong.summary")
+            data_tag = evento.select_one("time")
+            luogo_tag = evento.select_one("span.location")
+
+            nome = nome_tag.text.strip() if nome_tag else "Nome sconosciuto"
+            data = data_tag.text.strip() if data_tag else "Data sconosciuta"
+            luogo = luogo_tag.text.strip() if luogo_tag else "Luogo sconosciuto"
+
             print(f"{nome} – {data} – {luogo}")
         except Exception as err:
             print("Errore su un evento:", err)
