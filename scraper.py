@@ -3,7 +3,9 @@ import requests
 def estrai_eventi_bandsintown():
     artist = "dream-theater"
     url = f"https://rest.bandsintown.com/artists/{artist}/events?app_id=progdealer"
-    res = requests.get(url)
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+
+    res = requests.get(url, headers=headers)
 
     if res.status_code != 200:
         print("Errore nella richiesta:", res.status_code)
