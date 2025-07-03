@@ -2,25 +2,20 @@ import requests
 from bs4 import BeautifulSoup
 
 def estrai_eventi_songkick():
-    url = "https://www.songkick.com/search?page=1&query=progressive+rock&type=upcoming"
+    url = "https://www.songkick.com/metro-areas/28714-italy-concerts"
     headers = {"User-Agent": "Mozilla/5.0"}
     res = requests.get(url, headers=headers)
     soup = BeautifulSoup(res.text, 'html.parser')
 
-    eventi = soup.select("li.concert")
+    eventi = soup.select("li.event-listing")
     print(f"Numero eventi trovati: {len(eventi)}")
 
     for evento in eventi:
         try:
-            nome_tag = evento.select_one("strong.summary")
-            data_tag = evento.select_one("time")
-            luogo_tag = evento.select_one("span.location")
-
-            nome = nome_tag.text.strip() if nome_tag else "Nome sconosciuto"
-            data = data_tag.text.strip() if data_tag else "Data sconosciuta"
-            luogo = luogo_tag.text.strip() if luogo_tag else "Luogo sconosciuto"
-
-            print(f"{nome} – {data} – {luogo}")
+            artista = evento.select_one("strong.artists").text.strip() if evento.select_one("strong.artists") else "Artista sconosciuto"
+            data = evento.select_one("time").text.strip() if evento.select_one("time") else "Data sconosciuta"
+            luogo = evento.select_one("span.location").text.strip() if evento.select_one("span.location") else "Luogo sconosciuto"
+            print(f"{artista} – {data} – {luogo}")
         except Exception as err:
             print("Errore su un evento:", err)
 
