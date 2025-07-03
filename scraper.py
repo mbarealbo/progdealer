@@ -1,28 +1,23 @@
 import requests
 from bs4 import BeautifulSoup
 
-def estrai_eventi_songkick():
-    url = "https://www.songkick.com/search?page=1&query=progressive+rock&type=upcoming"
+def estrai_eventi_bandsintown():
+    url = "https://www.bandsintown.com/en/c/italy"
     headers = {"User-Agent": "Mozilla/5.0"}
     res = requests.get(url, headers=headers)
-    soup = BeautifulSoup(res.text, 'html.parser')
+    soup = BeautifulSoup(res.text, "html.parser")
 
-    eventi = soup.select("li.search-result.event")
+    eventi = soup.select("a.event-link")
     print(f"Numero eventi trovati: {len(eventi)}")
 
-    for evento in eventi:
+    for e in eventi:
         try:
-            artista = evento.select_one("p.artists a")
-            data = evento.select_one("time")
-            venue = evento.select_one("p.location")
-            
-            artista_txt = artista.text.strip() if artista else "Artista sconosciuto"
-            data_txt = data.text.strip() if data else "Data sconosciuta"
-            venue_txt = venue.text.strip() if venue else "Luogo sconosciuto"
-
-            print(f"{artista_txt} – {data_txt} – {venue_txt}")
+            titolo = e.select_one("div.event-title").text.strip() if e.select_one("div.event-title") else "Titolo sconosciuto"
+            data = e.select_one("div.event-date").text.strip() if e.select_one("div.event-date") else "Data sconosciuta"
+            luogo = e.select_one("div.event-venue").text.strip() if e.select_one("div.event-venue") else "Luogo sconosciuto"
+            print(f"{titolo} – {data} – {luogo}")
         except Exception as err:
-            print("Errore su un evento:", err)
+            print("Errore su evento:", err)
 
 if __name__ == "__main__":
-    estrai_eventi_songkick()
+    estrai_eventi_bandsintown()
