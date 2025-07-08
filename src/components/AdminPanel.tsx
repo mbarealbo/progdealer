@@ -17,7 +17,8 @@ import {
   Music,
   Users,
   Clock,
-  ArrowLeft
+  ArrowLeft,
+  Copy
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
@@ -42,6 +43,7 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [duplicatingEvent, setDuplicatingEvent] = useState<Event | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -148,6 +150,46 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
     } catch (error) {
       console.error('Error deleting all events:', error);
       alert('Error deleting all events');
+    }
+  };
+
+  const duplicateEvent = async (originalEvent: Event) => {
+    try {
+      // Create a copy of the event with new ID and pending status
+      const duplicatedEventData = {
+        nome_evento: originalEvent.nome_evento,
+        data_ora: originalEvent.data_ora,
+        venue: originalEvent.venue,
+        città: originalEvent.città,
+        sottogenere: originalEvent.sottogenere,
+        descrizione: originalEvent.descrizione,
+        artisti: originalEvent.artisti,
+        orario: originalEvent.orario,
+        link: originalEvent.link,
+        immagine: originalEvent.immagine,
+        fonte: originalEvent.fonte,
+        tipo_inserimento: originalEvent.tipo_inserimento,
+        event_id: null, // Clear the original event_id to avoid conflicts
+        status: 'pending' // Set as pending for admin review
+      };
+
+      const { data, error } = await supabase
+        .from('eventi_prog')
+        .insert([duplicatedEventData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      // Add the new event to the local state
+      setEvents([data, ...events]);
+      setDuplicatingEvent(null);
+      
+      // Show success message
+      alert(`Event "${originalEvent.nome_evento}" has been duplicated successfully. The duplicate is now pending approval.`);
+    } catch (error) {
+      console.error('Error duplicating event:', error);
+      alert('Error duplicating event');
     }
   };
 
@@ -377,6 +419,13 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
                               <Edit className="h-4 w-4" />
                             </button>
                             <button
+                              onClick={() => setDuplicatingEvent(event)}
+                              className="bg-transparent border border-asphalt-500 text-gray-300 p-1 hover:border-blue-600 hover:text-white transition-all duration-200"
+                              title="DUPLICATE EVENT"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </button>
+                            <button
                               onClick={() => setShowDeleteConfirm(event.id)}
                               className="bg-transparent border border-asphalt-500 text-gray-300 p-1 hover:border-burgundy-600 hover:text-white transition-all duration-200"
                               title="DELETE EVENT"
@@ -416,6 +465,15 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
         />
       )}
 
+      {/* Duplicate Event Confirmation */}
+      {duplicatingEvent && (
+        <DuplicateEventModal
+          event={duplicatingEvent}
+          onConfirm={() => duplicateEvent(duplicatingEvent)}
+          onCancel={() => setDuplicatingEvent(null)}
+        />
+      )}
+
       {/* Delete Confirmation */}
       {showDeleteConfirm && (
         <ConfirmationModal
@@ -439,6 +497,90 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
           confirmStyle="bg-burgundy-800 border-burgundy-600 hover:bg-burgundy-700"
         />
       )}
+    </div>
+  );
+}
+
+// Duplicate Event Modal Component
+function DuplicateEventModal({ 
+  event, 
+  onConfirm, 
+  onCancel 
+}: { 
+  event: Event; 
+  onConfirm: () => void; 
+  onCancel: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
+      <div className="bg-coal-800 border-2 border-asphalt-600 p-6 w-full max-w-2xl">
+        <div className="text-center">
+          <Copy className="h-16 w-16 text-blue-600 mx-auto mb-4" />
+          <h2 className="text-xl font-industrial text-gray-100 mb-4 tracking-wide uppercase">
+            DUPLICATE EVENT
+          </h2>
+          
+          {/* Event Preview */}
+          <div className="bg-coal-900 border border-asphalt-600 p-4 mb-6 text-left">
+            <div className="flex items-start space-x-4">
+              <div className="w-20 h-16 bg-asphalt-700 rounded flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <EventImage
+                  src={event.immagine}
+                  alt={event.nome_evento}
+                  className="w-full h-full object-cover rounded"
+                  placeholderClassName="w-full h-full rounded"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-bold text-gray-100 mb-2 truncate">
+                  {event.nome_evento}
+                </h3>
+                <div className="space-y-1 text-sm text-gray-300">
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-4 w-4 text-gray-400" />
+                    <span>{new Date(event.data_ora).toLocaleDateString('en-US', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="h-4 w-4 text-gray-400" />
+                    <span>{event.venue} • {event.città}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Music className="h-4 w-4 text-gray-400" />
+                    <span>{event.sottogenere}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <p className="text-gray-300 font-condensed mb-6 leading-relaxed">
+            This will create an exact copy of the event with <strong className="text-yellow-400">PENDING</strong> status. 
+            You can then edit the duplicate to change the date, venue, or other details before approving it.
+          </p>
+          
+          <div className="flex space-x-4">
+            <button
+              onClick={onCancel}
+              className="flex-1 bg-transparent border-2 border-asphalt-500 text-gray-300 px-4 py-2 uppercase tracking-wide font-condensed font-bold hover:border-industrial-green-500 hover:text-white transition-all duration-200 text-sm"
+            >
+              CANCEL
+            </button>
+            <button
+              onClick={onConfirm}
+              className="flex-1 bg-blue-800 border-2 border-blue-600 text-white px-4 py-2 uppercase tracking-wide font-condensed font-bold hover:bg-blue-700 transition-all duration-200 text-sm flex items-center justify-center space-x-2"
+            >
+              <Copy className="h-4 w-4" />
+              <span>DUPLICATE EVENT</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
