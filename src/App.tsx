@@ -314,18 +314,6 @@ function App() {
               >
                 <RefreshCw className="h-5 w-5" />
               </button>
-              <button
-                onClick={handleAdminAccess}
-                className="industrial-button flex items-center space-x-2"
-                title="ADMIN PANEL"
-              >
-                <Shield className="h-5 w-5" />
-                {pendingCount > 0 && (
-                  <span className="bg-yellow-600 text-black px-2 py-1 text-xs font-bold rounded">
-                    {pendingCount}
-                  </span>
-                )}
-              </button>
               {isAuthenticated && (
                 <button
                   onClick={handleLogout}
@@ -398,7 +386,11 @@ function App() {
       <AddEventForm onEventAdded={fetchEvents} />
 
       {/* Footer */}
-      <Footer />
+      <Footer 
+        onAdminAccess={handleAdminAccess}
+        isAuthenticated={isAuthenticated}
+        pendingCount={pendingCount}
+      />
 
       {/* Auth Modal */}
       <AuthModal

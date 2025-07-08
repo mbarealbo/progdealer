@@ -1,7 +1,13 @@
 import React from 'react';
-import { Music, Heart, Globe } from 'lucide-react';
+import { Music, Heart, Globe, Key } from 'lucide-react';
 
-export default function Footer() {
+interface FooterProps {
+  onAdminAccess: () => void;
+  isAuthenticated: boolean;
+  pendingCount: number;
+}
+
+export default function Footer({ onAdminAccess, isAuthenticated, pendingCount }: FooterProps) {
   return (
     <footer className="bg-coal-800 border-t-2 border-asphalt-600 mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -29,6 +35,21 @@ export default function Footer() {
               <Globe className="h-4 w-4" />
               <span className="uppercase tracking-wide">Europa</span>
             </div>
+            
+            {/* Admin Button */}
+            <button
+              onClick={onAdminAccess}
+              className="flex items-center space-x-2 text-gray-500 hover:text-industrial-green-400 transition-colors duration-200"
+              title="ADMIN PANEL"
+            >
+              <Key className="h-3 w-3" />
+              <span className="text-xs uppercase tracking-wide">Admin</span>
+              {pendingCount > 0 && (
+                <span className="bg-yellow-600 text-black px-1 py-0.5 text-xs font-bold rounded">
+                  {pendingCount}
+                </span>
+              )}
+            </button>
           </div>
 
           {/* Copyright */}
