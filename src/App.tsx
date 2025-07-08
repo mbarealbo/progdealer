@@ -339,9 +339,23 @@ function App() {
       </div>
 
       {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-6xl font-industrial text-gray-100 mb-6 tracking-ultra-wide">
+      <section className="hero-video-container py-20 px-4 sm:px-6 lg:px-8">
+        {/* Video Background */}
+        <video
+          className="hero-video-background"
+          autoPlay
+          muted
+          loop
+          playsInline
+        >
+          <source src="/progv.mp4" type="video/mp4" />
+        </video>
+        
+        {/* Video Overlay */}
+        <div className="hero-video-overlay"></div>
+        
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <h2 className="text-6xl font-rock-salt text-gray-100 mb-6 tracking-wide">
             PROG EVENTS
           </h2>
           <div className="w-32 h-1 bg-industrial-green-600 mx-auto mb-6"></div>

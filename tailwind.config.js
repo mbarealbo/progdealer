@@ -37,6 +37,7 @@ export default {
       fontFamily: {
         'condensed': ['Arial Narrow', 'Liberation Sans Narrow', 'sans-serif'],
         'industrial': ['Impact', 'Franklin Gothic Bold', 'Arial Black', 'sans-serif'],
+        'rock-salt': ['Rock Salt', 'cursive'],
       },
       letterSpacing: {
         'ultra-wide': '0.2em',
