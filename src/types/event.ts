@@ -20,13 +20,12 @@ export interface Event {
 }
 
 export interface EventFilters {
-  città: string;
-  sottogenere: string;
-  searchQuery?: string;
   country: string;
+  city: string;
+  subgenre: string;
   dateRange: { start: string; end: string };
-}
-
+  excludedSubgenres?: string[];
+  searchQuery?: string;
 export interface ImportEvent {
   nome_evento: string;
   data_ora: string;

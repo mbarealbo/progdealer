@@ -19,7 +19,9 @@ function App() {
     country: '',
     city: '',
     subgenre: '',
-    dateRange: { start: '', end: '' }
+    dateRange: { start: '', end: '' },
+    excludedSubgenres: [] as string[],
+    searchQuery: ''
   });
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
