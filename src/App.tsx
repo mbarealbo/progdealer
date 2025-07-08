@@ -365,52 +365,49 @@ function App() {
           uniqueCountries={uniqueCountries}
         />
 
-        {/* Events Header with Controls */}
-        <div className="mb-6 bg-coal-800 border-2 border-asphalt-600 p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-            {/* Event Count */}
-            <div className="flex items-center text-gray-300 font-condensed uppercase tracking-wide">
-              <Database className="h-5 w-5 mr-2 text-industrial-green-600" />
-              <span className="text-lg font-bold">
-                {filteredEvents.length} EVENTS
+        {/* Compact Events Info */}
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-sm">
+          {/* Event Count */}
+          <div className="flex items-center text-gray-400 font-condensed uppercase tracking-wide">
+            <Database className="h-4 w-4 mr-2" />
+            <span className="font-bold">
+              {filteredEvents.length} EVENTS
+            </span>
+            {filteredEvents.length !== events.length && (
+              <span className="text-gray-500 ml-1">
+                / {events.length}
               </span>
-              {filteredEvents.length !== events.length && (
-                <span className="text-gray-500 ml-2 text-sm">
-                  (of {events.length} total)
-                </span>
-              )}
-            </div>
+            )}
+          </div>
 
-            {/* Controls and Last Updated */}
-            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-              {/* Last Updated */}
-              {lastUpdated && (
-                <div className="flex items-center text-gray-500 font-condensed text-sm uppercase tracking-wide">
-                  <span className="mr-2">⏱️</span>
-                  <span>LAST UPDATED:</span>
-                  <span className="ml-1 text-gray-400">
-                    {lastUpdated.toLocaleTimeString('en-US', { 
-                      hour: '2-digit', 
-                      minute: '2-digit',
-                      hour12: false 
-                    })}
-                  </span>
-                </div>
-              )}
-
-              {/* Reload Button */}
-              <button
-                onClick={handleRefresh}
-                disabled={loading}
-                className="industrial-button flex items-center space-x-2"
-                title="REFRESH EVENTS"
-              >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                <span className="text-sm font-bold uppercase tracking-wide">
-                  {loading ? 'REFRESHING...' : 'REFRESH'}
+          {/* Right side controls */}
+          <div className="flex items-center space-x-4">
+            {/* Last Updated */}
+            {lastUpdated && (
+              <div className="flex items-center text-gray-500 font-condensed text-xs uppercase tracking-wide">
+                <span className="mr-1">⏱️</span>
+                <span>
+                  {lastUpdated.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: false 
+                  })}
                 </span>
-              </button>
-            </div>
+              </div>
+            )}
+
+            {/* Reload Button */}
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="flex items-center space-x-1 text-gray-400 hover:text-white transition-colors duration-200"
+              title="REFRESH EVENTS"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <span className="text-xs font-condensed font-bold uppercase tracking-wide">
+                {loading ? 'UPDATING...' : 'REFRESH'}
+              </span>
+            </button>
           </div>
         </div>
 
