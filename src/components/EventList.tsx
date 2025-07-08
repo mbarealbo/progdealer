@@ -54,16 +54,16 @@ export default function EventList({ events, loading }: EventListProps) {
   const getSourceBadge = (fonte: string, tipo_inserimento: string) => {
     if (tipo_inserimento === 'manual') {
       return {
-        label: 'MANUAL',
-        icon: User,
+        label: 'SCRAPED',
+        icon: () => <span className="text-sm">🤖</span>,
         bgColor: 'bg-yellow-900',
         textColor: 'text-yellow-300',
         borderColor: 'border-yellow-600'
       };
     } else {
       return {
-        label: fonte.toUpperCase(),
-        icon: Globe,
+        label: 'SCRAPED',
+        icon: () => <span className="text-sm">🤖</span>,
         bgColor: 'bg-industrial-green-900',
         textColor: 'text-industrial-green-300',
         borderColor: 'border-industrial-green-600'
@@ -127,7 +127,7 @@ export default function EventList({ events, loading }: EventListProps) {
                   <div className="w-8 h-0.5 bg-burgundy-600 group-hover:bg-industrial-green-600 transition-colors"></div>
                 </div>
                 <span className={`inline-flex items-center px-2 py-1 text-xs font-condensed font-bold ${sourceBadge.bgColor} ${sourceBadge.textColor} border ${sourceBadge.borderColor} uppercase tracking-wide`}>
-                  <SourceIcon className="h-3 w-3 mr-1" />
+                  <SourceIcon />
                   {sourceBadge.label}
                 </span>
               </div>
