@@ -23,6 +23,8 @@ export default function UserPanel({
   const [userEvents, setUserEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -31,6 +33,10 @@ export default function UserPanel({
     }
     fetchUserEvents();
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    applyFilter();
+  }, [userEvents, filter]);
 
   const fetchUserEvents = async () => {
     if (!currentUser) return;
@@ -71,6 +77,14 @@ export default function UserPanel({
     } catch (error) {
       console.error('Error deleting event:', error);
       alert('Error deleting event');
+    }
+  };
+
+  const applyFilter = () => {
+    if (filter === 'all') {
+      setFilteredEvents(userEvents);
+    } else {
+      setFilteredEvents(userEvents.filter(event => (event.status || 'pending') === filter));
     }
   };
 
@@ -206,14 +220,39 @@ export default function UserPanel({
           </div>
         </div>
 
-        {/* Add Event Button */}
-        <div className="mb-8">
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 space-y-4 sm:space-y-0">
+          {/* Filter Buttons */}
+          <div className="flex flex-wrap gap-2">
+            {(['all', 'pending', 'approved', 'rejected'] as const).map((filterOption) => (
+              <button
+                key={filterOption}
+                onClick={() => setFilter(filterOption)}
+                className={`px-4 py-2 text-sm font-condensed font-bold uppercase tracking-wide border-2 transition-all duration-200 ${
+                  filter === filterOption
+                    ? 'bg-industrial-green-600 border-industrial-green-600 text-white'
+                    : 'bg-transparent border-asphalt-500 text-gray-300 hover:border-industrial-green-600 hover:text-white'
+                }`}
+              >
+                {filterOption.toUpperCase()}
+                {filterOption !== 'all' && (
+                  <span className="ml-2 bg-white bg-opacity-20 px-2 py-1 rounded text-xs">
+                    {filterOption === 'pending' ? userEvents.filter(e => e.status === 'pending' || !e.status).length : 
+                     filterOption === 'approved' ? userEvents.filter(e => e.status === 'approved').length : 
+                     userEvents.filter(e => e.status === 'rejected').length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Add Event Button */}
           <button
             onClick={() => setShowAddForm(true)}
             className="bg-industrial-green-600 border-2 border-industrial-green-600 text-white px-6 py-3 uppercase tracking-wide font-condensed font-bold hover:bg-industrial-green-700 hover:border-industrial-green-700 transition-all duration-200 flex items-center space-x-2"
           >
             <Plus className="h-5 w-5" />
-            <span>ADD NEW EVENT</span>
+            <span>ADD EVENT</span>
           </button>
         </div>
 
@@ -221,7 +260,7 @@ export default function UserPanel({
         <div className="bg-coal-800 border-2 border-asphalt-600">
           <div className="p-6 border-b border-asphalt-600">
             <h2 className="text-xl font-industrial text-gray-100 tracking-wide uppercase">
-              YOUR EVENTS
+              YOUR EVENTS ({filteredEvents.length})
             </h2>
           </div>
 
@@ -242,9 +281,19 @@ export default function UserPanel({
                 Start by adding your first event using the button above.
               </p>
             </div>
+          ) : filteredEvents.length === 0 ? (
+            <div className="p-8 text-center">
+              <div className="text-4xl mb-4">🔍</div>
+              <p className="text-gray-400 text-xl font-condensed uppercase tracking-wide mb-4">
+                No {filter.toUpperCase()} Events
+              </p>
+              <p className="text-gray-500 font-condensed">
+                Try selecting a different filter or add a new event.
+              </p>
+            </div>
           ) : (
             <div className="divide-y divide-asphalt-600">
-              {userEvents.map((event) => (
+              {filteredEvents.map((event) => (
                 <div key={event.id} className="p-6">
                   <div className="flex items-start space-x-6">
                     {/* Event Image */}

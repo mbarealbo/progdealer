@@ -9,6 +9,7 @@ import SearchInput from './components/SearchInput';
 import AdminPanel from './components/AdminPanel';
 import UserPanel from './components/UserPanel';
 import AuthModal from './components/AuthModal';
+import UserAuthModal from './components/UserAuthModal';
 import Footer from './components/Footer';
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showUserAuthModal, setShowUserAuthModal] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -260,13 +262,19 @@ function App() {
     if (isAuthenticated) {
       setCurrentView('user');
     } else {
-      setShowAuthModal(true);
+      setShowUserAuthModal(true);
     }
   };
 
   const handleAuthenticated = () => {
     setIsAuthenticated(true);
     // Don't automatically redirect to admin - let user choose
+    checkAuthStatus(); // Update user info
+  };
+
+  const handleUserAuthenticated = () => {
+    setIsAuthenticated(true);
+    setCurrentView('user');
     checkAuthStatus(); // Update user info
   };
 
@@ -435,6 +443,13 @@ function App() {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onAuthenticated={handleAuthenticated}
+      />
+
+      {/* User Auth Modal */}
+      <UserAuthModal
+        isOpen={showUserAuthModal}
+        onClose={() => setShowUserAuthModal(false)}
+        onAuthenticated={handleUserAuthenticated}
       />
     </div>
   );
