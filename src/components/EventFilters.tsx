@@ -107,7 +107,7 @@ export default function EventFiltersComponent({
                         border transition-all duration-200 flex items-center space-x-1
                         ${isExcluded 
                           ? 'bg-asphalt-700 border-asphalt-500 text-gray-500 line-through' 
-                          : 'bg-industrial-green-900 border-industrial-green-600 text-industrial-green-300 hover:bg-industrial-green-800'
+                          : 'bg-industrial-green-600 border-industrial-green-600 text-white hover:bg-industrial-green-700'
                         }
                       `}
                     >
