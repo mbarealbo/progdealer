@@ -22,6 +22,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
 import CityAutocomplete from './CityAutocomplete';
+import ImportEvents from './ImportEvents';
 
 interface AdminPanelProps {
   isAuthenticated: boolean;
@@ -384,6 +385,9 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
           )}
         </div>
       </main>
+
+      {/* Import Events - Admin Only */}
+      <ImportEvents onEventsImported={fetchEvents} />
 
       {/* Event Details Modal */}
       {selectedEvent && (

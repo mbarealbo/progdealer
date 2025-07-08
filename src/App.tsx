@@ -5,7 +5,6 @@ import { Event, EventFilters } from './types/event';
 import EventList from './components/EventList';
 import EventFiltersComponent from './components/EventFilters';
 import AddEventForm from './components/AddEventForm';
-import ImportEvents from './components/ImportEvents';
 import AdminPanel from './components/AdminPanel';
 import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
@@ -234,9 +233,6 @@ function App() {
         {/* Events List */}
         <EventList events={filteredEvents} loading={loading} />
       </main>
-
-      {/* Import Events */}
-      <ImportEvents onEventsImported={fetchEvents} />
 
       {/* Add Event Form */}
       <AddEventForm onEventAdded={fetchEvents} />

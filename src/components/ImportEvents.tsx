@@ -68,7 +68,7 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 right-8 bg-coal-800 hover:bg-coal-700 border-2 border-asphalt-600 hover:border-industrial-green-600 text-white p-4 transition-all duration-200 z-50"
+        className="fixed bottom-8 right-8 bg-coal-800 hover:bg-coal-700 border-2 border-asphalt-600 hover:border-industrial-green-600 text-white p-4 transition-all duration-200 z-50"
         title="IMPORT EVENTS"
       >
         <Upload className="h-6 w-6" />
