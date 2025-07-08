@@ -20,13 +20,14 @@ export interface Event {
 }
 
 export interface EventFilters {
-  country: string;
-  city: string;
-  subgenre: string;
-  dateRange: { start: string; end: string };
-  excludedSubgenres?: string[];
-  searchQuery?: string;
+  città: string;
+  sottogenere: string;
+  dataInizio: string;
+  dataFine: string;
+  excludedSubgenres: string[];
+  countries: string[];
 }
+
 export interface ImportEvent {
   nome_evento: string;
   data_ora: string;
