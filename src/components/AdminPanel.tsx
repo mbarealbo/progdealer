@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   Shield, 
   Eye, 
@@ -27,10 +26,10 @@ interface AdminPanelProps {
   isAuthenticated: boolean;
   onAuthRequired: () => void;
   onLogout: () => void;
+  onBackToMain: () => void;
 }
 
-export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout }: AdminPanelProps) {
-  const navigate = useNavigate();
+export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, onBackToMain }: AdminPanelProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -223,7 +222,7 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout }
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => navigate('/')}
+                onClick={onBackToMain}
                 className="industrial-button flex items-center space-x-2"
                 title="BACK TO MAIN"
               >
