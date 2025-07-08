@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { X, Filter, ChevronDown, ChevronUp } from 'lucide-react';
-import { EventFilters, PROG_SUBGENRES } from '../types/event';
+import { PROG_SUBGENRES } from '../types/event';
+
+interface EventFilters {
+  country: string;
+  city: string;
+  subgenre: string;
+  dateRange: { start: string; end: string };
+  excludedSubgenres: string[];
+  searchQuery?: string;
+}
 
 interface EventFiltersProps {
   filters: EventFilters;
@@ -19,13 +28,20 @@ export default function EventFiltersComponent({
 }: EventFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleFilterChange = (key: keyof EventFilters, value: string | string[]) => {
+  const handleFilterChange = (key: keyof EventFilters, value: string | string[] | { start: string; end: string }) => {
     onFiltersChange({
       ...filters,
       [key]: value
     });
   };
 
+  const toggleSubgenreExclusion = (subgenre: string) => {
+    const newExcludedSubgenres = filters.excludedSubgenres?.includes(subgenre) 
+      ? filters.excludedSubgenres.filter(s => s !== subgenre)
+      : [...(filters.excludedSubgenres || []), subgenre];
+    
+    handleFilterChange('excludedSubgenres', newExcludedSubgenres);
+  };
 
   const clearFilters = () => {
     onFiltersChange({
@@ -94,6 +110,37 @@ export default function EventFiltersComponent({
           </div>
           
           <div className="space-y-6">
+            {/* Progressive Subgenres - Chip Interface */}
+            <div>
+              <label className="block text-sm font-condensed font-bold text-gray-400 mb-4 uppercase tracking-wide">
+                🎵 PROGRESSIVE SUBGENRES
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {PROG_SUBGENRES.map((subgenre) => {
+                  const isExcluded = filters.excludedSubgenres?.includes(subgenre);
+                  return (
+                    <button
+                      key={subgenre}
+                      onClick={() => toggleSubgenreExclusion(subgenre)}
+                      className={`
+                        px-3 py-1 text-xs font-condensed font-bold uppercase tracking-wide
+                        border transition-all duration-200 flex items-center space-x-1
+                        ${isExcluded 
+                          ? 'bg-asphalt-700 border-asphalt-500 text-gray-500 line-through' 
+                          : 'bg-industrial-green-600 border-industrial-green-600 text-white hover:bg-industrial-green-700'
+                        }
+                      `}
+                    >
+                      <span>{subgenre}</span>
+                      {isExcluded && <X className="h-3 w-3" />}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-gray-500 mt-2 font-condensed uppercase tracking-wide">
+                Click to exclude subgenres • Active subgenres will be included in results
+              </p>
+            </div>
 
             {/* Location, Date, and Source Filters */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
