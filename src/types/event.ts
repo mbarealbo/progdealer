@@ -26,6 +26,7 @@ export interface EventFilters {
   dateRange: { start: string; end: string };
   excludedSubgenres?: string[];
   searchQuery?: string;
+}
 export interface ImportEvent {
   nome_evento: string;
   data_ora: string;
