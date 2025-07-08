@@ -158,7 +158,7 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
       // Create a copy of the event with new ID and pending status
       const duplicatedEventData = {
         nome_evento: originalEvent.nome_evento,
-        data_ora: originalEvent.data_ora,
+        data_ora: '', // Clear date to avoid unique constraint conflicts
         venue: originalEvent.venue,
         città: originalEvent.città,
         sottogenere: originalEvent.sottogenere,
@@ -186,7 +186,7 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
       setDuplicatingEvent(null);
       
       // Show success message
-      alert(`Event "${originalEvent.nome_evento}" has been duplicated successfully. The duplicate is now pending approval.`);
+      alert(`Event "${originalEvent.nome_evento}" has been duplicated successfully. Please set a new date/time for the duplicate before approval.`);
     } catch (error) {
       console.error('Error duplicating event:', error);
       alert('Error duplicating event');
@@ -560,8 +560,8 @@ function DuplicateEventModal({
           </div>
           
           <p className="text-gray-300 font-condensed mb-6 leading-relaxed">
-            This will create an exact copy of the event with <strong className="text-yellow-400">PENDING</strong> status. 
-            You can then edit the duplicate to change the date, venue, or other details before approving it.
+            This will create a copy of the event with <strong className="text-yellow-400">PENDING</strong> status and <strong className="text-orange-400">NO DATE SET</strong>. 
+            You must edit the duplicate to set a new date/time before approving it.
           </p>
           
           <div className="flex space-x-4">
