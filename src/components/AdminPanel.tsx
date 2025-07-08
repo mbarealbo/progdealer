@@ -28,6 +28,7 @@ import EventImage from './EventImage';
 
 interface AdminPanelProps {
   isAuthenticated: boolean;
+  currentUser: any;
   onAuthRequired: () => void;
   onLogout: () => void;
   onBackToMain: () => void;
@@ -35,6 +36,7 @@ interface AdminPanelProps {
 
 export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, onBackToMain }: AdminPanelProps) {
   const [events, setEvents] = useState<Event[]>([]);
+  currentUser,
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -316,7 +318,7 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
               </button>
               <div className="text-gray-400 font-condensed uppercase tracking-wide">
                 <span className="text-lg font-bold">
-                  {filteredEvents.length} / {events.length} EVENTS
+                  {currentUser?.email || 'ADMIN USER'}
                 </span>
               </div>
             </div>

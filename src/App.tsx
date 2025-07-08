@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Music, Database, RefreshCw, Shield } from 'lucide-react';
+import { Music, RefreshCw, User } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { Event, EventFilters } from './types/event';
 import EventList from './components/EventList';
@@ -7,12 +7,14 @@ import EventFiltersComponent from './components/EventFilters';
 import AddEventForm from './components/AddEventForm';
 import SearchInput from './components/SearchInput';
 import AdminPanel from './components/AdminPanel';
+import UserPanel from './components/UserPanel';
 import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
 
 function App() {
-  const [currentView, setCurrentView] = useState<'events' | 'admin'>('events');
+  const [currentView, setCurrentView] = useState<'events' | 'admin' | 'user'>('events');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
@@ -181,6 +183,7 @@ function App() {
   const checkAuthStatus = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     setIsAuthenticated(!!session);
+    setCurrentUser(session?.user || null);
   };
 
   useEffect(() => {
@@ -249,18 +252,28 @@ function App() {
     }
   };
 
+  const handleBackToMain = () => {
+    setCurrentView('events');
+  };
+
+  const handleUserAccess = () => {
+    if (isAuthenticated) {
+      setCurrentView('user');
+    } else {
+      setShowAuthModal(true);
+    }
+  };
+
   const handleAuthenticated = () => {
     setIsAuthenticated(true);
-    setCurrentView('admin');
+    // Don't automatically redirect to admin - let user choose
+    checkAuthStatus(); // Update user info
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setIsAuthenticated(false);
-    setCurrentView('events');
-  };
-
-  const handleBackToMain = () => {
+    setCurrentUser(null);
     setCurrentView('events');
   };
 
@@ -271,6 +284,19 @@ function App() {
     return (
       <AdminPanel 
         isAuthenticated={isAuthenticated}
+        currentUser={currentUser}
+        onAuthRequired={() => setShowAuthModal(true)}
+        onLogout={handleLogout}
+        onBackToMain={handleBackToMain}
+      />
+    );
+  }
+
+  if (currentView === 'user') {
+    return (
+      <UserPanel 
+        isAuthenticated={isAuthenticated}
+        currentUser={currentUser}
         onAuthRequired={() => setShowAuthModal(true)}
         onLogout={handleLogout}
         onBackToMain={handleBackToMain}
@@ -301,18 +327,20 @@ function App() {
             </div>
             
             <div className="flex items-center space-x-4 md:space-x-6">
-              <div className="hidden md:flex items-center text-gray-400 font-condensed uppercase tracking-wide">
-                <Database className="h-5 w-5 mr-2" />
-                <span className="text-lg font-bold">
-                  {filteredEvents.length} EVENTS
-                </span>
-              </div>
               <button
                 onClick={handleRefresh}
                 className="industrial-button"
                 title="REFRESH EVENTS"
               >
                 <RefreshCw className="h-5 w-5" />
+              </button>
+              <button
+                onClick={handleUserAccess}
+                className="industrial-button"
+                title="USER AREA"
+              >
+                <User className="h-5 w-5" />
+                {isAuthenticated && <span className="ml-2 text-sm">USER</span>}
               </button>
               {isAuthenticated && (
                 <button
@@ -369,6 +397,16 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        {/* Event Count */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center text-gray-400 font-condensed uppercase tracking-wide">
+            <Music className="h-5 w-5 mr-2" />
+            <span className="text-lg font-bold">
+              {filteredEvents.length} EVENTS
+            </span>
+          </div>
+        </div>
+
         {/* Filters */}
         <EventFiltersComponent
           filters={filters}
