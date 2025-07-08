@@ -6,7 +6,7 @@ export interface Event {
   città: string;
   sottogenere: string;
   descrizione?: string;
-  artisti?: string[];
+  artisti?: string[] | null;
   orario?: string;
   link: string;
   immagine?: string;
@@ -35,7 +35,7 @@ export interface ImportEvent {
   città: string;
   sottogenere?: string;
   descrizione?: string;
-  artisti?: string[];
+  artisti?: string[] | null;
   orario?: string;
   link: string;
   immagine?: string;

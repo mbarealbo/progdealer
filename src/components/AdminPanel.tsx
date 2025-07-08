@@ -629,7 +629,9 @@ function EditEventModal({
   onSave: (event: Event) => void;
 }) {
   const [editedEvent, setEditedEvent] = useState<Event>({ ...event });
-  const [artists, setArtists] = useState<string[]>(event.artisti || ['']);
+  const [artists, setArtists] = useState<string[]>(
+    event.artisti && event.artisti.length > 0 ? event.artisti : ['']
+  );
 
   const handleChange = (field: keyof Event, value: any) => {
     setEditedEvent({ ...editedEvent, [field]: value });
@@ -652,11 +654,10 @@ function EditEventModal({
   };
 
   const handleSave = () => {
+    const filteredArtists = artists.filter(artist => artist.trim() !== '');
     const finalEvent = {
       ...editedEvent,
-      artisti: artists.filter(artist => artist.trim() !== '').length > 0 
-        ? artists.filter(artist => artist.trim() !== '') 
-        : null
+      artisti: filteredArtists.length > 0 ? filteredArtists : []
     };
     onSave(finalEvent);
   };
