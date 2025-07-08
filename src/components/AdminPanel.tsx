@@ -27,13 +27,12 @@ import ImportEvents from './ImportEvents';
 import EventImage from './EventImage';
 
 interface AdminPanelProps {
-  isAuthenticated: boolean;
-  onAuthRequired: () => void;
+  onClose: () => void;
+  onEventUpdated: () => void;
   onLogout: () => void;
-  onBackToMain: () => void;
 }
 
-export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, onBackToMain }: AdminPanelProps) {
+export default function AdminPanel({ onClose, onEventUpdated, onLogout }: AdminPanelProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,18 +44,21 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [duplicatingEvent, setDuplicatingEvent] = useState<Event | null>(null);
   const [tempDuplicateEvent, setTempDuplicateEvent] = useState<Event | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      onAuthRequired();
-      return;
-    }
+    checkAuthStatus();
     fetchEvents();
-  }, [isAuthenticated]);
+  }, []);
 
   useEffect(() => {
     applyFilters();
   }, [events, searchTerm, statusFilter]);
+
+  const checkAuthStatus = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setIsAuthenticated(!!session);
+  };
 
   const fetchEvents = async () => {
     try {
@@ -67,6 +69,7 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
 
       if (error) throw error;
       setEvents(data || []);
+      onEventUpdated();
     } catch (error) {
       console.error('Error fetching events:', error);
     } finally {
@@ -289,7 +292,7 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center space-x-4">
               <button
-                onClick={onBackToMain}
+                onClick={onClose}
                 className="industrial-button flex items-center space-x-2"
                 title="BACK TO MAIN"
               >
