@@ -62,12 +62,15 @@ function App() {
       const { data, error } = await supabase
         .from('eventi_prog')
         .select('*')
-        .eq('status', 'approved')
         .order('data_ora', { ascending: true });
 
       if (error) throw error;
       
-      setEvents(data || []);
+      // Filter for approved events on the client side as a fallback
+      const approvedEvents = (data || []).filter(event => 
+        (event.status || 'approved') === 'approved'
+      );
+      setEvents(approvedEvents);
     } catch (error) {
       console.error('Error fetching events:', error);
     } finally {
