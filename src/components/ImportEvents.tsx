@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { Upload, X, Check, AlertTriangle, FileText, Calendar, Database } from 'lucide-react';
-import { importEvents, classifySubgenre } from '../lib/supabase';
+import { Upload, X, Check, AlertTriangle, FileText, Calendar, Database, Code, Play } from 'lucide-react';
+import { importEvents } from '../lib/supabase';
 import { ImportEvent } from '../types/event';
 
 interface ImportEventsProps {
@@ -20,10 +20,12 @@ interface ImportSummary {
   updated: number;
   skipped: number;
   failed: number;
+  scriptProcessed: number;
   reasons: {
     invalidDate: number;
     missingRequired: number;
     duplicate: number;
+    scriptError: number;
     other: number;
   };
 }
@@ -36,71 +38,117 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
   const [jsonInput, setJsonInput] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [scriptOutput, setScriptOutput] = useState<string>('');
+  const [processingStep, setProcessingStep] = useState<'idle' | 'script' | 'validation' | 'import'>('idle');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Normalize date to ISO 8601 format
-  const normalizeDate = (dateInput: any): string | null => {
-    if (!dateInput) return null;
+  // Execute Python mapping script
+  const executePythonScript = async (rawJsonData: string): Promise<ImportEvent[]> => {
+    setProcessingStep('script');
+    setScriptOutput('🐍 Executing map_event_json_for_import.py...\n');
 
     try {
-      let date: Date;
+      // Create temporary input file
+      const inputFileName = `input_${Date.now()}.json`;
+      const outputFileName = `output_${Date.now()}.json`;
 
-      if (typeof dateInput === 'string') {
-        // Handle various date formats
-        if (dateInput.includes('T') || dateInput.includes('Z')) {
-          // Already in ISO format or similar
-          date = new Date(dateInput);
-        } else if (dateInput.includes('/')) {
-          // Handle MM/DD/YYYY or DD/MM/YYYY formats
-          date = new Date(dateInput);
-        } else if (dateInput.includes('-')) {
-          // Handle YYYY-MM-DD format
-          date = new Date(dateInput);
-        } else {
-          // Try parsing as-is
-          date = new Date(dateInput);
-        }
-      } else if (dateInput instanceof Date) {
-        date = dateInput;
-      } else if (typeof dateInput === 'number') {
-        // Unix timestamp
-        date = new Date(dateInput);
-      } else {
-        return null;
-      }
-
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        return null;
-      }
-
-      // Convert to ISO string and ensure it has time component
-      const isoString = date.toISOString();
+      // Write input file
+      const fs = await import('fs');
+      await fs.promises.writeFile(inputFileName, rawJsonData, 'utf8');
       
-      // If the original input didn't have time, default to 20:00 (8 PM)
-      if (typeof dateInput === 'string' && !dateInput.includes('T') && !dateInput.includes(':')) {
-        const dateOnly = isoString.split('T')[0];
-        return `${dateOnly}T20:00:00`;
-      }
+      setScriptOutput(prev => prev + `📝 Created temporary input file: ${inputFileName}\n`);
 
-      return isoString;
+      // Execute Python script
+      const { spawn } = await import('child_process');
+      
+      return new Promise((resolve, reject) => {
+        const pythonProcess = spawn('python3', ['map_event_json_for_import.py', inputFileName, outputFileName], {
+          stdio: ['pipe', 'pipe', 'pipe']
+        });
+
+        let stdout = '';
+        let stderr = '';
+
+        pythonProcess.stdout.on('data', (data) => {
+          stdout += data.toString();
+          setScriptOutput(prev => prev + `📤 ${data.toString()}`);
+        });
+
+        pythonProcess.stderr.on('data', (data) => {
+          stderr += data.toString();
+          setScriptOutput(prev => prev + `⚠️ ${data.toString()}`);
+        });
+
+        pythonProcess.on('close', async (code) => {
+          try {
+            // Clean up input file
+            await fs.promises.unlink(inputFileName);
+            setScriptOutput(prev => prev + `🗑️ Cleaned up input file\n`);
+
+            if (code !== 0) {
+              // Clean up output file if it exists
+              try {
+                await fs.promises.unlink(outputFileName);
+              } catch (e) {
+                // File might not exist, ignore
+              }
+              
+              setScriptOutput(prev => prev + `❌ Script failed with exit code ${code}\n${stderr}\n`);
+              reject(new Error(`Python script failed with exit code ${code}: ${stderr}`));
+              return;
+            }
+
+            // Read processed output
+            try {
+              const processedData = await fs.promises.readFile(outputFileName, 'utf8');
+              const processedEvents = JSON.parse(processedData);
+              
+              setScriptOutput(prev => prev + `✅ Script completed successfully\n`);
+              setScriptOutput(prev => prev + `📊 Processed ${processedEvents.length} events\n`);
+
+              // Clean up output file
+              await fs.promises.unlink(outputFileName);
+              setScriptOutput(prev => prev + `🗑️ Cleaned up output file\n`);
+
+              resolve(processedEvents);
+            } catch (readError) {
+              setScriptOutput(prev => prev + `❌ Failed to read script output: ${readError}\n`);
+              reject(new Error(`Failed to read script output: ${readError}`));
+            }
+          } catch (cleanupError) {
+            setScriptOutput(prev => prev + `⚠️ Cleanup error: ${cleanupError}\n`);
+            reject(new Error(`Cleanup error: ${cleanupError}`));
+          }
+        });
+
+        pythonProcess.on('error', (error) => {
+          setScriptOutput(prev => prev + `❌ Failed to start Python process: ${error}\n`);
+          reject(new Error(`Failed to start Python process: ${error}`));
+        });
+      });
+
     } catch (error) {
-      return null;
+      setScriptOutput(prev => prev + `❌ Script execution error: ${error}\n`);
+      throw new Error(`Script execution failed: ${error}`);
     }
   };
 
-  // Validate and process events
-  const processEvents = (rawEvents: any[]): { validEvents: ImportEvent[], summary: ImportSummary } => {
+  // Validate processed events
+  const validateProcessedEvents = (processedEvents: ImportEvent[]): { validEvents: ImportEvent[], summary: ImportSummary } => {
+    setProcessingStep('validation');
+    
     const summary: ImportSummary = {
-      total: rawEvents.length,
+      total: processedEvents.length,
       imported: 0,
       updated: 0,
       skipped: 0,
       failed: 0,
+      scriptProcessed: processedEvents.length,
       reasons: {
         invalidDate: 0,
         missingRequired: 0,
         duplicate: 0,
+        scriptError: 0,
         other: 0
       }
     };
@@ -108,31 +156,24 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
     const validEvents: ImportEvent[] = [];
     const seenEvents = new Set<string>();
 
-    for (const event of rawEvents) {
+    for (const event of processedEvents) {
       try {
-        // Normalize date
-        const normalizedDate = normalizeDate(event.data_ora || event.date || event.datetime);
-        
-        if (!normalizedDate) {
-          summary.failed++;
-          summary.reasons.invalidDate++;
-          continue;
-        }
-
-        // Extract required fields
-        const nome_evento = event.nome_evento || event.name || event.title || '';
-        const venue = event.venue || event.location || '';
-        const città = event.città || event.city || event.luogo || '';
-
-        // Check required fields
-        if (!nome_evento || !venue || !città) {
+        // Check required fields (script should have handled this, but double-check)
+        if (!event.nome_evento || !event.venue || !event.città || !event.data_ora) {
           summary.failed++;
           summary.reasons.missingRequired++;
           continue;
         }
 
+        // Check date format (script should have normalized this)
+        if (!event.data_ora.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)) {
+          summary.failed++;
+          summary.reasons.invalidDate++;
+          continue;
+        }
+
         // Create deduplication key
-        const dedupeKey = `${nome_evento.toLowerCase()}-${normalizedDate}-${venue.toLowerCase()}`;
+        const dedupeKey = `${event.nome_evento.toLowerCase()}-${event.data_ora}-${event.venue.toLowerCase()}`;
         
         if (seenEvents.has(dedupeKey)) {
           summary.skipped++;
@@ -141,30 +182,7 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
         }
 
         seenEvents.add(dedupeKey);
-
-        // Process event
-        const processedEvent: ImportEvent = {
-          nome_evento,
-          data_ora: normalizedDate,
-          venue,
-          città,
-          sottogenere: event.sottogenere || event.subgenre || 
-            classifySubgenre(
-              nome_evento,
-              event.descrizione || event.description,
-              event.artisti || event.artists
-            ),
-          descrizione: event.descrizione || event.description || null,
-          artisti: event.artisti || event.artists || null,
-          orario: event.orario || event.time || null,
-          link: event.link || event.url || event.link_biglietti || '',
-          immagine: event.immagine || event.image || event.copertina || null,
-          fonte: event.fonte || event.source || 'import',
-          tipo_inserimento: event.tipo_inserimento || 'scraped',
-          event_id: event.event_id || event.id || null
-        };
-
-        validEvents.push(processedEvent);
+        validEvents.push(event);
         summary.imported++;
       } catch (error) {
         summary.failed++;
@@ -227,43 +245,56 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
     setLoading(true);
     setResults([]);
     setSummary(null);
+    setScriptOutput('');
+    setProcessingStep('idle');
 
     try {
-      const rawEvents = JSON.parse(jsonInput);
-      const eventsArray = Array.isArray(rawEvents) ? rawEvents : [rawEvents];
-      
-      // Process and validate events
-      const { validEvents, summary: processSummary } = processEvents(eventsArray);
+      // Step 1: Execute Python mapping script
+      setScriptOutput('🚀 Starting import process...\n');
+      const processedEvents = await executePythonScript(jsonInput);
+
+      if (!processedEvents || processedEvents.length === 0) {
+        throw new Error('Python script returned no valid events');
+      }
+
+      // Step 2: Validate processed events
+      setProcessingStep('validation');
+      setScriptOutput(prev => prev + '🔍 Validating processed events...\n');
+      const { validEvents, summary: validationSummary } = validateProcessedEvents(processedEvents);
       
       if (validEvents.length === 0) {
-        setSummary(processSummary);
+        setSummary(validationSummary);
         setResults([{
           success: false,
           event: 'No Valid Events',
-          error: 'All events were skipped due to validation errors'
+          error: 'All events were skipped during validation'
         }]);
         return;
       }
 
-      // Import valid events
+      // Step 3: Import to database
+      setProcessingStep('import');
+      setScriptOutput(prev => prev + `💾 Importing ${validEvents.length} valid events to database...\n`);
       const importResults = await importEvents(validEvents);
       
       // Update summary with import results
-      const finalSummary = { ...processSummary };
+      const finalSummary = { ...validationSummary };
       finalSummary.imported = importResults.filter(r => r.success).length;
       finalSummary.failed += importResults.filter(r => !r.success).length;
 
       setResults(importResults);
       setSummary(finalSummary);
+      setScriptOutput(prev => prev + `✅ Import process completed!\n`);
       
       if (importResults.some(r => r.success)) {
         onEventsImported();
       }
     } catch (error) {
       console.error('Import error:', error);
+      setScriptOutput(prev => prev + `❌ Import failed: ${error}\n`);
       setResults([{ 
         success: false, 
-        event: 'JSON Parse Error', 
+        event: 'Script Execution Error', 
         error: String(error) 
       }]);
       setSummary({
@@ -272,10 +303,12 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
         updated: 0,
         skipped: 0,
         failed: 1,
-        reasons: { invalidDate: 0, missingRequired: 0, duplicate: 0, other: 1 }
+        scriptProcessed: 0,
+        reasons: { invalidDate: 0, missingRequired: 0, duplicate: 0, scriptError: 1, other: 0 }
       });
     } finally {
       setLoading(false);
+      setProcessingStep('idle');
     }
   };
 
@@ -284,8 +317,28 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
     setSummary(null);
     setJsonInput('');
     setSelectedFile(null);
+    setScriptOutput('');
+    setProcessingStep('idle');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const getProcessingStepIcon = () => {
+    switch (processingStep) {
+      case 'script': return <Code className="h-4 w-4 animate-pulse text-yellow-400" />;
+      case 'validation': return <Check className="h-4 w-4 animate-pulse text-blue-400" />;
+      case 'import': return <Database className="h-4 w-4 animate-pulse text-green-400" />;
+      default: return <Upload className="h-4 w-4" />;
+    }
+  };
+
+  const getProcessingStepText = () => {
+    switch (processingStep) {
+      case 'script': return 'EXECUTING PYTHON SCRIPT...';
+      case 'validation': return 'VALIDATING EVENTS...';
+      case 'import': return 'IMPORTING TO DATABASE...';
+      default: return 'IMPORT EVENTS';
     }
   };
 
@@ -303,11 +356,17 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
-      <div className="bg-coal-800 border-2 border-asphalt-600 p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-coal-800 border-2 border-asphalt-600 p-6 w-full max-w-6xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-industrial text-gray-100 tracking-wide uppercase">
-            IMPORT EVENTS
-          </h2>
+          <div className="flex items-center space-x-3">
+            <Code className="h-6 w-6 text-industrial-green-600" />
+            <h2 className="text-2xl font-industrial text-gray-100 tracking-wide uppercase">
+              IMPORT EVENTS
+            </h2>
+            <span className="bg-yellow-900 border border-yellow-600 text-yellow-300 px-2 py-1 text-xs font-condensed font-bold uppercase tracking-wide">
+              PYTHON SCRIPT REQUIRED
+            </span>
+          </div>
           <button
             onClick={() => setIsOpen(false)}
             className="bg-transparent border-2 border-asphalt-500 text-gray-300 p-2 hover:border-burgundy-500 hover:text-white transition-all duration-200"
@@ -319,6 +378,20 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - File Upload */}
           <div className="space-y-6">
+            {/* Python Script Info */}
+            <div className="bg-yellow-900 border-2 border-yellow-600 p-4">
+              <div className="flex items-center space-x-2 mb-2">
+                <Play className="h-4 w-4 text-yellow-300" />
+                <h3 className="text-sm font-condensed font-bold text-yellow-300 uppercase tracking-wide">
+                  PYTHON SCRIPT EXECUTION
+                </h3>
+              </div>
+              <p className="text-xs font-condensed text-yellow-200 leading-relaxed">
+                All imports execute <code className="bg-yellow-800 px-1">map_event_json_for_import.py</code> first.
+                The script maps and normalizes all fields before validation and database insert.
+              </p>
+            </div>
+
             {/* File Upload Area */}
             <div>
               <label className="block text-sm font-condensed font-bold text-gray-100 mb-3 uppercase tracking-wide">
@@ -383,14 +456,18 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
                 onChange={(e) => setJsonInput(e.target.value)}
                 rows={8}
                 className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-mono text-xs focus:outline-none focus:border-industrial-green-600 resize-none"
-                placeholder={`Paste JSON array of events here:
+                placeholder={`Raw JSON data (will be processed by Python script):
 [
   {
-    "nome_evento": "Event Name",
-    "data_ora": "2025-01-15T20:00:00",
-    "venue": "Venue Name",
-    "città": "City",
-    "link": "https://example.com"
+    "name": "Event Name",
+    "startDate": "2025-01-15T20:00:00",
+    "location": {
+      "name": "Venue Name",
+      "address": {
+        "addressLocality": "City"
+      }
+    },
+    "url": "https://example.com"
   }
 ]`}
               />
@@ -403,20 +480,11 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
                 disabled={loading || !jsonInput.trim()}
                 className="flex-1 bg-industrial-green-800 border-2 border-industrial-green-600 text-white px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:bg-industrial-green-700 transition-all duration-200 disabled:opacity-50 flex items-center justify-center space-x-2"
               >
-                {loading ? (
-                  <>
-                    <Database className="h-4 w-4 animate-pulse" />
-                    <span>PROCESSING...</span>
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4" />
-                    <span>IMPORT EVENTS</span>
-                  </>
-                )}
+                {getProcessingStepIcon()}
+                <span>{getProcessingStepText()}</span>
               </button>
               
-              {(results.length > 0 || summary) && (
+              {(results.length > 0 || summary || scriptOutput) && (
                 <button
                   onClick={clearAll}
                   className="bg-transparent border-2 border-asphalt-500 text-gray-300 px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:border-burgundy-500 hover:text-white transition-all duration-200"
@@ -429,6 +497,21 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
 
           {/* Right Column - Results */}
           <div className="space-y-6">
+            {/* Script Output */}
+            {scriptOutput && (
+              <div className="bg-coal-900 border-2 border-asphalt-600 p-4">
+                <h3 className="text-lg font-industrial text-gray-100 mb-4 uppercase tracking-wide flex items-center space-x-2">
+                  <Code className="h-5 w-5" />
+                  <span>SCRIPT OUTPUT</span>
+                </h3>
+                <div className="bg-black border border-asphalt-500 p-3 max-h-40 overflow-y-auto">
+                  <pre className="text-xs font-mono text-green-400 whitespace-pre-wrap">
+                    {scriptOutput}
+                  </pre>
+                </div>
+              </div>
+            )}
+
             {/* Import Summary */}
             {summary && (
               <div className="bg-coal-900 border-2 border-asphalt-600 p-4">
@@ -458,9 +541,20 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
 
                 <div className="space-y-2 text-sm font-condensed">
                   <div className="flex justify-between text-gray-300">
-                    <span>TOTAL PROCESSED:</span>
+                    <span>SCRIPT PROCESSED:</span>
+                    <span className="font-bold">{summary.scriptProcessed}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-300">
+                    <span>TOTAL INPUT:</span>
                     <span className="font-bold">{summary.total}</span>
                   </div>
+                  
+                  {summary.reasons.scriptError > 0 && (
+                    <div className="flex justify-between text-burgundy-400">
+                      <span>SCRIPT ERRORS:</span>
+                      <span className="font-bold">{summary.reasons.scriptError}</span>
+                    </div>
+                  )}
                   
                   {summary.reasons.invalidDate > 0 && (
                     <div className="flex justify-between text-burgundy-400">
@@ -529,13 +623,14 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
             <div className="bg-asphalt-700 border border-asphalt-600 p-4">
               <h4 className="text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide flex items-center space-x-2">
                 <Calendar className="h-4 w-4" />
-                <span>DATE FORMAT INFO</span>
+                <span>PYTHON SCRIPT INFO</span>
               </h4>
               <div className="text-xs font-condensed text-gray-400 space-y-1">
-                <p>• Supported formats: ISO 8601, YYYY-MM-DD, MM/DD/YYYY</p>
-                <p>• Times are optional (defaults to 8:00 PM)</p>
-                <p>• Invalid dates will be automatically skipped</p>
-                <p>• Duplicates are detected by name + date + venue</p>
+                <p>• <code>map_event_json_for_import.py</code> executes first</p>
+                <p>• Script maps all field names and normalizes dates</p>
+                <p>• Only processed events proceed to validation</p>
+                <p>• Script failure stops the entire import process</p>
+                <p>• No fallback mapping - script is mandatory</p>
               </div>
             </div>
           </div>
