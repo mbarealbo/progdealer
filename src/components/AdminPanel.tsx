@@ -103,6 +103,12 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
       setEvents(events.map(event => 
         event.id === eventId ? { ...event, status } : event
       ));
+      
+      // Refresh the main events list if an event was approved
+      if (status === 'approved') {
+        // This will trigger a refresh in the parent component
+        window.dispatchEvent(new CustomEvent('eventApproved'));
+      }
     } catch (error) {
       console.error('Error updating event status:', error);
       alert('Error updating event status');

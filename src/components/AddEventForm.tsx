@@ -55,7 +55,8 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
         link: formData.link || null,
         immagine: formData.immagine?.trim() || null,
         fonte: 'manual-submission',
-        tipo_inserimento: 'manual' as const
+        tipo_inserimento: 'manual' as const,
+        status: 'pending'
       };
 
       const { error } = await supabase

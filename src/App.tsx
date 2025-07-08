@@ -162,6 +162,17 @@ function App() {
   useEffect(() => {
     fetchEvents();
     checkAuthStatus();
+    
+    // Listen for event approval to refresh the list
+    const handleEventApproved = () => {
+      fetchEvents();
+    };
+    
+    window.addEventListener('eventApproved', handleEventApproved);
+    
+    return () => {
+      window.removeEventListener('eventApproved', handleEventApproved);
+    };
   }, []);
 
   const checkAuthStatus = async () => {
