@@ -14,6 +14,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [artists, setArtists] = useState<string[]>(['']);
+  const [cityData, setCityData] = useState<{city: string, region: string, country: string} | null>(null);
   const [formData, setFormData] = useState({
     nome_evento: '',
     data_ora: '',
@@ -211,7 +212,12 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
               </label>
               <CityAutocomplete
                 value={formData.città}
-                onChange={(value) => setFormData({ ...formData, città: value })}
+                onChange={(value, data) => {
+                  setFormData({ ...formData, città: value });
+                  if (data) {
+                    setCityData({ city: data.city, region: data.region, country: data.country });
+                  }
+                }}
                 required
                 placeholder="CITY"
               />

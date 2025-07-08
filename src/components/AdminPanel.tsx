@@ -724,7 +724,10 @@ function EditEventModal({
               </label>
               <CityAutocomplete
                 value={editedEvent.città}
-                onChange={(value) => handleChange('città', value)}
+                onChange={(value, data) => {
+                  handleChange('città', value);
+                  // Could store additional city data if needed for future features
+                }}
                 placeholder="CITY"
               />
             </div>

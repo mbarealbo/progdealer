@@ -10,13 +10,24 @@ interface NominatimResult {
     municipality?: string;
     county?: string;
     state?: string;
+    region?: string;
     country?: string;
+    country_code?: string;
   };
+  lat: string;
+  lon: string;
+}
+
+interface CityData {
+  city: string;
+  region: string;
+  country: string;
+  displayName: string;
 }
 
 interface CityAutocompleteProps {
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: string, cityData?: CityData) => void;
   placeholder?: string;
   className?: string;
   required?: boolean;
@@ -29,7 +40,7 @@ export default function CityAutocomplete({
   className = "",
   required = false 
 }: CityAutocompleteProps) {
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<CityData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -38,7 +49,7 @@ export default function CityAutocomplete({
   const debounceRef = useRef<NodeJS.Timeout>();
 
   const fetchCitySuggestions = async (query: string) => {
-    if (query.length < 2) {
+    if (query.length < 3) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
@@ -48,7 +59,7 @@ export default function CityAutocomplete({
     
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`,
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`,
         {
           headers: {
             'User-Agent': 'ProgDealer/1.0 (https://progdealer.netlify.app)'
@@ -62,18 +73,40 @@ export default function CityAutocomplete({
 
       const data: NominatimResult[] = await response.json();
       
-      // Extract city names and remove duplicates
-      const cityNames = data
+      // Process results to extract city, region, and country
+      const cityData: CityData[] = data
         .map(result => {
           const address = result.address;
-          return address.city || address.town || address.village || address.municipality || '';
+          
+          // Extract city name (prioritize city, then town, village, municipality)
+          const city = address.city || address.town || address.village || address.municipality || '';
+          
+          // Extract region/state
+          const region = address.state || address.region || address.county || '';
+          
+          // Extract country
+          const country = address.country || '';
+          
+          // Create display name
+          const parts = [city, region, country].filter(part => part.length > 0);
+          const displayName = parts.join(', ');
+          
+          return {
+            city,
+            region,
+            country,
+            displayName
+          };
         })
-        .filter(city => city.length > 0)
-        .filter((city, index, array) => array.indexOf(city) === index) // Remove duplicates
+        .filter(item => item.city.length > 0) // Only include results with valid city names
+        .filter((item, index, array) => 
+          // Remove duplicates based on display name
+          array.findIndex(other => other.displayName === item.displayName) === index
+        )
         .slice(0, 5); // Limit to 5 suggestions
 
-      setSuggestions(cityNames);
-      setShowSuggestions(cityNames.length > 0);
+      setSuggestions(cityData);
+      setShowSuggestions(cityData.length > 0);
       setSelectedIndex(-1);
     } catch (error) {
       console.error('Error fetching city suggestions:', error);
@@ -99,8 +132,8 @@ export default function CityAutocomplete({
     }, 300);
   };
 
-  const handleSuggestionClick = (suggestion: string) => {
-    onChange(suggestion);
+  const handleSuggestionClick = (cityData: CityData) => {
+    onChange(cityData.city, cityData);
     setShowSuggestions(false);
     setSuggestions([]);
     setSelectedIndex(-1);
@@ -147,7 +180,7 @@ export default function CityAutocomplete({
   };
 
   const handleFocus = () => {
-    if (suggestions.length > 0) {
+    if (suggestions.length > 0 && value.length >= 3) {
       setShowSuggestions(true);
     }
   };
@@ -190,25 +223,46 @@ export default function CityAutocomplete({
       {showSuggestions && suggestions.length > 0 && (
         <div
           ref={suggestionsRef}
-          className="absolute z-50 w-full mt-1 bg-coal-800 border-2 border-asphalt-600 max-h-48 overflow-y-auto"
+          className="absolute z-50 w-full mt-1 bg-coal-800 border-2 border-asphalt-600 max-h-60 overflow-y-auto shadow-lg"
         >
-          {suggestions.map((suggestion, index) => (
+          {suggestions.map((cityData, index) => (
             <button
               key={index}
               type="button"
-              onClick={() => handleSuggestionClick(suggestion)}
-              className={`w-full text-left px-3 py-2 font-condensed text-sm transition-colors duration-150 ${
+              onClick={() => handleSuggestionClick(cityData)}
+              className={`w-full text-left px-3 py-3 font-condensed text-sm transition-colors duration-150 border-b border-asphalt-600 last:border-b-0 ${
                 index === selectedIndex
-                  ? 'bg-industrial-green-900 text-white border-l-2 border-industrial-green-600'
+                  ? 'bg-industrial-green-900 text-white border-l-4 border-industrial-green-600'
                   : 'text-gray-300 hover:bg-asphalt-700 hover:text-white'
               }`}
             >
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-3 w-3 text-gray-500" />
-                <span className="uppercase tracking-wide">{suggestion}</span>
+              <div className="flex items-start space-x-3">
+                <MapPin className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold uppercase tracking-wide text-white">
+                    {cityData.city}
+                  </div>
+                  {(cityData.region || cityData.country) && (
+                    <div className="text-xs text-gray-400 uppercase tracking-wide mt-1">
+                      {[cityData.region, cityData.country]
+                        .filter(part => part.length > 0)
+                        .join(', ')}
+                    </div>
+                  )}
+                </div>
               </div>
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Loading state when typing */}
+      {isLoading && value.length >= 3 && (
+        <div className="absolute z-40 w-full mt-1 bg-coal-800 border-2 border-asphalt-600 px-3 py-3">
+          <div className="flex items-center space-x-2 text-gray-400 font-condensed text-sm">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="uppercase tracking-wide">SEARCHING CITIES...</span>
+          </div>
         </div>
       )}
     </div>
