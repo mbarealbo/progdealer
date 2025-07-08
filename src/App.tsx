@@ -355,14 +355,14 @@ function App() {
         <div className="hero-video-overlay"></div>
         
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h2 className="text-6xl font-rock-salt text-gray-100 mb-6 tracking-wide">
+          <h2 className="text-6xl font-rock-salt text-gray-100 mb-6 tracking-wide relative z-30">
             PROG EVENTS
           </h2>
-          <div className="w-32 h-1 bg-industrial-green-600 mx-auto mb-6"></div>
-          <p className="text-gray-400 text-xl font-condensed uppercase tracking-wide mb-4">
+          <div className="w-32 h-1 bg-industrial-green-600 mx-auto mb-6 relative z-30"></div>
+          <p className="text-gray-400 text-xl font-condensed uppercase tracking-wide mb-4 relative z-30">
             PROGRESSIVE MUSIC CULTURE DATABASE
           </p>
-          <p className="text-gray-300 text-lg font-condensed max-w-2xl mx-auto leading-relaxed">
+          <p className="text-gray-300 text-lg font-condensed max-w-2xl mx-auto leading-relaxed relative z-30">
             Europe's best progressive music events, all in one place.
           </p>
         </div>
