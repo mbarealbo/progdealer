@@ -29,6 +29,7 @@ import EventImage from './EventImage';
 interface AdminPanelProps {
   isAuthenticated: boolean;
   currentUser: any;
+  currentUser: any;
   onAuthRequired: () => void;
   onLogout: () => void;
   onBackToMain: () => void;
@@ -37,10 +38,10 @@ interface AdminPanelProps {
 export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, onBackToMain }: AdminPanelProps) {
   const [events, setEvents] = useState<Event[]>([]);
   currentUser,
+  currentUser,
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
