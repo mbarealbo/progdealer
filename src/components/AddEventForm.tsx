@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, X, Check, ChevronDown, ChevronUp, Minus } from 'lucide-react';
 import { supabase, classifySubgenre } from '../lib/supabase';
 import { PROG_SUBGENRES } from '../types/event';
 
@@ -12,6 +12,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [artists, setArtists] = useState<string[]>(['']);
   const [formData, setFormData] = useState({
     nome_evento: '',
     data_ora: '',
@@ -19,10 +20,9 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
     città: '',
     sottogenere: '',
     descrizione: '',
-    artisti: '',
     orario: '',
-    link: '',
-    immagine: ''
+    link: 'https://',
+    immagine: 'https://'
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,8 +35,12 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
         classifySubgenre(
           formData.nome_evento, 
           formData.descrizione, 
-          formData.artisti ? formData.artisti.split(',').map(a => a.trim()) : undefined
+          artists.filter(artist => artist.trim() !== '')
         );
+
+      // Clean up URL fields - if they only contain "https://", make them empty
+      const cleanLink = formData.link === 'https://' ? '' : formData.link;
+      const cleanImage = formData.immagine === 'https://' ? '' : formData.immagine;
 
       const eventData = {
         nome_evento: formData.nome_evento,
@@ -45,10 +49,12 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
         città: formData.città,
         sottogenere: finalSubgenre,
         descrizione: formData.descrizione || null,
-        artisti: formData.artisti ? formData.artisti.split(',').map(a => a.trim()) : null,
+        artisti: artists.filter(artist => artist.trim() !== '').length > 0 
+          ? artists.filter(artist => artist.trim() !== '') 
+          : null,
         orario: formData.orario || null,
-        link: formData.link,
-        immagine: formData.immagine || null,
+        link: cleanLink,
+        immagine: cleanImage || null,
         fonte: 'manual-submission',
         tipo_inserimento: 'manual' as const
       };
@@ -67,13 +73,14 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
         città: '',
         sottogenere: '',
         descrizione: '',
-        artisti: '',
         orario: '',
-        link: '',
-        immagine: ''
+        link: 'https://',
+        immagine: 'https://'
       });
+      setArtists(['']);
       
       setIsOpen(false);
+      setShowAdvanced(false);
       setShowSuccess(true);
       onEventAdded();
 
@@ -94,6 +101,23 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const handleArtistChange = (index: number, value: string) => {
+    const newArtists = [...artists];
+    newArtists[index] = value;
+    setArtists(newArtists);
+  };
+
+  const addArtist = () => {
+    setArtists([...artists, '']);
+  };
+
+  const removeArtist = (index: number) => {
+    if (artists.length > 1) {
+      const newArtists = artists.filter((_, i) => i !== index);
+      setArtists(newArtists);
+    }
   };
 
   // Success Toast
@@ -136,6 +160,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Main Fields - Always Visible */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
@@ -209,7 +234,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
               value={formData.link}
               onChange={handleChange}
               className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
-              placeholder="HTTPS://... (OPTIONAL)"
+              placeholder="HTTPS://EXAMPLE.COM (OPTIONAL)"
             />
           </div>
 
@@ -265,18 +290,42 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
                 </div>
               </div>
 
+              {/* Artists Section with Add/Remove functionality */}
               <div>
                 <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                   ARTISTS
                 </label>
-                <input
-                  type="text"
-                  name="artisti"
-                  value={formData.artisti}
-                  onChange={handleChange}
-                  className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
-                  placeholder="ARTIST 1, ARTIST 2, ARTIST 3"
-                />
+                <div className="space-y-2">
+                  {artists.map((artist, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={artist}
+                        onChange={(e) => handleArtistChange(index, e.target.value)}
+                        className="flex-1 bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+                        placeholder={`ARTIST ${index + 1}`}
+                      />
+                      {artists.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeArtist(index)}
+                          className="bg-burgundy-800 border-2 border-burgundy-600 text-white p-2 hover:bg-burgundy-700 transition-all duration-200"
+                          title="REMOVE ARTIST"
+                        >
+                          <Minus className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addArtist}
+                    className="flex items-center space-x-2 bg-industrial-green-800 border-2 border-industrial-green-600 text-white px-3 py-2 hover:bg-industrial-green-700 transition-all duration-200 text-sm font-condensed font-bold uppercase tracking-wide"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>ADD ARTIST</span>
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -303,7 +352,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
                   value={formData.immagine}
                   onChange={handleChange}
                   className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
-                  placeholder="HTTPS://..."
+                  placeholder="HTTPS://EXAMPLE.COM/IMAGE.JPG"
                 />
               </div>
             </div>
