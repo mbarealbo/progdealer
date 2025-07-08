@@ -7,7 +7,7 @@ interface EventFiltersProps {
   searchQuery?: string;
   onFiltersChange: (filters: EventFilters) => void;
   uniqueLocations: string[];
-  uniqueSources: string[];
+  uniqueCountries: string[];
 }
 
 export default function EventFiltersComponent({
@@ -15,7 +15,7 @@ export default function EventFiltersComponent({
   searchQuery = '',
   onFiltersChange,
   uniqueLocations,
-  uniqueSources
+  uniqueCountries
 }: EventFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -41,7 +41,7 @@ export default function EventFiltersComponent({
       dataInizio: '',
       dataFine: '',
       excludedSubgenres: [],
-      fonte: '',
+      countries: [],
       tipo_inserimento: ''
     });
   };
@@ -54,6 +54,13 @@ export default function EventFiltersComponent({
     Array.isArray(value) ? value.length > 0 : value !== ''
   ).length + (searchQuery.trim() ? 1 : 0);
 
+  const toggleCountrySelection = (country: string) => {
+    const newCountries = filters.countries.includes(country)
+      ? filters.countries.filter(c => c !== country)
+      : [...filters.countries, country];
+    
+    handleFilterChange('countries', newCountries);
+  };
   return (
     <div className="mb-8">
       {/* Filter Toggle Button */}
@@ -131,7 +138,7 @@ export default function EventFiltersComponent({
             </div>
 
             {/* Location, Date, and Source Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-condensed font-bold text-gray-400 mb-3 uppercase tracking-wide">
                   🏙️ CITY
@@ -173,24 +180,38 @@ export default function EventFiltersComponent({
                   className="brutal-input w-full text-sm"
                 />
               </div>
+            </div>
 
-              <div>
-                <label className="block text-sm font-condensed font-bold text-gray-400 mb-3 uppercase tracking-wide">
-                  🔗 SOURCE
-                </label>
-                <select
-                  value={filters.fonte}
-                  onChange={(e) => handleFilterChange('fonte', e.target.value)}
-                  className="brutal-input w-full text-sm"
-                >
-                  <option value="">ALL SOURCES</option>
-                  {uniqueSources.map((source) => (
-                    <option key={source} value={source}>
-                      {source.toUpperCase()}
-                    </option>
-                  ))}
-                </select>
+            {/* Countries Filter - Multi-select with chips */}
+            <div>
+              <label className="block text-sm font-condensed font-bold text-gray-400 mb-4 uppercase tracking-wide">
+                🌍 COUNTRIES
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {uniqueCountries.map((country) => {
+                  const isSelected = filters.countries.includes(country);
+                  return (
+                    <button
+                      key={country}
+                      onClick={() => toggleCountrySelection(country)}
+                      className={`
+                        px-3 py-1 text-xs font-condensed font-bold uppercase tracking-wide
+                        border transition-all duration-200 flex items-center space-x-1
+                        ${isSelected 
+                          ? 'bg-industrial-green-600 border-industrial-green-600 text-white hover:bg-industrial-green-700' 
+                          : 'bg-transparent border-asphalt-500 text-gray-400 hover:border-industrial-green-600 hover:text-white'
+                        }
+                      `}
+                    >
+                      <span>{country}</span>
+                      {isSelected && <X className="h-3 w-3" />}
+                    </button>
+                  );
+                })}
               </div>
+              <p className="text-xs text-gray-500 mt-2 font-condensed uppercase tracking-wide">
+                Click to select/deselect countries • Multiple selections allowed
+              </p>
             </div>
 
             {/* Type Filter */}
