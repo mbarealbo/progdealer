@@ -5,6 +5,7 @@ import { Event, EventFilters } from './types/event';
 import EventList from './components/EventList';
 import EventFiltersComponent from './components/EventFilters';
 import AddEventForm from './components/AddEventForm';
+import SearchInput from './components/SearchInput';
 import AdminPanel from './components/AdminPanel';
 import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
@@ -15,6 +16,7 @@ function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<EventFilters>({
     città: '',
@@ -49,6 +51,47 @@ function App() {
 
   const applyFilters = () => {
     let filtered = events;
+
+    // Apply search query first
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      
+      // Check for special search prefixes
+      if (query.startsWith('venue:')) {
+        const venueQuery = query.replace('venue:', '').trim();
+        filtered = filtered.filter(event => 
+          event.venue.toLowerCase().includes(venueQuery)
+        );
+      } else if (query.startsWith('city:')) {
+        const cityQuery = query.replace('city:', '').trim();
+        filtered = filtered.filter(event => 
+          event.città.toLowerCase().includes(cityQuery)
+        );
+      } else if (query.startsWith('artist:')) {
+        const artistQuery = query.replace('artist:', '').trim();
+        filtered = filtered.filter(event => 
+          event.artisti?.some(artist => 
+            artist.toLowerCase().includes(artistQuery)
+          )
+        );
+      } else {
+        // General search across all fields
+        filtered = filtered.filter(event => {
+          const searchFields = [
+            event.nome_evento,
+            event.venue,
+            event.città,
+            event.descrizione || '',
+            event.sottogenere,
+            ...(event.artisti || [])
+          ];
+          
+          return searchFields.some(field => 
+            field.toLowerCase().includes(query)
+          );
+        });
+      }
+    }
 
     if (filters.città) {
       filtered = filtered.filter(event => event.città === filters.città);
@@ -103,7 +146,7 @@ function App() {
 
   useEffect(() => {
     applyFilters();
-  }, [events, filters]);
+  }, [events, filters, searchQuery]);
 
   const handleRefresh = () => {
     setLoading(true);
@@ -112,6 +155,26 @@ function App() {
 
   const handleFiltersChange = (newFilters: EventFilters) => {
     setFilters(newFilters);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleSelectEvent = (event: Event) => {
+    // Scroll to the event in the list
+    const eventElement = document.getElementById(`event-${event.id}`);
+    if (eventElement) {
+      eventElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      });
+      // Briefly highlight the event
+      eventElement.classList.add('ring-2', 'ring-industrial-green-600');
+      setTimeout(() => {
+        eventElement.classList.remove('ring-2', 'ring-industrial-green-600');
+      }, 2000);
+    }
   };
 
   const handleAdminAccess = () => {
@@ -159,12 +222,22 @@ function App() {
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center">
               <div className="text-4xl mr-4">🎸</div>
-              <h1 className="text-4xl font-industrial text-gray-100 tracking-mega-wide">
+              <h1 className="text-3xl md:text-4xl font-industrial text-gray-100 tracking-mega-wide">
                 PROGDEALER
               </h1>
             </div>
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center text-gray-400 font-condensed uppercase tracking-wide">
+            
+            {/* Search Input - Desktop */}
+            <div className="hidden lg:block flex-1 max-w-md mx-8">
+              <SearchInput
+                events={events}
+                onSearch={handleSearch}
+                onSelectEvent={handleSelectEvent}
+              />
+            </div>
+            
+            <div className="flex items-center space-x-4 md:space-x-6">
+              <div className="hidden md:flex items-center text-gray-400 font-condensed uppercase tracking-wide">
                 <Database className="h-5 w-5 mr-2" />
                 <span className="text-lg font-bold">
                   {filteredEvents.length} EVENTS
@@ -203,6 +276,15 @@ function App() {
         </div>
       </header>
 
+      {/* Mobile Search */}
+      <div className="lg:hidden bg-coal-800 border-b border-asphalt-600 px-4 py-3">
+        <SearchInput
+          events={events}
+          onSearch={handleSearch}
+          onSelectEvent={handleSelectEvent}
+        />
+      </div>
+
       {/* Hero Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
@@ -224,6 +306,7 @@ function App() {
         {/* Filters */}
         <EventFiltersComponent
           filters={filters}
+          searchQuery={searchQuery}
           onFiltersChange={handleFiltersChange}
           uniqueLocations={uniqueLocations}
           uniqueSources={uniqueSources}

@@ -151,6 +151,7 @@ export default function EventList({ events, loading }: EventListProps) {
         return (
           <div
             key={event.id}
+            id={`event-${event.id}`}
             className="bg-white bg-opacity-10 backdrop-blur-sm border border-white border-opacity-20 rounded-lg shadow-lg hover:bg-opacity-15 hover:border-opacity-30 transition-all duration-300 overflow-hidden"
           >
             {/* Mobile Layout */}

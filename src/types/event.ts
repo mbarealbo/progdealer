@@ -21,6 +21,7 @@ export interface Event {
 export interface EventFilters {
   città: string;
   sottogenere: string;
+  searchQuery?: string;
   dataInizio: string;
   dataFine: string;
   excludedSubgenres: string[];

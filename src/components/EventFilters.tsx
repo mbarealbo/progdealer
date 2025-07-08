@@ -4,6 +4,7 @@ import { EventFilters, PROG_SUBGENRES } from '../types/event';
 
 interface EventFiltersProps {
   filters: EventFilters;
+  searchQuery?: string;
   onFiltersChange: (filters: EventFilters) => void;
   uniqueLocations: string[];
   uniqueSources: string[];
@@ -11,6 +12,7 @@ interface EventFiltersProps {
 
 export default function EventFiltersComponent({
   filters,
+  searchQuery = '',
   onFiltersChange,
   uniqueLocations,
   uniqueSources
@@ -50,7 +52,7 @@ export default function EventFiltersComponent({
 
   const activeFilterCount = Object.entries(filters).filter(([key, value]) => 
     Array.isArray(value) ? value.length > 0 : value !== ''
-  ).length;
+  ).length + (searchQuery.trim() ? 1 : 0);
 
   return (
     <div className="mb-8">
@@ -65,7 +67,7 @@ export default function EventFiltersComponent({
         </span>
         {hasActiveFilters && (
           <span className="bg-industrial-green-600 text-white px-2 py-1 text-xs font-bold rounded">
-            {activeFilterCount}
+            {activeFilterCount}{searchQuery.trim() ? ' + SEARCH' : ''}
           </span>
         )}
         {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -82,10 +84,16 @@ export default function EventFiltersComponent({
               <button
                 onClick={clearFilters}
                 className="industrial-button flex items-center text-sm"
+                title={searchQuery.trim() ? 'Clear filters (search will remain active)' : 'Clear all filters'}
               >
                 <X className="h-4 w-4 mr-2" />
-                CLEAR ALL
+                CLEAR FILTERS
               </button>
+            )}
+            {searchQuery.trim() && (
+              <div className="text-sm text-gray-400 font-condensed uppercase tracking-wide">
+                🔍 SEARCH: "{searchQuery}"
+              </div>
             )}
           </div>
           
