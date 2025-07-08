@@ -6,17 +6,31 @@ import EventImage from './EventImage';
 import ImportEvents from './ImportEvents';
 
 interface AdminPanelProps {
+  isAuthenticated: boolean;
   onClose: () => void;
   onEventUpdated: () => Promise<void>;
   onLogout: () => Promise<void>;
 }
 
-export default function AdminPanel({ onClose, onEventUpdated, onLogout }: AdminPanelProps) {
+export default function AdminPanel({ 
+  isAuthenticated,
+  onAuthRequired, 
+  onLogout, 
+  onBackToMain 
+}: AdminPanelProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [showImport, setShowImport] = useState(false);
+
+  // Check authentication on component mount
+  useEffect(() => {
+    if (!isAuthenticated) {
+      onAuthRequired();
+      return;
+    }
+  }, [isAuthenticated, onAuthRequired]);
 
   useEffect(() => {
     fetchEvents();
@@ -54,7 +68,6 @@ export default function AdminPanel({ onClose, onEventUpdated, onLogout }: AdminP
       if (error) throw error;
       
       await fetchEvents();
-      await onEventUpdated();
       
       // Dispatch custom event for real-time updates
       window.dispatchEvent(new CustomEvent('eventApproved'));
@@ -75,7 +88,6 @@ export default function AdminPanel({ onClose, onEventUpdated, onLogout }: AdminP
       if (error) throw error;
       
       await fetchEvents();
-      await onEventUpdated();
     } catch (error) {
       console.error('Error deleting event:', error);
     }
@@ -129,7 +141,6 @@ export default function AdminPanel({ onClose, onEventUpdated, onLogout }: AdminP
       case 'approved':
         return 'bg-green-600 text-white';
       case 'rejected':
-        return 'bg-red-600 text-white';
       default:
         return 'bg-gray-600 text-white';
     }
@@ -137,6 +148,20 @@ export default function AdminPanel({ onClose, onEventUpdated, onLogout }: AdminP
 
   const filteredEvents = events;
   const pendingCount = events.filter(e => e.status === 'pending').length;
+
+  // Show loading or authentication required state
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-coal-900 flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="h-16 w-16 text-industrial-green-600 mx-auto mb-4" />
+          <p className="text-gray-400 text-xl font-condensed uppercase tracking-wide">
+            AUTHENTICATION REQUIRED
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-coal-900">
@@ -146,7 +171,7 @@ export default function AdminPanel({ onClose, onEventUpdated, onLogout }: AdminP
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center space-x-4">
               <button
-                onClick={onClose}
+                onClick={onBackToMain}
                 className="industrial-button flex items-center space-x-2"
               >
                 <ArrowLeft className="h-5 w-5" />

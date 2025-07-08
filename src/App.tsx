@@ -29,7 +29,7 @@ function App() {
 
   // Get unique values for filters
   const uniqueLocations = [...new Set(events.map(event => event.città))].sort();
-  const uniqueCountries = [...new Set(events.map(event => event.country).filter(Boolean))].sort();
+  const uniqueCountries = [...new Set(events.map(event => event.country).filter((country): country is string => Boolean(country)))].sort();
 
   const fetchEvents = async () => {
     try {
