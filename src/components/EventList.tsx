@@ -65,7 +65,7 @@ export default function EventList({ events, loading }: EventListProps) {
         label: 'SCRAPED',
         icon: () => <span className="text-sm">🤖</span>,
         bgColor: 'bg-industrial-green-900',
-        textColor: 'text-industrial-green-300',
+        textColor: 'text-white',
         borderColor: 'border-industrial-green-600'
       };
     }
