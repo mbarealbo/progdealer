@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X, Check } from 'lucide-react';
+import { Plus, X, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase, classifySubgenre } from '../lib/supabase';
 import { PROG_SUBGENRES } from '../types/event';
 
@@ -9,6 +9,7 @@ interface AddEventFormProps {
 
 export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [formData, setFormData] = useState({
@@ -198,100 +199,113 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
-                SUBGENRE
-              </label>
-              <select
-                name="sottogenere"
-                value={formData.sottogenere}
-                onChange={handleChange}
-                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
-              >
-                <option value="">AUTO-DETECT FROM EVENT NAME</option>
-                {PROG_SUBGENRES.map((subgenre) => (
-                  <option key={subgenre} value={subgenre}>
-                    {subgenre.toUpperCase()}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
-                TIME INFO
-              </label>
-              <input
-                type="text"
-                name="orario"
-                value={formData.orario}
-                onChange={handleChange}
-                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
-                placeholder="e.g. DOORS 20:00, START 21:00"
-              />
-            </div>
-          </div>
-
           <div>
             <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
-              ARTISTS
+              EVENT LINK
             </label>
             <input
-              type="text"
-              name="artisti"
-              value={formData.artisti}
+              type="url"
+              name="link"
+              value={formData.link}
               onChange={handleChange}
               className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
-              placeholder="ARTIST 1, ARTIST 2, ARTIST 3"
+              placeholder="HTTPS://... (OPTIONAL)"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
-              DESCRIPTION
-            </label>
-            <textarea
-              name="descrizione"
-              value={formData.descrizione}
-              onChange={handleChange}
-              rows={3}
-              className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm resize-none"
-              placeholder="EVENT DESCRIPTION..."
-            />
+          {/* Advanced Options Toggle */}
+          <div className="pt-4 border-t border-asphalt-600">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
+            >
+              {showAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              <span className="font-condensed font-bold uppercase tracking-wide text-sm">
+                ADVANCED OPTIONS
+              </span>
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
-                EVENT LINK *
-              </label>
-              <input
-                type="url"
-                name="link"
-                value={formData.link}
-                onChange={handleChange}
-                required
-                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
-                placeholder="HTTPS://..."
-              />
-            </div>
+          {/* Advanced Options Section */}
+          {showAdvanced && (
+            <div className="space-y-4 pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                    SUBGENRE
+                  </label>
+                  <select
+                    name="sottogenere"
+                    value={formData.sottogenere}
+                    onChange={handleChange}
+                    className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+                  >
+                    <option value="">AUTO-DETECT FROM EVENT NAME</option>
+                    {PROG_SUBGENRES.map((subgenre) => (
+                      <option key={subgenre} value={subgenre}>
+                        {subgenre.toUpperCase()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <div>
-              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
-                IMAGE URL
-              </label>
-              <input
-                type="url"
-                name="immagine"
-                value={formData.immagine}
-                onChange={handleChange}
-                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
-                placeholder="HTTPS://..."
-              />
-            </div>
-          </div>
+                <div>
+                  <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                    TIME INFO
+                  </label>
+                  <input
+                    type="text"
+                    name="orario"
+                    value={formData.orario}
+                    onChange={handleChange}
+                    className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+                    placeholder="e.g. DOORS 20:00, START 21:00"
+                  />
+                </div>
+              </div>
 
+              <div>
+                <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                  ARTISTS
+                </label>
+                <input
+                  type="text"
+                  name="artisti"
+                  value={formData.artisti}
+                  onChange={handleChange}
+                  className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+                  placeholder="ARTIST 1, ARTIST 2, ARTIST 3"
+              <div>
+                <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                  DESCRIPTION
+                </label>
+                <textarea
+                  name="descrizione"
+                  value={formData.descrizione}
+                  onChange={handleChange}
+                  rows={3}
+                  className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm resize-none"
+                  placeholder="EVENT DESCRIPTION..."
+                />
+              </div>
+                />
+              <div>
+                <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                  IMAGE URL
+                </label>
+                <input
+                  type="url"
+                  name="immagine"
+                  value={formData.immagine}
+                  onChange={handleChange}
+                  className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+                  placeholder="HTTPS://..."
+                />
+              </div>
+            </div>
+          )}
+              </div>
           <div className="flex space-x-4 pt-4">
             <button
               type="button"
