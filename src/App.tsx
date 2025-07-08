@@ -62,6 +62,7 @@ function App() {
       const { data, error } = await supabase
         .from('eventi_prog')
         .select('*')
+        .eq('status', 'approved')
         .order('data_ora', { ascending: true });
 
       if (error) throw error;

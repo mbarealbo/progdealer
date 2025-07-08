@@ -120,11 +120,11 @@ export default function EventList({ events, loading }: EventListProps) {
   const getSourceBadge = (fonte: string, tipo_inserimento: string) => {
     if (tipo_inserimento === 'manual') {
       return {
-        label: 'MANUAL',
-        emoji: '👤',
-        bgColor: 'bg-amber-100',
-        textColor: 'text-amber-800',
-        borderColor: 'border-amber-300'
+        label: 'SUBMITTED BY USER',
+        emoji: '🧑‍🤝‍🧑',
+        bgColor: 'bg-blue-100',
+        textColor: 'text-blue-800',
+        borderColor: 'border-blue-300'
       };
     } else {
       return {
