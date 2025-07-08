@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Music, Database, RefreshCw, Shield } from 'lucide-react';
+import { Music, Database, RefreshCw, Shield, Menu, X } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { Event, EventFilters } from './types/event';
 import EventList from './components/EventList';
@@ -14,6 +14,7 @@ function App() {
   const [currentView, setCurrentView] = useState<'events' | 'admin'>('events');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -266,6 +267,14 @@ function App() {
     setCurrentView('events');
   };
 
+  const toggleMobileMenu = () => {
+    setShowMobileMenu(!showMobileMenu);
+  };
+
+  const closeMobileMenu = () => {
+    setShowMobileMenu(false);
+  };
+
   // Get pending events count for admin badge
   const pendingCount = events.filter(event => (event.status || 'approved') === 'pending').length;
 
@@ -285,16 +294,16 @@ function App() {
       {/* Header */}
       <header className="bg-coal-800 border-b-2 border-asphalt-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+          <div className="flex items-center justify-between h-16 lg:h-20">
             <div className="flex items-center">
-              <div className="text-4xl mr-4">🎸</div>
-              <h1 className="text-3xl md:text-4xl font-industrial text-gray-100 tracking-mega-wide">
+              <div className="text-3xl lg:text-4xl mr-3 lg:mr-4">🎸</div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-industrial text-gray-100 tracking-mega-wide leading-tight sm:leading-normal">
                 PROGDEALER
               </h1>
             </div>
             
             {/* Search Input - Desktop */}
-            <div className="hidden lg:block flex-1 max-w-md mx-8">
+            <div className="hidden lg:block flex-1 max-w-md mx-6 xl:mx-8">
               <SearchInput
                 events={events}
                 onSearch={handleSearch}
@@ -302,7 +311,20 @@ function App() {
               />
             </div>
             
-            <div className="flex items-center space-x-4 md:space-x-6">
+            <div className="hidden lg:flex items-center space-x-4 xl:space-x-6">
+              <div className="flex items-center text-gray-400 font-condensed uppercase tracking-wide">
+                <Database className="h-5 w-5 mr-2" />
+                <span className="text-lg font-bold">
+                  {filteredEvents.length} EVENTS
+                </span>
+              </div>
+              <button
+                onClick={handleRefresh}
+                className="industrial-button"
+                title="REFRESH EVENTS"
+              >
+                <RefreshCw className="h-5 w-5" />
+              </button>
               <button
                 onClick={handleAdminAccess}
                 className="industrial-button flex items-center space-x-2"
@@ -325,8 +347,92 @@ function App() {
                 </button>
               )}
             </div>
+
+            {/* Mobile Menu Button */}
+            <div className="lg:hidden">
+              <button
+                onClick={toggleMobileMenu}
+                className="industrial-button p-2"
+                title="MENU"
+              >
+                {showMobileMenu ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {showMobileMenu && (
+          <div className="lg:hidden bg-coal-900 border-t border-asphalt-600">
+            <div className="px-4 py-4 space-y-4">
+              {/* Mobile Search */}
+              <div>
+                <SearchInput
+                  events={events}
+                  onSearch={(query) => {
+                    handleSearch(query);
+                    closeMobileMenu();
+                  }}
+                  onSelectEvent={(event) => {
+                    handleSelectEvent(event);
+                    closeMobileMenu();
+                  }}
+                />
+              </div>
+
+              {/* Mobile Stats and Controls */}
+              <div className="flex items-center justify-between py-2 border-t border-asphalt-600">
+                <div className="flex items-center text-gray-400 font-condensed uppercase tracking-wide text-sm">
+                  <Database className="h-4 w-4 mr-2" />
+                  <span className="font-bold">
+                    {filteredEvents.length} EVENTS
+                  </span>
+                  {filteredEvents.length !== events.length && (
+                    <span className="text-gray-500 ml-1">
+                      / {events.length}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => {
+                    handleRefresh();
+                    closeMobileMenu();
+                  }}
+                </button>
+
+                {/* Admin Button */}
+                <button
+                  onClick={() => {
+                    handleAdminAccess();
+                    closeMobileMenu();
+                  }}
+                  className="w-full flex items-center justify-center space-x-2 bg-transparent border-2 border-asphalt-500 text-gray-300 px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:border-industrial-green-500 hover:text-white transition-all duration-200"
+                >
+                  <Shield className="h-5 w-5" />
+                  <span>ADMIN PANEL</span>
+                  {pendingCount > 0 && (
+                    <span className="bg-yellow-600 text-black px-2 py-1 text-xs font-bold rounded ml-2">
+                      {pendingCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Logout Button - Only show if authenticated */}
+                {isAuthenticated && (
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      closeMobileMenu();
+                    }}
+                    className="w-full flex items-center justify-center space-x-2 bg-transparent border-2 border-burgundy-500 text-burgundy-300 px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:border-burgundy-400 hover:text-white transition-all duration-200"
+                  >
+                    <span>LOGOUT</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Mobile Search */}
@@ -355,7 +461,7 @@ function App() {
         <div className="hero-video-overlay"></div>
         
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h2 className="text-6xl font-rock-salt text-gray-100 mb-6 tracking-wide relative z-30">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-rock-salt text-gray-100 mb-6 tracking-wide relative z-30 leading-relaxed sm:leading-relaxed lg:leading-normal">
             PROG EVENTS
           </h2>
           <div className="w-32 h-1 bg-industrial-green-600 mx-auto mb-6 relative z-30"></div>
@@ -378,52 +484,6 @@ function App() {
           uniqueLocations={uniqueLocations}
           uniqueCountries={uniqueCountries}
         />
-
-        {/* Compact Events Info */}
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-sm">
-          {/* Event Count */}
-          <div className="flex items-center text-gray-400 font-condensed uppercase tracking-wide">
-            <Database className="h-4 w-4 mr-2" />
-            <span className="font-bold">
-              {filteredEvents.length} EVENTS
-            </span>
-            {filteredEvents.length !== events.length && (
-              <span className="text-gray-500 ml-1">
-                / {events.length}
-              </span>
-            )}
-          </div>
-
-          {/* Right side controls */}
-          <div className="flex items-center space-x-4">
-            {/* Last Updated */}
-            {lastUpdated && (
-              <div className="flex items-center text-gray-500 font-condensed text-xs uppercase tracking-wide">
-                <span className="mr-1">⏱️</span>
-                <span>
-                  {lastUpdated.toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    hour12: false 
-                  })}
-                </span>
-              </div>
-            )}
-
-            {/* Reload Button */}
-            <button
-              onClick={handleRefresh}
-              disabled={loading}
-              className="flex items-center space-x-1 text-gray-400 hover:text-white transition-colors duration-200"
-              title="REFRESH EVENTS"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              <span className="text-xs font-condensed font-bold uppercase tracking-wide">
-                {loading ? 'UPDATING...' : 'REFRESH'}
-              </span>
-            </button>
-          </div>
-        </div>
 
         {/* Events List */}
         <EventList events={filteredEvents} loading={loading} />
