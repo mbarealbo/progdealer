@@ -355,7 +355,7 @@ function App() {
         <div className="hero-video-overlay"></div>
         
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h2 className="text-6xl font-rock-salt text-gray-100 mb-6 tracking-wide relative z-30">
+          <h2 className="text-4xl sm:text-6xl font-rock-salt text-gray-100 mb-6 tracking-wide relative z-30 leading-normal sm:leading-tight">
             PROG EVENTS
           </h2>
           <div className="w-32 h-1 bg-industrial-green-600 mx-auto mb-6 relative z-30"></div>
