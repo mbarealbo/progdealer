@@ -72,7 +72,7 @@ export default function EventList({ events, loading }: EventListProps) {
   };
 
   const getSubgenreIcon = (sottogenere: string) => {
-    const subgenre = sottogenere.toLowerCase();
+    const subgenre = (sottogenere || 'Progressive').toLowerCase();
     if (subgenre.includes('metal')) return '🤘';
     if (subgenre.includes('kraut')) return '🇩🇪';
     if (subgenre.includes('space')) return '🚀';
