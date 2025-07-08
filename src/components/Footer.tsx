@@ -1,7 +1,12 @@
 import React from 'react';
-import { Music, Heart, Globe } from 'lucide-react';
+import { Music, Heart, Globe, Shield } from 'lucide-react';
 
-export default function Footer() {
+interface FooterProps {
+  onAdminAccess?: () => void;
+  pendingCount?: number;
+}
+
+export default function Footer({ onAdminAccess, pendingCount = 0 }: FooterProps) {
   return (
     <footer className="bg-coal-800 border-t-2 border-asphalt-600 mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -29,6 +34,23 @@ export default function Footer() {
               <Globe className="h-4 w-4" />
               <span className="uppercase tracking-wide">Europa</span>
             </div>
+            
+            {/* Admin Access - Mobile */}
+            {onAdminAccess && (
+              <button
+                onClick={onAdminAccess}
+                className="flex items-center space-x-2 text-gray-400 hover:text-industrial-green-400 transition-colors duration-200 md:hidden"
+                title="ADMIN PANEL"
+              >
+                <Shield className="h-4 w-4" />
+                {pendingCount > 0 && (
+                  <span className="bg-yellow-600 text-black px-2 py-1 text-xs font-bold rounded">
+                    {pendingCount}
+                  </span>
+                )}
+                <span className="uppercase tracking-wide text-xs">Admin</span>
+              </button>
+            )}
           </div>
 
           {/* Copyright */}
@@ -36,6 +58,23 @@ export default function Footer() {
             <span className="uppercase tracking-wide">Made with</span>
             <Heart className="h-3 w-3 text-burgundy-500" />
             <span className="uppercase tracking-wide">for Prog Culture</span>
+            
+            {/* Admin Access - Desktop (alternative location) */}
+            {onAdminAccess && (
+              <button
+                onClick={onAdminAccess}
+                className="hidden md:flex items-center space-x-1 text-gray-500 hover:text-industrial-green-400 transition-colors duration-200 ml-4"
+                title="ADMIN PANEL"
+              >
+                <Shield className="h-3 w-3" />
+                {pendingCount > 0 && (
+                  <span className="bg-yellow-600 text-black px-1 py-0.5 text-xs font-bold rounded">
+                    {pendingCount}
+                  </span>
+                )}
+                <span className="uppercase tracking-wide">Admin</span>
+              </button>
+            )}
           </div>
         </div>
 
