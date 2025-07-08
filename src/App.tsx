@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Music, Database, RefreshCw } from 'lucide-react';
+import { Music, Database, RefreshCw, Shield } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { Event, EventFilters } from './types/event';
 import EventList from './components/EventList';
 import EventFiltersComponent from './components/EventFilters';
 import AddEventForm from './components/AddEventForm';
 import ImportEvents from './components/ImportEvents';
+import AdminPanel from './components/AdminPanel';
+import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
 
 function App() {
+  const [currentView, setCurrentView] = useState<'events' | 'admin'>('events');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,7 +94,13 @@ function App() {
 
   useEffect(() => {
     fetchEvents();
+    checkAuthStatus();
   }, []);
+
+  const checkAuthStatus = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setIsAuthenticated(!!session);
+  };
 
   useEffect(() => {
     applyFilters();
@@ -103,6 +114,37 @@ function App() {
   const handleFiltersChange = (newFilters: EventFilters) => {
     setFilters(newFilters);
   };
+
+  const handleAdminAccess = () => {
+    if (isAuthenticated) {
+      setCurrentView('admin');
+    } else {
+      setShowAuthModal(true);
+    }
+  };
+
+  const handleAuthenticated = () => {
+    setIsAuthenticated(true);
+    setCurrentView('admin');
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsAuthenticated(false);
+    setCurrentView('events');
+  };
+
+  // Get pending events count for admin badge
+  const pendingCount = events.filter(event => (event.status || 'approved') === 'pending').length;
+
+  if (currentView === 'admin') {
+    return (
+      <AdminPanel 
+        isAuthenticated={isAuthenticated}
+        onAuthRequired={() => setShowAuthModal(true)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-coal-900 bg-noise">
@@ -130,6 +172,27 @@ function App() {
               >
                 <RefreshCw className="h-5 w-5" />
               </button>
+              <button
+                onClick={handleAdminAccess}
+                className="industrial-button flex items-center space-x-2"
+                title="ADMIN PANEL"
+              >
+                <Shield className="h-5 w-5" />
+                {pendingCount > 0 && (
+                  <span className="bg-yellow-600 text-black px-2 py-1 text-xs font-bold rounded">
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+              {isAuthenticated && (
+                <button
+                  onClick={handleLogout}
+                  className="industrial-button text-sm"
+                  title="LOGOUT"
+                >
+                  LOGOUT
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -174,6 +237,13 @@ function App() {
 
       {/* Footer */}
       <Footer />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onAuthenticated={handleAuthenticated}
+      />
     </div>
   );
 }

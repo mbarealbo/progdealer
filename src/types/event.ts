@@ -13,6 +13,7 @@ export interface Event {
   fonte: string;
   tipo_inserimento: 'scraped' | 'manual';
   event_id?: string;
+  status?: 'pending' | 'approved' | 'rejected';
   created_at: string;
   updated_at: string;
 }
