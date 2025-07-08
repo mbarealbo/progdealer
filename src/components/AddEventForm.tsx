@@ -46,8 +46,8 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
         sottogenere: finalSubgenre,
         descrizione: formData.descrizione || null,
         artisti: artists.filter(artist => artist.trim() !== '').length > 0 
-          ? artists.filter(artist => artist.trim() !== '') 
-          : null,
+          ? artists.filter(artist => artist.trim() !== '')
+          : [],
         orario: formData.orario || null,
         link: formData.link || null,
         immagine: formData.immagine || null,

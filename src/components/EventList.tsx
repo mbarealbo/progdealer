@@ -167,7 +167,7 @@ export default function EventList({ events, loading }: EventListProps) {
                     <span className="text-base mr-2">👥</span>
                     <div>
                       <span className="text-xs uppercase tracking-wide text-gray-500 block">ARTISTS</span>
-                      <span>{event.artisti.join(', ')}</span>
+                      <span>{event.artisti?.join(', ') || 'N/A'}</span>
                     </div>
                   </div>
                 )}
@@ -257,7 +257,12 @@ export default function EventList({ events, loading }: EventListProps) {
                         <span className="text-base mr-2">👥</span>
                         <div>
                           <span className="text-xs uppercase tracking-wide text-gray-500 block">ARTISTS</span>
-                          <span className="text-xs">{event.artisti.slice(0, 2).join(', ')}{event.artisti.length > 2 ? '...' : ''}</span>
+                          <span className="text-xs">
+                            {event.artisti && event.artisti.length > 0 
+                              ? `${event.artisti.slice(0, 2).join(', ')}${event.artisti.length > 2 ? '...' : ''}` 
+                              : 'N/A'
+                            }
+                          </span>
                         </div>
                       </div>
                     )}
