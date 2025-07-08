@@ -18,6 +18,7 @@ function App() {
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [filters, setFilters] = useState<EventFilters>({
     città: '',
     sottogenere: '',
@@ -29,7 +30,33 @@ function App() {
 
   // Get unique values for filters
   const uniqueLocations = [...new Set(events.map(event => event.città))].sort();
-  const uniqueCountries = [...new Set(events.map(event => event.country).filter((country): country is string => Boolean(country)))].sort();
+  const uniqueCountries = [...new Set(events.map(event => {
+    // Extract country from city data or use a mapping
+    // For now, we'll extract from existing city names or use a simple mapping
+    const city = event.città.toLowerCase();
+    
+    // Simple country mapping based on common European cities
+    if (city.includes('london') || city.includes('manchester') || city.includes('birmingham') || city.includes('liverpool') || city.includes('bristol') || city.includes('leeds') || city.includes('glasgow') || city.includes('edinburgh')) return 'United Kingdom';
+    if (city.includes('paris') || city.includes('lyon') || city.includes('marseille') || city.includes('toulouse') || city.includes('nice') || city.includes('nantes') || city.includes('strasbourg') || city.includes('montpellier') || city.includes('bordeaux') || city.includes('lille')) return 'France';
+    if (city.includes('berlin') || city.includes('munich') || city.includes('hamburg') || city.includes('cologne') || city.includes('frankfurt') || city.includes('stuttgart') || city.includes('düsseldorf') || city.includes('dortmund') || city.includes('essen') || city.includes('leipzig')) return 'Germany';
+    if (city.includes('rome') || city.includes('milan') || city.includes('naples') || city.includes('turin') || city.includes('palermo') || city.includes('genoa') || city.includes('bologna') || city.includes('florence') || city.includes('bari') || city.includes('catania')) return 'Italy';
+    if (city.includes('madrid') || city.includes('barcelona') || city.includes('valencia') || city.includes('seville') || city.includes('zaragoza') || city.includes('málaga') || city.includes('murcia') || city.includes('palma') || city.includes('bilbao') || city.includes('alicante')) return 'Spain';
+    if (city.includes('amsterdam') || city.includes('rotterdam') || city.includes('the hague') || city.includes('utrecht') || city.includes('eindhoven') || city.includes('tilburg') || city.includes('groningen') || city.includes('almere') || city.includes('breda') || city.includes('nijmegen')) return 'Netherlands';
+    if (city.includes('brussels') || city.includes('antwerp') || city.includes('ghent') || city.includes('charleroi') || city.includes('liège') || city.includes('bruges') || city.includes('namur') || city.includes('leuven') || city.includes('mons') || city.includes('aalst')) return 'Belgium';
+    if (city.includes('zurich') || city.includes('geneva') || city.includes('basel') || city.includes('bern') || city.includes('lausanne') || city.includes('winterthur') || city.includes('lucerne') || city.includes('st. gallen') || city.includes('lugano') || city.includes('biel')) return 'Switzerland';
+    if (city.includes('vienna') || city.includes('graz') || city.includes('linz') || city.includes('salzburg') || city.includes('innsbruck') || city.includes('klagenfurt') || city.includes('villach') || city.includes('wels') || city.includes('sankt pölten') || city.includes('dornbirn')) return 'Austria';
+    if (city.includes('prague') || city.includes('brno') || city.includes('ostrava') || city.includes('plzen') || city.includes('liberec') || city.includes('olomouc') || city.includes('budweis') || city.includes('hradec králové') || city.includes('ústí nad labem') || city.includes('pardubice')) return 'Czech Republic';
+    if (city.includes('warsaw') || city.includes('krakow') || city.includes('lodz') || city.includes('wroclaw') || city.includes('poznan') || city.includes('gdansk') || city.includes('szczecin') || city.includes('bydgoszcz') || city.includes('lublin') || city.includes('katowice')) return 'Poland';
+    if (city.includes('stockholm') || city.includes('gothenburg') || city.includes('malmö') || city.includes('uppsala') || city.includes('västerås') || city.includes('örebro') || city.includes('linköping') || city.includes('helsingborg') || city.includes('jönköping') || city.includes('norrköping')) return 'Sweden';
+    if (city.includes('copenhagen') || city.includes('aarhus') || city.includes('odense') || city.includes('aalborg') || city.includes('esbjerg') || city.includes('randers') || city.includes('kolding') || city.includes('horsens') || city.includes('vejle') || city.includes('roskilde')) return 'Denmark';
+    if (city.includes('oslo') || city.includes('bergen') || city.includes('trondheim') || city.includes('stavanger') || city.includes('drammen') || city.includes('fredrikstad') || city.includes('kristiansand') || city.includes('sandnes') || city.includes('tromsø') || city.includes('sarpsborg')) return 'Norway';
+    if (city.includes('helsinki') || city.includes('espoo') || city.includes('tampere') || city.includes('vantaa') || city.includes('oulu') || city.includes('turku') || city.includes('jyväskylä') || city.includes('lahti') || city.includes('kuopio') || city.includes('pori')) return 'Finland';
+    if (city.includes('dublin') || city.includes('cork') || city.includes('limerick') || city.includes('galway') || city.includes('waterford') || city.includes('drogheda') || city.includes('dundalk') || city.includes('swords') || city.includes('bray') || city.includes('navan')) return 'Ireland';
+    if (city.includes('lisbon') || city.includes('porto') || city.includes('vila nova de gaia') || city.includes('amadora') || city.includes('braga') || city.includes('funchal') || city.includes('coimbra') || city.includes('setúbal') || city.includes('almada') || city.includes('agualva-cacém')) return 'Portugal';
+    
+    // Default fallback - try to extract from city name or return "Other"
+    return 'Other';
+  }))].filter(country => country !== 'Other').sort();
 
   const fetchEvents = async () => {
     try {
@@ -45,6 +72,7 @@ function App() {
         (event.status || 'approved') === 'approved'
       );
       setEvents(approvedEvents);
+      setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching events:', error);
     } finally {
@@ -106,7 +134,8 @@ function App() {
 
     if (filters.countries && filters.countries.length > 0) {
       filtered = filtered.filter(event => {
-        return filters.countries.includes(event.country || '');
+        const eventCountry = getEventCountry(event.città);
+        return filters.countries.includes(eventCountry);
       });
     }
 
@@ -167,6 +196,31 @@ function App() {
 
   const handleFiltersChange = (newFilters: EventFilters) => {
     setFilters(newFilters);
+  };
+
+  // Helper function to get country from city
+  const getEventCountry = (city: string): string => {
+    const cityLower = city.toLowerCase();
+    
+    if (cityLower.includes('london') || cityLower.includes('manchester') || cityLower.includes('birmingham') || cityLower.includes('liverpool') || cityLower.includes('bristol') || cityLower.includes('leeds') || cityLower.includes('glasgow') || cityLower.includes('edinburgh')) return 'United Kingdom';
+    if (cityLower.includes('paris') || cityLower.includes('lyon') || cityLower.includes('marseille') || cityLower.includes('toulouse') || cityLower.includes('nice') || cityLower.includes('nantes') || cityLower.includes('strasbourg') || cityLower.includes('montpellier') || cityLower.includes('bordeaux') || cityLower.includes('lille')) return 'France';
+    if (cityLower.includes('berlin') || cityLower.includes('munich') || cityLower.includes('hamburg') || cityLower.includes('cologne') || cityLower.includes('frankfurt') || cityLower.includes('stuttgart') || cityLower.includes('düsseldorf') || cityLower.includes('dortmund') || cityLower.includes('essen') || cityLower.includes('leipzig')) return 'Germany';
+    if (cityLower.includes('rome') || cityLower.includes('milan') || cityLower.includes('naples') || cityLower.includes('turin') || cityLower.includes('palermo') || cityLower.includes('genoa') || cityLower.includes('bologna') || cityLower.includes('florence') || cityLower.includes('bari') || cityLower.includes('catania')) return 'Italy';
+    if (cityLower.includes('madrid') || cityLower.includes('barcelona') || cityLower.includes('valencia') || cityLower.includes('seville') || cityLower.includes('zaragoza') || cityLower.includes('málaga') || cityLower.includes('murcia') || cityLower.includes('palma') || cityLower.includes('bilbao') || cityLower.includes('alicante')) return 'Spain';
+    if (cityLower.includes('amsterdam') || cityLower.includes('rotterdam') || cityLower.includes('the hague') || cityLower.includes('utrecht') || cityLower.includes('eindhoven') || cityLower.includes('tilburg') || cityLower.includes('groningen') || cityLower.includes('almere') || cityLower.includes('breda') || cityLower.includes('nijmegen')) return 'Netherlands';
+    if (cityLower.includes('brussels') || cityLower.includes('antwerp') || cityLower.includes('ghent') || cityLower.includes('charleroi') || cityLower.includes('liège') || cityLower.includes('bruges') || cityLower.includes('namur') || cityLower.includes('leuven') || cityLower.includes('mons') || cityLower.includes('aalst')) return 'Belgium';
+    if (cityLower.includes('zurich') || cityLower.includes('geneva') || cityLower.includes('basel') || cityLower.includes('bern') || cityLower.includes('lausanne') || cityLower.includes('winterthur') || cityLower.includes('lucerne') || cityLower.includes('st. gallen') || cityLower.includes('lugano') || cityLower.includes('biel')) return 'Switzerland';
+    if (cityLower.includes('vienna') || cityLower.includes('graz') || cityLower.includes('linz') || cityLower.includes('salzburg') || cityLower.includes('innsbruck') || cityLower.includes('klagenfurt') || cityLower.includes('villach') || cityLower.includes('wels') || cityLower.includes('sankt pölten') || cityLower.includes('dornbirn')) return 'Austria';
+    if (cityLower.includes('prague') || cityLower.includes('brno') || cityLower.includes('ostrava') || cityLower.includes('plzen') || cityLower.includes('liberec') || cityLower.includes('olomouc') || cityLower.includes('budweis') || cityLower.includes('hradec králové') || cityLower.includes('ústí nad labem') || cityLower.includes('pardubice')) return 'Czech Republic';
+    if (cityLower.includes('warsaw') || cityLower.includes('krakow') || cityLower.includes('lodz') || cityLower.includes('wroclaw') || cityLower.includes('poznan') || cityLower.includes('gdansk') || cityLower.includes('szczecin') || cityLower.includes('bydgoszcz') || cityLower.includes('lublin') || cityLower.includes('katowice')) return 'Poland';
+    if (cityLower.includes('stockholm') || cityLower.includes('gothenburg') || cityLower.includes('malmö') || cityLower.includes('uppsala') || cityLower.includes('västerås') || cityLower.includes('örebro') || cityLower.includes('linköping') || cityLower.includes('helsingborg') || cityLower.includes('jönköping') || cityLower.includes('norrköping')) return 'Sweden';
+    if (cityLower.includes('copenhagen') || cityLower.includes('aarhus') || cityLower.includes('odense') || cityLower.includes('aalborg') || cityLower.includes('esbjerg') || cityLower.includes('randers') || cityLower.includes('kolding') || cityLower.includes('horsens') || cityLower.includes('vejle') || cityLower.includes('roskilde')) return 'Denmark';
+    if (cityLower.includes('oslo') || cityLower.includes('bergen') || cityLower.includes('trondheim') || cityLower.includes('stavanger') || cityLower.includes('drammen') || cityLower.includes('fredrikstad') || cityLower.includes('kristiansand') || cityLower.includes('sandnes') || cityLower.includes('tromsø') || cityLower.includes('sarpsborg')) return 'Norway';
+    if (cityLower.includes('helsinki') || cityLower.includes('espoo') || cityLower.includes('tampere') || cityLower.includes('vantaa') || cityLower.includes('oulu') || cityLower.includes('turku') || cityLower.includes('jyväskylä') || cityLower.includes('lahti') || cityLower.includes('kuopio') || cityLower.includes('pori')) return 'Finland';
+    if (cityLower.includes('dublin') || cityLower.includes('cork') || cityLower.includes('limerick') || cityLower.includes('galway') || cityLower.includes('waterford') || cityLower.includes('drogheda') || cityLower.includes('dundalk') || cityLower.includes('swords') || cityLower.includes('bray') || cityLower.includes('navan')) return 'Ireland';
+    if (cityLower.includes('lisbon') || cityLower.includes('porto') || cityLower.includes('vila nova de gaia') || cityLower.includes('amadora') || cityLower.includes('braga') || cityLower.includes('funchal') || cityLower.includes('coimbra') || cityLower.includes('setúbal') || cityLower.includes('almada') || cityLower.includes('agualva-cacém')) return 'Portugal';
+    
+    return 'Other';
   };
 
   const handleSearch = (query: string) => {
@@ -249,19 +303,6 @@ function App() {
             </div>
             
             <div className="flex items-center space-x-4 md:space-x-6">
-              <div className="hidden md:flex items-center text-gray-400 font-condensed uppercase tracking-wide">
-                <Database className="h-5 w-5 mr-2" />
-                <span className="text-lg font-bold">
-                  {filteredEvents.length} EVENTS
-                </span>
-              </div>
-              <button
-                onClick={handleRefresh}
-                className="industrial-button"
-                title="REFRESH EVENTS"
-              >
-                <RefreshCw className="h-5 w-5" />
-              </button>
               <button
                 onClick={handleAdminAccess}
                 className="industrial-button flex items-center space-x-2"
@@ -298,16 +339,30 @@ function App() {
       </div>
 
       {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-6xl font-industrial text-gray-100 mb-6 tracking-ultra-wide">
+      <section className="hero-video-container py-20 px-4 sm:px-6 lg:px-8">
+        {/* Video Background */}
+        <video
+          className="hero-video-background"
+          autoPlay
+          muted
+          loop
+          playsInline
+        >
+          <source src="/progv.mp4" type="video/mp4" />
+        </video>
+        
+        {/* Video Overlay */}
+        <div className="hero-video-overlay"></div>
+        
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <h2 className="text-6xl font-rock-salt text-gray-100 mb-6 tracking-wide relative z-30">
             PROG EVENTS
           </h2>
-          <div className="w-32 h-1 bg-industrial-green-600 mx-auto mb-6"></div>
-          <p className="text-gray-400 text-xl font-condensed uppercase tracking-wide mb-4">
+          <div className="w-32 h-1 bg-industrial-green-600 mx-auto mb-6 relative z-30"></div>
+          <p className="text-gray-400 text-xl font-condensed uppercase tracking-wide mb-4 relative z-30">
             PROGRESSIVE MUSIC CULTURE DATABASE
           </p>
-          <p className="text-gray-300 text-lg font-condensed max-w-2xl mx-auto leading-relaxed">
+          <p className="text-gray-300 text-lg font-condensed max-w-2xl mx-auto leading-relaxed relative z-30">
             Europe's best progressive music events, all in one place.
           </p>
         </div>
@@ -323,6 +378,52 @@ function App() {
           uniqueLocations={uniqueLocations}
           uniqueCountries={uniqueCountries}
         />
+
+        {/* Compact Events Info */}
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-sm">
+          {/* Event Count */}
+          <div className="flex items-center text-gray-400 font-condensed uppercase tracking-wide">
+            <Database className="h-4 w-4 mr-2" />
+            <span className="font-bold">
+              {filteredEvents.length} EVENTS
+            </span>
+            {filteredEvents.length !== events.length && (
+              <span className="text-gray-500 ml-1">
+                / {events.length}
+              </span>
+            )}
+          </div>
+
+          {/* Right side controls */}
+          <div className="flex items-center space-x-4">
+            {/* Last Updated */}
+            {lastUpdated && (
+              <div className="flex items-center text-gray-500 font-condensed text-xs uppercase tracking-wide">
+                <span className="mr-1">⏱️</span>
+                <span>
+                  {lastUpdated.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: false 
+                  })}
+                </span>
+              </div>
+            )}
+
+            {/* Reload Button */}
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="flex items-center space-x-1 text-gray-400 hover:text-white transition-colors duration-200"
+              title="REFRESH EVENTS"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <span className="text-xs font-condensed font-bold uppercase tracking-wide">
+                {loading ? 'UPDATING...' : 'REFRESH'}
+              </span>
+            </button>
+          </div>
+        </div>
 
         {/* Events List */}
         <EventList events={filteredEvents} loading={loading} />

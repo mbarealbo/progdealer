@@ -21,7 +21,6 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
     data_ora: '',
     venue: '',
     città: '',
-    country: '',
     sottogenere: '',
     descrizione: '',
     orario: '',
@@ -55,7 +54,6 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
         orario: formData.orario || null,
         link: formData.link || null,
         immagine: formData.immagine?.trim() || null,
-        country: cityData?.country || null,
         fonte: 'manual-submission',
         tipo_inserimento: 'manual' as const,
         status: 'pending'
@@ -73,7 +71,6 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
         data_ora: '',
         venue: '',
         città: '',
-        country: '',
         sottogenere: '',
         descrizione: '',
         orario: '',
@@ -221,7 +218,6 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
                   setFormData({ ...formData, città: value });
                   if (data) {
                     setCityData({ city: data.city, region: data.region, country: data.country });
-                    setFormData(prev => ({ ...prev, country: data.country }));
                   }
                 }}
                 required

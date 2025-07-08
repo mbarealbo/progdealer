@@ -60,7 +60,6 @@ export default function EventFiltersComponent({
     
     handleFilterChange('countries', newCountries);
   };
-
   return (
     <div className="mb-8">
       {/* Filter Toggle Button */}

@@ -4,7 +4,6 @@ export interface Event {
   data_ora: string;
   venue: string;
   città: string;
-  country?: string;
   sottogenere: string;
   descrizione?: string;
   artisti?: string[] | null;
@@ -22,6 +21,7 @@ export interface Event {
 export interface EventFilters {
   città: string;
   sottogenere: string;
+  searchQuery?: string;
   dataInizio: string;
   dataFine: string;
   excludedSubgenres: string[];
@@ -33,10 +33,9 @@ export interface ImportEvent {
   data_ora: string;
   venue: string;
   città: string;
-  country?: string;
   sottogenere?: string;
   descrizione?: string;
-  artisti?: string[];
+  artisti?: string[] | null;
   orario?: string;
   link: string;
   immagine?: string;
