@@ -7,9 +7,9 @@ import ImportEvents from './ImportEvents';
 
 interface AdminPanelProps {
   isAuthenticated: boolean;
-  onClose: () => void;
-  onEventUpdated: () => Promise<void>;
+  onAuthRequired: () => void;
   onLogout: () => Promise<void>;
+  onBackToMain: () => void;
 }
 
 export default function AdminPanel({ 
@@ -70,7 +70,7 @@ export default function AdminPanel({
       await fetchEvents();
       
       // Dispatch custom event for real-time updates
-      window.dispatchEvent(new CustomEvent('eventApproved'));
+      window.dispatchEvent(new CustomEvent('eventUpdated'));
     } catch (error) {
       console.error('Error updating event status:', error);
     }
@@ -362,8 +362,9 @@ export default function AdminPanel({
         <ImportEvents
           onEventsImported={() => {
             fetchEvents();
-            onEventUpdated();
             setShowImport(false);
+            // Dispatch custom event for real-time updates
+            window.dispatchEvent(new CustomEvent('eventUpdated'));
           }}
         />
       )}
