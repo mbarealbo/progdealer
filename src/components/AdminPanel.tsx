@@ -1010,21 +1010,21 @@ function EventDetailsModal({
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => onStatusChange(event.id, 'approved')}
-                    className="bg-industrial-green-800 border-2 border-industrial-green-600 text-white px-3 py-1 text-sm font-condensed font-bold uppercase tracking-wide hover:bg-industrial-green-700 transition-all duration-200 flex items-center space-x-1"
+                    className="bg-industrial-green-800 border-2 border-industrial-green-600 text-white px-3 py-1 text-sm font-condensed font-bold uppercase tracking-wide hover:bg-industrial-green-700 transition-all duration-200 flex items-center space-x-1 disabled:opacity-50"
                   >
                     <Check className="h-4 w-4" />
                     <span>APPROVE</span>
                   </button>
                   <button
                     onClick={() => onStatusChange(event.id, 'rejected')}
-                    className="bg-burgundy-800 border-2 border-burgundy-600 text-white px-3 py-1 text-sm font-condensed font-bold uppercase tracking-wide hover:bg-burgundy-700 transition-all duration-200 flex items-center space-x-1"
+                    className="bg-burgundy-800 border-2 border-burgundy-600 text-white px-3 py-1 text-sm font-condensed font-bold uppercase tracking-wide hover:bg-burgundy-700 transition-all duration-200 flex items-center space-x-1 disabled:opacity-50"
                   >
                     <X className="h-4 w-4" />
                     <span>REJECT</span>
                   </button>
                   <button
                     onClick={() => onStatusChange(event.id, 'pending')}
-                    className="bg-yellow-800 border-2 border-yellow-600 text-white px-3 py-1 text-sm font-condensed font-bold uppercase tracking-wide hover:bg-yellow-700 transition-all duration-200"
+                    className="bg-yellow-800 border-2 border-yellow-600 text-white px-3 py-1 text-sm font-condensed font-bold uppercase tracking-wide hover:bg-yellow-700 transition-all duration-200 disabled:opacity-50"
                   >
                     PENDING
                   </button>
