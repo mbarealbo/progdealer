@@ -150,13 +150,13 @@ export default function EventList({ events, loading }: EventListProps) {
         return (
           <div
             key={event.id}
-            className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+            className="bg-white bg-opacity-10 backdrop-blur-sm border border-white border-opacity-20 rounded-lg shadow-lg hover:bg-opacity-15 hover:border-opacity-30 transition-all duration-300 overflow-hidden"
           >
             {/* Mobile Layout */}
             <div className="block md:hidden p-6">
               <div className="flex space-x-4 mb-4">
                 {/* Event Image */}
-                <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <div className="w-24 h-24 bg-black bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden border border-white border-opacity-10">
                   {event.immagine ? (
                     <img 
                       src={event.immagine} 
@@ -169,30 +169,30 @@ export default function EventList({ events, loading }: EventListProps) {
                 </div>
                 
                 {/* Date Card */}
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center min-w-[80px]">
-                  <div className="text-2xl font-bold text-gray-900 leading-none">
+                <div className="bg-white bg-opacity-15 backdrop-blur-sm border border-white border-opacity-20 rounded-lg p-3 text-center min-w-[80px]">
+                  <div className="text-2xl font-bold text-gray-100 leading-none">
                     {dateInfo.day}
                   </div>
-                  <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                  <div className="text-sm font-medium text-gray-300 uppercase tracking-wide">
                     {dateInfo.month}
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-400">
                     {dateInfo.year}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-xs text-gray-400 mt-1">
                     {dateInfo.time}
                   </div>
                 </div>
               </div>
 
               {/* Event Title */}
-              <h3 className="text-xl font-bold text-gray-900 mb-3 leading-tight">
+              <h3 className="text-xl font-bold text-gray-100 mb-3 leading-tight">
                 {event.nome_evento}
               </h3>
 
               {/* Description */}
               {event.descrizione && (
-                <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+                <p className="text-gray-300 text-sm mb-4 leading-relaxed">
                   {event.descrizione}
                 </p>
               )}
@@ -200,12 +200,12 @@ export default function EventList({ events, loading }: EventListProps) {
               {/* City & Venue */}
               <div className="flex items-center space-x-4 mb-4 text-sm">
                 <div className="flex items-center space-x-2">
-                  <span className="text-gray-500">📍</span>
-                  <span className="font-medium text-gray-900">{event.città}</span>
+                  <span className="text-gray-400">📍</span>
+                  <span className="font-medium text-gray-100">{event.città}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-gray-500">🏢</span>
-                  <span className="text-gray-700">{event.venue}</span>
+                  <span className="text-gray-400">🏢</span>
+                  <span className="text-gray-200">{event.venue}</span>
                 </div>
               </div>
 
@@ -227,14 +227,14 @@ export default function EventList({ events, loading }: EventListProps) {
                 <div className="space-y-2 mb-4 text-sm">
                   {event.artisti && event.artisti.length > 0 && (
                     <div className="flex items-start space-x-2">
-                      <span className="text-gray-500 mt-0.5">👥</span>
-                      <span className="text-gray-700">{event.artisti.join(', ')}</span>
+                      <span className="text-gray-400 mt-0.5">👥</span>
+                      <span className="text-gray-200">{event.artisti.join(', ')}</span>
                     </div>
                   )}
                   {event.orario && (
                     <div className="flex items-center space-x-2">
-                      <span className="text-gray-500">⏰</span>
-                      <span className="text-gray-700">{event.orario}</span>
+                      <span className="text-gray-400">⏰</span>
+                      <span className="text-gray-200">{event.orario}</span>
                     </div>
                   )}
                 </div>
@@ -259,7 +259,7 @@ export default function EventList({ events, loading }: EventListProps) {
             <div className="hidden md:block p-6">
               <div className="flex space-x-6">
                 {/* Event Image */}
-                <div className="w-40 h-32 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <div className="w-40 h-32 bg-black bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden border border-white border-opacity-10">
                   {event.immagine ? (
                     <img 
                       src={event.immagine} 
@@ -272,17 +272,17 @@ export default function EventList({ events, loading }: EventListProps) {
                 </div>
 
                 {/* Date Card */}
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center min-w-[100px] h-fit">
-                  <div className="text-3xl font-bold text-gray-900 leading-none mb-1">
+                <div className="bg-white bg-opacity-15 backdrop-blur-sm border border-white border-opacity-20 rounded-lg p-4 text-center min-w-[100px] h-fit">
+                  <div className="text-3xl font-bold text-gray-100 leading-none mb-1">
                     {dateInfo.day}
                   </div>
-                  <div className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-1">
+                  <div className="text-sm font-medium text-gray-300 uppercase tracking-wide mb-1">
                     {dateInfo.month}
                   </div>
-                  <div className="text-xs text-gray-500 mb-2">
+                  <div className="text-xs text-gray-400 mb-2">
                     {dateInfo.year}
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-400">
                     {dateInfo.time}
                   </div>
                 </div>
@@ -291,7 +291,7 @@ export default function EventList({ events, loading }: EventListProps) {
                 <div className="flex-1 min-w-0">
                   {/* Header with Source Badge */}
                   <div className="flex items-start justify-between mb-4">
-                    <h3 className="text-2xl font-bold text-gray-900 leading-tight pr-4">
+                    <h3 className="text-2xl font-bold text-gray-100 leading-tight pr-4">
                       {event.nome_evento}
                     </h3>
                     <span className={`inline-flex items-center px-3 py-1 rounded text-sm font-medium ${sourceBadge.bgColor} ${sourceBadge.textColor} border ${sourceBadge.borderColor} flex-shrink-0`}>
@@ -302,7 +302,7 @@ export default function EventList({ events, loading }: EventListProps) {
 
                   {/* Description */}
                   {event.descrizione && (
-                    <p className="text-gray-600 mb-4 leading-relaxed">
+                    <p className="text-gray-300 mb-4 leading-relaxed">
                       {event.descrizione}
                     </p>
                   )}
@@ -310,17 +310,17 @@ export default function EventList({ events, loading }: EventListProps) {
                   {/* City & Venue - Side by Side */}
                   <div className="flex items-center space-x-8 mb-4">
                     <div className="flex items-center space-x-2">
-                      <span className="text-gray-500">📍</span>
+                      <span className="text-gray-400">📍</span>
                       <div>
                         <span className="text-xs text-gray-500 uppercase tracking-wide block">CITY</span>
-                        <span className="font-medium text-gray-900">{event.città}</span>
+                        <span className="font-medium text-gray-100">{event.città}</span>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-gray-500">🏢</span>
+                      <span className="text-gray-400">🏢</span>
                       <div>
                         <span className="text-xs text-gray-500 uppercase tracking-wide block">VENUE</span>
-                        <span className="text-gray-700">{event.venue}</span>
+                        <span className="text-gray-200">{event.venue}</span>
                       </div>
                     </div>
                   </div>
@@ -336,8 +336,8 @@ export default function EventList({ events, loading }: EventListProps) {
                       {/* Artists */}
                       {event.artisti && event.artisti.length > 0 && (
                         <div className="flex items-center space-x-2 text-sm">
-                          <span className="text-gray-500">👥</span>
-                          <span className="text-gray-700">
+                          <span className="text-gray-400">👥</span>
+                          <span className="text-gray-200">
                             {event.artisti.slice(0, 3).join(', ')}
                             {event.artisti.length > 3 ? '...' : ''}
                           </span>
@@ -347,8 +347,8 @@ export default function EventList({ events, loading }: EventListProps) {
                       {/* Time Info */}
                       {event.orario && (
                         <div className="flex items-center space-x-2 text-sm">
-                          <span className="text-gray-500">⏰</span>
-                          <span className="text-gray-700">{event.orario}</span>
+                          <span className="text-gray-400">⏰</span>
+                          <span className="text-gray-200">{event.orario}</span>
                         </div>
                       )}
                     </div>
