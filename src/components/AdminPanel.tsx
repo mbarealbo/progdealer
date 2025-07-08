@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
+import CityAutocomplete from './CityAutocomplete';
 
 interface AdminPanelProps {
   isAuthenticated: boolean;
@@ -721,11 +722,10 @@ function EditEventModal({
               <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                 CITY
               </label>
-              <input
-                type="text"
+              <CityAutocomplete
                 value={editedEvent.città}
-                onChange={(e) => handleChange('città', e.target.value)}
-                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+                onChange={(value) => handleChange('città', value)}
+                placeholder="CITY"
               />
             </div>
           </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, X, Check, ChevronDown, ChevronUp, Minus } from 'lucide-react';
 import { supabase, classifySubgenre } from '../lib/supabase';
 import { PROG_SUBGENRES } from '../types/event';
+import CityAutocomplete from './CityAutocomplete';
 
 interface AddEventFormProps {
   onEventAdded: () => void;
@@ -208,13 +209,10 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
               <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                 CITY *
               </label>
-              <input
-                type="text"
-                name="città"
+              <CityAutocomplete
                 value={formData.città}
-                onChange={handleChange}
+                onChange={(value) => setFormData({ ...formData, città: value })}
                 required
-                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
                 placeholder="CITY"
               />
             </div>
