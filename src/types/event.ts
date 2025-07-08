@@ -33,6 +33,7 @@ export interface ImportEvent {
   venue: string;
   città: string;
   country?: string;
+  country?: string;
   sottogenere?: string;
   descrizione?: string;
   artisti?: string[] | null;
