@@ -25,6 +25,13 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
       return false;
     }
 
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+
     if (password.length < 6) {
       setError('Password must be at least 6 characters long');
       return false;
@@ -59,7 +66,14 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
         resetForm();
       }
     } catch (error: any) {
-      setError(error.message || 'Login failed');
+      // Handle specific Supabase auth errors
+      if (error.message?.includes('email_not_confirmed')) {
+        setError('Please check your email and click the confirmation link before logging in. Check your spam folder if you don\'t see it.');
+      } else if (error.message?.includes('Invalid login credentials')) {
+        setError('Invalid email or password. Please check your credentials and try again.');
+      } else {
+        setError(error.message || 'Login failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -97,7 +111,17 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
         }
       }
     } catch (error: any) {
-      setError(error.message || 'Registration failed');
+      // Handle specific Supabase auth errors
+      if (error.message?.includes('email_address_invalid')) {
+        setError('Please enter a valid email address. Make sure it\'s properly formatted (e.g., user@example.com).');
+      } else if (error.message?.includes('User already registered')) {
+        setError('An account with this email already exists. Please try logging in instead.');
+        setMode('login');
+      } else if (error.message?.includes('Password should be at least')) {
+        setError('Password must be at least 6 characters long.');
+      } else {
+        setError(error.message || 'Registration failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -178,7 +202,7 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
 
         {/* Error Message */}
         {error && (
-          <div className="bg-burgundy-900 border-2 border-burgundy-600 text-burgundy-300 p-3 mb-4 font-condensed text-sm uppercase tracking-wide">
+          <div className="bg-burgundy-900 border-2 border-burgundy-600 text-burgundy-300 p-3 mb-4 font-condensed text-sm tracking-wide">
             {error}
           </div>
         )}
@@ -287,10 +311,15 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
         <div className="mt-6 pt-4 border-t border-asphalt-600">
           <p className="text-gray-500 text-xs font-condensed uppercase tracking-wide text-center">
             {mode === 'login' 
-              ? 'New user? Click Register above to create an account'
-              : 'Already have an account? Click Login above'
+              ? 'New user? Click Register above to create an account.'
+              : 'Already have an account? Click Login above.'
             }
           </p>
+          {mode === 'login' && (
+            <p className="text-gray-600 text-xs font-condensed mt-2 text-center">
+              If you just registered, check your email for a confirmation link before logging in.
+            </p>
+          )}
         </div>
       </div>
     </div>
