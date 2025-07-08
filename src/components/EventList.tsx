@@ -242,7 +242,7 @@ export default function EventList({ events, loading }: EventListProps) {
                       <span className="text-base mr-2">{getSubgenreIcon(event.sottogenere)}</span>
                       <div>
                         <span className="text-xs uppercase tracking-wide text-gray-500 block">SUBGENRE</span>
-                        <span className="text-xs uppercase">{event.sottogenere}</span>
+                        <span className="bg-industrial-green-600 text-white px-2 py-1 text-xs font-bold uppercase tracking-wide">{event.sottogenere}</span>
                       </div>
                     </div>
                     <div className="flex items-center text-gray-300 font-condensed text-sm">
