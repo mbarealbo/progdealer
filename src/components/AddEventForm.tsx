@@ -276,6 +276,9 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
                   onChange={handleChange}
                   className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
                   placeholder="ARTIST 1, ARTIST 2, ARTIST 3"
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                   DESCRIPTION
@@ -289,7 +292,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
                   placeholder="EVENT DESCRIPTION..."
                 />
               </div>
-                />
+
               <div>
                 <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                   IMAGE URL
@@ -305,7 +308,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
               </div>
             </div>
           )}
-              </div>
+
           <div className="flex space-x-4 pt-4">
             <button
               type="button"
