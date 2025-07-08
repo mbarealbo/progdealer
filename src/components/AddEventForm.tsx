@@ -21,8 +21,8 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
     sottogenere: '',
     descrizione: '',
     orario: '',
-    link: 'https://',
-    immagine: 'https://'
+    link: '',
+    immagine: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,10 +38,6 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
           artists.filter(artist => artist.trim() !== '')
         );
 
-      // Clean up URL fields - if they only contain "https://", make them empty
-      const cleanLink = formData.link === 'https://' ? '' : formData.link;
-      const cleanImage = formData.immagine === 'https://' ? '' : formData.immagine;
-
       const eventData = {
         nome_evento: formData.nome_evento,
         data_ora: formData.data_ora,
@@ -53,8 +49,8 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
           ? artists.filter(artist => artist.trim() !== '') 
           : null,
         orario: formData.orario || null,
-        link: cleanLink,
-        immagine: cleanImage || null,
+        link: formData.link || null,
+        immagine: formData.immagine || null,
         fonte: 'manual-submission',
         tipo_inserimento: 'manual' as const
       };
@@ -74,8 +70,8 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
         sottogenere: '',
         descrizione: '',
         orario: '',
-        link: 'https://',
-        immagine: 'https://'
+        link: '',
+        immagine: ''
       });
       setArtists(['']);
       
@@ -234,7 +230,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
               value={formData.link}
               onChange={handleChange}
               className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
-              placeholder="HTTPS://EXAMPLE.COM (OPTIONAL)"
+              placeholder="EVENT LINK (OPTIONAL)"
             />
           </div>
 
@@ -352,7 +348,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
                   value={formData.immagine}
                   onChange={handleChange}
                   className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
-                  placeholder="HTTPS://EXAMPLE.COM/IMAGE.JPG"
+                  placeholder="IMAGE URL (OPTIONAL)"
                 />
               </div>
             </div>
