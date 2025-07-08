@@ -5,6 +5,7 @@ import { Event, EventFilters } from './types/event';
 import EventList from './components/EventList';
 import EventFiltersComponent from './components/EventFilters';
 import AddEventForm from './components/AddEventForm';
+import ImportEvents from './components/ImportEvents';
 import Footer from './components/Footer';
 
 function App() {
@@ -12,16 +13,18 @@ function App() {
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<EventFilters>({
-    luogo: '',
-    genere: '',
+    città: '',
+    sottogenere: '',
     dataInizio: '',
     dataFine: '',
-    excludedGenres: []
+    excludedSubgenres: [],
+    fonte: '',
+    tipo_inserimento: ''
   });
 
   // Get unique values for filters
-  const uniqueLocations = [...new Set(events.map(event => event.luogo))].sort();
-  const uniqueGenres = [...new Set(events.map(event => event.genere))].sort();
+  const uniqueLocations = [...new Set(events.map(event => event.città))].sort();
+  const uniqueSources = [...new Set(events.map(event => event.fonte))].sort();
 
   const fetchEvents = async () => {
     try {
@@ -43,20 +46,28 @@ function App() {
   const applyFilters = () => {
     let filtered = events;
 
-    if (filters.luogo) {
-      filtered = filtered.filter(event => event.luogo === filters.luogo);
+    if (filters.città) {
+      filtered = filtered.filter(event => event.città === filters.città);
     }
 
-    if (filters.genere) {
-      filtered = filtered.filter(event => event.genere === filters.genere);
+    if (filters.sottogenere) {
+      filtered = filtered.filter(event => event.sottogenere === filters.sottogenere);
     }
 
-    // Apply excluded genres filter
-    if (filters.excludedGenres && filters.excludedGenres.length > 0) {
+    if (filters.fonte) {
+      filtered = filtered.filter(event => event.fonte === filters.fonte);
+    }
+
+    if (filters.tipo_inserimento) {
+      filtered = filtered.filter(event => event.tipo_inserimento === filters.tipo_inserimento);
+    }
+
+    // Apply excluded subgenres filter
+    if (filters.excludedSubgenres && filters.excludedSubgenres.length > 0) {
       filtered = filtered.filter(event => {
-        const eventGenre = event.genere.toLowerCase();
-        return !filters.excludedGenres!.some(excludedGenre => 
-          eventGenre.includes(excludedGenre.toLowerCase())
+        const eventSubgenre = event.sottogenere.toLowerCase();
+        return !filters.excludedSubgenres.some(excludedSubgenre => 
+          eventSubgenre.includes(excludedSubgenre.toLowerCase())
         );
       });
     }
@@ -132,10 +143,11 @@ function App() {
           </h2>
           <div className="w-32 h-1 bg-industrial-green-600 mx-auto mb-6"></div>
           <p className="text-gray-400 text-xl font-condensed uppercase tracking-wide mb-4">
-            LIVE ELECTRONIC MUSIC CULTURE
+            PROGRESSIVE MUSIC CULTURE DATABASE
           </p>
           <p className="text-gray-300 text-lg font-condensed max-w-2xl mx-auto leading-relaxed">
-            Raccogliamo i concerti prog, metal e alternativi da tutta Europa. Automaticamente.
+            Automated collection of progressive, metal, and alternative concerts across Europe. 
+            Multi-source aggregation with intelligent deduplication and subgenre classification.
           </p>
         </div>
       </section>
@@ -147,12 +159,15 @@ function App() {
           filters={filters}
           onFiltersChange={handleFiltersChange}
           uniqueLocations={uniqueLocations}
-          uniqueGenres={uniqueGenres}
+          uniqueSources={uniqueSources}
         />
 
         {/* Events List */}
         <EventList events={filteredEvents} loading={loading} />
       </main>
+
+      {/* Import Events */}
+      <ImportEvents onEventsImported={fetchEvents} />
 
       {/* Add Event Form */}
       <AddEventForm onEventAdded={fetchEvents} />

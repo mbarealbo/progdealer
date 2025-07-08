@@ -2,19 +2,69 @@ export interface Event {
   id: string;
   nome_evento: string;
   data_ora: string;
-  luogo: string;
   venue: string;
-  genere: string;
-  link_biglietti: string;
+  città: string;
+  sottogenere: string;
+  descrizione?: string;
+  artisti?: string[];
+  orario?: string;
+  link: string;
+  immagine?: string;
   fonte: string;
+  tipo_inserimento: 'scraped' | 'manual';
+  event_id?: string;
   created_at: string;
   updated_at: string;
 }
 
 export interface EventFilters {
-  luogo: string;
-  genere: string;
+  città: string;
+  sottogenere: string;
   dataInizio: string;
   dataFine: string;
-  excludedGenres?: string[];
+  excludedSubgenres: string[];
+  fonte: string;
+  tipo_inserimento: string;
 }
+
+export interface ImportEvent {
+  nome_evento: string;
+  data_ora: string;
+  venue: string;
+  città: string;
+  sottogenere?: string;
+  descrizione?: string;
+  artisti?: string[];
+  orario?: string;
+  link: string;
+  immagine?: string;
+  fonte: string;
+  tipo_inserimento: 'scraped' | 'manual';
+  event_id?: string;
+}
+
+// Progressive subgenres for classification
+export const PROG_SUBGENRES = [
+  'Progressive Rock',
+  'Prog Metal',
+  'Symphonic Prog',
+  'Canterbury Scene',
+  'Krautrock',
+  'Zeuhl',
+  'Italian Prog',
+  'Neo-Prog',
+  'Avant-Prog',
+  'Space Rock',
+  'Psychedelic Prog',
+  'Post-Rock',
+  'Math Rock',
+  'Progressive Electronic',
+  'Fusion',
+  'Progressive Folk',
+  'RIO (Rock in Opposition)',
+  'Eclectic Prog',
+  'Crossover Prog',
+  'Progressive'
+] as const;
+
+export type ProgSubgenre = typeof PROG_SUBGENRES[number];

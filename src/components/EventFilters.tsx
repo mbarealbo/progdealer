@@ -1,77 +1,56 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-import { EventFilters } from '../types/event';
+import { X, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { EventFilters, PROG_SUBGENRES } from '../types/event';
 
 interface EventFiltersProps {
   filters: EventFilters;
   onFiltersChange: (filters: EventFilters) => void;
   uniqueLocations: string[];
-  uniqueGenres: string[];
+  uniqueSources: string[];
 }
-
-const PROG_SUBGENRES = [
-  'Symphonic',
-  'Canterbury',
-  'Zeuhl',
-  'Avant-Prog',
-  'Krautrock',
-  'Italian Prog',
-  'Neo-Prog',
-  'Prog Metal',
-  'Post Prog'
-];
 
 export default function EventFiltersComponent({
   filters,
   onFiltersChange,
   uniqueLocations,
-  uniqueGenres
+  uniqueSources
 }: EventFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [excludedGenres, setExcludedGenres] = useState<string[]>([]);
 
-  const handleFilterChange = (key: keyof EventFilters, value: string) => {
+  const handleFilterChange = (key: keyof EventFilters, value: string | string[]) => {
     onFiltersChange({
       ...filters,
       [key]: value
     });
   };
 
-  const toggleGenreExclusion = (genre: string) => {
-    const newExcludedGenres = excludedGenres.includes(genre) 
-      ? excludedGenres.filter(g => g !== genre)
-      : [...excludedGenres, genre];
+  const toggleSubgenreExclusion = (subgenre: string) => {
+    const newExcludedSubgenres = filters.excludedSubgenres.includes(subgenre) 
+      ? filters.excludedSubgenres.filter(s => s !== subgenre)
+      : [...filters.excludedSubgenres, subgenre];
     
-    setExcludedGenres(newExcludedGenres);
-    
-    // Update filters with excluded genres
-    onFiltersChange({
-      ...filters,
-      excludedGenres: newExcludedGenres
-    });
+    handleFilterChange('excludedSubgenres', newExcludedSubgenres);
   };
 
   const clearFilters = () => {
     onFiltersChange({
-      luogo: '',
-      genere: '',
+      città: '',
+      sottogenere: '',
       dataInizio: '',
       dataFine: '',
-      excludedGenres: []
+      excludedSubgenres: [],
+      fonte: '',
+      tipo_inserimento: ''
     });
-    setExcludedGenres([]);
   };
 
-  // Sync excludedGenres with filters
-  useEffect(() => {
-    if (filters.excludedGenres) {
-      setExcludedGenres(filters.excludedGenres);
-    }
-  }, [filters.excludedGenres]);
-
-  const hasActiveFilters = Object.values(filters).some(filter => 
-    Array.isArray(filter) ? filter.length > 0 : filter !== ''
+  const hasActiveFilters = Object.entries(filters).some(([key, value]) => 
+    Array.isArray(value) ? value.length > 0 : value !== ''
   );
+
+  const activeFilterCount = Object.entries(filters).filter(([key, value]) => 
+    Array.isArray(value) ? value.length > 0 : value !== ''
+  ).length;
 
   return (
     <div className="mb-8">
@@ -80,24 +59,23 @@ export default function EventFiltersComponent({
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-3 industrial-button mb-6"
       >
-        <span className="text-xl">🎚️</span>
+        <Filter className="h-5 w-5" />
         <span className="text-lg font-industrial tracking-wide uppercase">
           FILTERS
         </span>
         {hasActiveFilters && (
-          <span className="bg-industrial-green-600 text-white px-2 py-1 text-xs font-bold">
-            {Object.values(filters).filter(f => 
-              Array.isArray(f) ? f.length > 0 : f !== ''
-            ).length}
+          <span className="bg-industrial-green-600 text-white px-2 py-1 text-xs font-bold rounded">
+            {activeFilterCount}
           </span>
         )}
+        {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
       </button>
 
       {/* Collapsible Filter Panel */}
       {isOpen && (
-        <div className="bg-coal-800 border-2 border-asphalt-600 p-8">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-industrial text-gray-100 tracking-wide uppercase">
+        <div className="bg-coal-800 border-2 border-asphalt-600 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-industrial text-gray-100 tracking-wide uppercase">
               FILTER EVENTS
             </h2>
             {hasActiveFilters && (
@@ -111,51 +89,51 @@ export default function EventFiltersComponent({
             )}
           </div>
           
-          <div className="space-y-8">
-            {/* Progressive Rock Subgenres */}
+          <div className="space-y-6">
+            {/* Progressive Subgenres - Chip Interface */}
             <div>
               <label className="block text-sm font-condensed font-bold text-gray-400 mb-4 uppercase tracking-wide">
                 🎵 PROGRESSIVE SUBGENRES
               </label>
-              <div className="flex flex-wrap gap-3">
-                {PROG_SUBGENRES.map((genre) => {
-                  const isExcluded = excludedGenres.includes(genre);
+              <div className="flex flex-wrap gap-2">
+                {PROG_SUBGENRES.map((subgenre) => {
+                  const isExcluded = filters.excludedSubgenres.includes(subgenre);
                   return (
                     <button
-                      key={genre}
-                      onClick={() => toggleGenreExclusion(genre)}
+                      key={subgenre}
+                      onClick={() => toggleSubgenreExclusion(subgenre)}
                       className={`
-                        px-4 py-2 text-sm font-condensed font-bold uppercase tracking-wide
-                        border-2 transition-all duration-200 flex items-center space-x-2
+                        px-3 py-1 text-xs font-condensed font-bold uppercase tracking-wide
+                        border transition-all duration-200 flex items-center space-x-1
                         ${isExcluded 
-                          ? 'bg-asphalt-700 border-asphalt-500 text-gray-400 line-through' 
-                          : 'bg-industrial-green-900 border-industrial-green-600 text-white hover:bg-industrial-green-800'
+                          ? 'bg-asphalt-700 border-asphalt-500 text-gray-500 line-through' 
+                          : 'bg-industrial-green-900 border-industrial-green-600 text-industrial-green-300 hover:bg-industrial-green-800'
                         }
                       `}
                     >
-                      <span>{genre}</span>
+                      <span>{subgenre}</span>
                       {isExcluded && <X className="h-3 w-3" />}
                     </button>
                   );
                 })}
               </div>
-              <p className="text-xs text-gray-500 mt-3 font-condensed uppercase tracking-wide">
-                Click to exclude subgenres from results
+              <p className="text-xs text-gray-500 mt-2 font-condensed uppercase tracking-wide">
+                Click to exclude subgenres • Active subgenres will be included in results
               </p>
             </div>
 
-            {/* Location and Date Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Location, Date, and Source Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-condensed font-bold text-gray-400 mb-4 uppercase tracking-wide">
-                  🏙️ LOCATION
+                <label className="block text-sm font-condensed font-bold text-gray-400 mb-3 uppercase tracking-wide">
+                  🏙️ CITY
                 </label>
                 <select
-                  value={filters.luogo}
-                  onChange={(e) => handleFilterChange('luogo', e.target.value)}
-                  className="brutal-input w-full"
+                  value={filters.città}
+                  onChange={(e) => handleFilterChange('città', e.target.value)}
+                  className="brutal-input w-full text-sm"
                 >
-                  <option value="">ALL LOCATIONS</option>
+                  <option value="">ALL CITIES</option>
                   {uniqueLocations.map((location) => (
                     <option key={location} value={location}>
                       {location.toUpperCase()}
@@ -165,27 +143,74 @@ export default function EventFiltersComponent({
               </div>
               
               <div>
-                <label className="block text-sm font-condensed font-bold text-gray-400 mb-4 uppercase tracking-wide">
+                <label className="block text-sm font-condensed font-bold text-gray-400 mb-3 uppercase tracking-wide">
                   📅 FROM DATE
                 </label>
                 <input
                   type="date"
                   value={filters.dataInizio}
                   onChange={(e) => handleFilterChange('dataInizio', e.target.value)}
-                  className="brutal-input w-full"
+                  className="brutal-input w-full text-sm"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-condensed font-bold text-gray-400 mb-4 uppercase tracking-wide">
+                <label className="block text-sm font-condensed font-bold text-gray-400 mb-3 uppercase tracking-wide">
                   📅 TO DATE
                 </label>
                 <input
                   type="date"
                   value={filters.dataFine}
                   onChange={(e) => handleFilterChange('dataFine', e.target.value)}
-                  className="brutal-input w-full"
+                  className="brutal-input w-full text-sm"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-condensed font-bold text-gray-400 mb-3 uppercase tracking-wide">
+                  🔗 SOURCE
+                </label>
+                <select
+                  value={filters.fonte}
+                  onChange={(e) => handleFilterChange('fonte', e.target.value)}
+                  className="brutal-input w-full text-sm"
+                >
+                  <option value="">ALL SOURCES</option>
+                  {uniqueSources.map((source) => (
+                    <option key={source} value={source}>
+                      {source.toUpperCase()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Type Filter */}
+            <div>
+              <label className="block text-sm font-condensed font-bold text-gray-400 mb-3 uppercase tracking-wide">
+                ⚙️ ENTRY TYPE
+              </label>
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => handleFilterChange('tipo_inserimento', filters.tipo_inserimento === 'scraped' ? '' : 'scraped')}
+                  className={`px-4 py-2 text-sm font-condensed font-bold uppercase tracking-wide border transition-all duration-200 ${
+                    filters.tipo_inserimento === 'scraped'
+                      ? 'bg-industrial-green-900 border-industrial-green-600 text-white'
+                      : 'bg-transparent border-asphalt-500 text-gray-400 hover:border-industrial-green-600'
+                  }`}
+                >
+                  🤖 SCRAPED
+                </button>
+                <button
+                  onClick={() => handleFilterChange('tipo_inserimento', filters.tipo_inserimento === 'manual' ? '' : 'manual')}
+                  className={`px-4 py-2 text-sm font-condensed font-bold uppercase tracking-wide border transition-all duration-200 ${
+                    filters.tipo_inserimento === 'manual'
+                      ? 'bg-industrial-green-900 border-industrial-green-600 text-white'
+                      : 'bg-transparent border-asphalt-500 text-gray-400 hover:border-industrial-green-600'
+                  }`}
+                >
+                  👤 MANUAL
+                </button>
               </div>
             </div>
           </div>

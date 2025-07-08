@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, X, Check } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { supabase, classifySubgenre } from '../lib/supabase';
+import { PROG_SUBGENRES } from '../types/event';
 
 interface AddEventFormProps {
   onEventAdded: () => void;
@@ -13,36 +14,47 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
   const [formData, setFormData] = useState({
     nome_evento: '',
     data_ora: '',
-    luogo: '',
     venue: '',
-    genere: '',
-    link_biglietti: ''
+    città: '',
+    sottogenere: '',
+    descrizione: '',
+    artisti: '',
+    orario: '',
+    link: '',
+    immagine: ''
   });
-
-  const genreOptions = [
-    'Progressive Rock',
-    'Prog Metal',
-    'Symphonic Prog',
-    'Psychedelic Rock',
-    'Zeuhl',
-    'Fusion',
-    'Avant-Prog',
-    'Space Rock',
-    'Post-Rock',
-    'Krautrock'
-  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // Auto-classify subgenre if not manually selected
+      const finalSubgenre = formData.sottogenere || 
+        classifySubgenre(
+          formData.nome_evento, 
+          formData.descrizione, 
+          formData.artisti ? formData.artisti.split(',').map(a => a.trim()) : undefined
+        );
+
+      const eventData = {
+        nome_evento: formData.nome_evento,
+        data_ora: formData.data_ora,
+        venue: formData.venue,
+        città: formData.città,
+        sottogenere: finalSubgenre,
+        descrizione: formData.descrizione || null,
+        artisti: formData.artisti ? formData.artisti.split(',').map(a => a.trim()) : null,
+        orario: formData.orario || null,
+        link: formData.link,
+        immagine: formData.immagine || null,
+        fonte: 'manual-submission',
+        tipo_inserimento: 'manual' as const
+      };
+
       const { error } = await supabase
         .from('eventi_prog')
-        .insert([{
-          ...formData,
-          fonte: 'segnalazione'
-        }]);
+        .insert([eventData]);
 
       if (error) throw error;
 
@@ -50,10 +62,14 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
       setFormData({
         nome_evento: '',
         data_ora: '',
-        luogo: '',
         venue: '',
-        genere: '',
-        link_biglietti: ''
+        città: '',
+        sottogenere: '',
+        descrizione: '',
+        artisti: '',
+        orario: '',
+        link: '',
+        immagine: ''
       });
       
       setIsOpen(false);
@@ -72,7 +88,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
@@ -85,7 +101,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
       <div className="fixed bottom-8 right-8 bg-industrial-green-800 border-2 border-industrial-green-600 text-white p-6 z-50 flex items-center space-x-3">
         <Check className="h-6 w-6" />
         <span className="font-condensed font-bold uppercase tracking-wide">
-          SEGNALAZIONE INVIATA CON SUCCESSO
+          EVENT SUBMITTED SUCCESSFULLY
         </span>
       </div>
     );
@@ -96,7 +112,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
       <button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-8 right-8 bg-coal-800 hover:bg-coal-700 border-2 border-asphalt-600 hover:border-industrial-green-600 text-white p-4 transition-all duration-200 z-50"
-        title="SEGNALA UN EVENTO"
+        title="SUBMIT AN EVENT"
       >
         <Plus className="h-8 w-8" />
       </button>
@@ -105,10 +121,10 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
-      <div className="bg-coal-800 border-2 border-asphalt-600 p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-industrial text-gray-100 tracking-wide uppercase">
-            SEGNALA UN EVENTO
+      <div className="bg-coal-800 border-2 border-asphalt-600 p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-industrial text-gray-100 tracking-wide uppercase">
+            SUBMIT AN EVENT
           </h2>
           <button
             onClick={() => setIsOpen(false)}
@@ -118,54 +134,41 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-condensed font-bold text-gray-100 mb-3 uppercase tracking-wide">
-              NOME EVENTO *
-            </label>
-            <input
-              type="text"
-              name="nome_evento"
-              value={formData.nome_evento}
-              onChange={handleChange}
-              required
-              className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-4 py-3 font-condensed focus:outline-none focus:border-industrial-green-600"
-              placeholder="INSERISCI IL NOME DELL'EVENTO"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-condensed font-bold text-gray-100 mb-3 uppercase tracking-wide">
-              DATA E ORA *
-            </label>
-            <input
-              type="datetime-local"
-              name="data_ora"
-              value={formData.data_ora}
-              onChange={handleChange}
-              required
-              className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-4 py-3 font-condensed focus:outline-none focus:border-industrial-green-600"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-condensed font-bold text-gray-100 mb-3 uppercase tracking-wide">
-                CITTÀ *
+              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                EVENT NAME *
               </label>
               <input
                 type="text"
-                name="luogo"
-                value={formData.luogo}
+                name="nome_evento"
+                value={formData.nome_evento}
                 onChange={handleChange}
                 required
-                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-4 py-3 font-condensed focus:outline-none focus:border-industrial-green-600"
-                placeholder="CITTÀ"
+                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+                placeholder="EVENT NAME"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-condensed font-bold text-gray-100 mb-3 uppercase tracking-wide">
+              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                DATE & TIME *
+              </label>
+              <input
+                type="datetime-local"
+                name="data_ora"
+                value={formData.data_ora}
+                onChange={handleChange}
+                required
+                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                 VENUE *
               </label>
               <input
@@ -174,60 +177,135 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
                 value={formData.venue}
                 onChange={handleChange}
                 required
-                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-4 py-3 font-condensed focus:outline-none focus:border-industrial-green-600"
-                placeholder="NOME DEL LOCALE"
+                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+                placeholder="VENUE NAME"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                CITY *
+              </label>
+              <input
+                type="text"
+                name="città"
+                value={formData.città}
+                onChange={handleChange}
+                required
+                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+                placeholder="CITY"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                SUBGENRE
+              </label>
+              <select
+                name="sottogenere"
+                value={formData.sottogenere}
+                onChange={handleChange}
+                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+              >
+                <option value="">AUTO-DETECT FROM EVENT NAME</option>
+                {PROG_SUBGENRES.map((subgenre) => (
+                  <option key={subgenre} value={subgenre}>
+                    {subgenre.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                TIME INFO
+              </label>
+              <input
+                type="text"
+                name="orario"
+                value={formData.orario}
+                onChange={handleChange}
+                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+                placeholder="e.g. DOORS 20:00, START 21:00"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-condensed font-bold text-gray-100 mb-3 uppercase tracking-wide">
-              GENERE *
-            </label>
-            <select
-              name="genere"
-              value={formData.genere}
-              onChange={handleChange}
-              required
-              className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-4 py-3 font-condensed focus:outline-none focus:border-industrial-green-600"
-            >
-              <option value="">SELEZIONA GENERE</option>
-              {genreOptions.map((genre) => (
-                <option key={genre} value={genre}>
-                  {genre.toUpperCase()}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-condensed font-bold text-gray-100 mb-3 uppercase tracking-wide">
-              LINK BIGLIETTI
+            <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+              ARTISTS
             </label>
             <input
-              type="url"
-              name="link_biglietti"
-              value={formData.link_biglietti}
+              type="text"
+              name="artisti"
+              value={formData.artisti}
               onChange={handleChange}
-              className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-4 py-3 font-condensed focus:outline-none focus:border-industrial-green-600"
-              placeholder="HTTPS://..."
+              className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+              placeholder="ARTIST 1, ARTIST 2, ARTIST 3"
             />
           </div>
 
-          <div className="flex space-x-4 pt-6">
+          <div>
+            <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+              DESCRIPTION
+            </label>
+            <textarea
+              name="descrizione"
+              value={formData.descrizione}
+              onChange={handleChange}
+              rows={3}
+              className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm resize-none"
+              placeholder="EVENT DESCRIPTION..."
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                EVENT LINK *
+              </label>
+              <input
+                type="url"
+                name="link"
+                value={formData.link}
+                onChange={handleChange}
+                required
+                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+                placeholder="HTTPS://..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                IMAGE URL
+              </label>
+              <input
+                type="url"
+                name="immagine"
+                value={formData.immagine}
+                onChange={handleChange}
+                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+                placeholder="HTTPS://..."
+              />
+            </div>
+          </div>
+
+          <div className="flex space-x-4 pt-4">
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="flex-1 bg-transparent border-2 border-asphalt-500 text-gray-300 px-6 py-3 uppercase tracking-wide font-condensed font-bold hover:border-burgundy-500 hover:text-white transition-all duration-200"
+              className="flex-1 bg-transparent border-2 border-asphalt-500 text-gray-300 px-4 py-2 uppercase tracking-wide font-condensed font-bold hover:border-burgundy-500 hover:text-white transition-all duration-200 text-sm"
             >
-              ANNULLA
+              CANCEL
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-6 py-3 uppercase tracking-wide font-condensed font-bold hover:border-industrial-green-600 hover:text-white transition-all duration-200 disabled:opacity-50"
+              className="flex-1 bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-4 py-2 uppercase tracking-wide font-condensed font-bold hover:border-industrial-green-600 hover:text-white transition-all duration-200 disabled:opacity-50 text-sm"
             >
-              {loading ? 'INVIO...' : 'INVIA SEGNALAZIONE'}
+              {loading ? 'SUBMITTING...' : 'SUBMIT EVENT'}
             </button>
           </div>
         </form>
