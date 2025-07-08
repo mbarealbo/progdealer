@@ -280,7 +280,7 @@ export default function SearchInput({
   const getTypeBadge = (type: string) => {
     switch (type) {
       case 'event':
-        return { bg: 'bg-industrial-green-600', text: 'text-white', label: 'EVENT' };
+        return { bg: 'bg-industrial-green-600', text: 'text-white', label: 'ARTIST / FESTIVAL' };
       case 'venue':
         return { bg: 'bg-blue-600', text: 'text-white', label: 'VENUE' };
       case 'city':

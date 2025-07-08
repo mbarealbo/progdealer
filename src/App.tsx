@@ -25,7 +25,6 @@ function App() {
     dataFine: '',
     excludedSubgenres: [],
     countries: [],
-    tipo_inserimento: ''
   });
 
   // Get unique values for filters
@@ -132,10 +131,6 @@ function App() {
         const eventCountry = getEventCountry(event.città);
         return filters.countries.includes(eventCountry);
       });
-    }
-
-    if (filters.tipo_inserimento) {
-      filtered = filtered.filter(event => event.tipo_inserimento === filters.tipo_inserimento);
     }
 
     // Apply excluded subgenres filter

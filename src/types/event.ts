@@ -26,7 +26,6 @@ export interface EventFilters {
   dataFine: string;
   excludedSubgenres: string[];
   countries: string[];
-  tipo_inserimento: string;
 }
 
 export interface ImportEvent {

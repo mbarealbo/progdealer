@@ -42,7 +42,6 @@ export default function EventFiltersComponent({
       dataFine: '',
       excludedSubgenres: [],
       countries: [],
-      tipo_inserimento: ''
     });
   };
 
@@ -214,34 +213,6 @@ export default function EventFiltersComponent({
               </p>
             </div>
 
-            {/* Type Filter */}
-            <div>
-              <label className="block text-sm font-condensed font-bold text-gray-400 mb-3 uppercase tracking-wide">
-                ⚙️ ENTRY TYPE
-              </label>
-              <div className="flex space-x-4">
-                <button
-                  onClick={() => handleFilterChange('tipo_inserimento', filters.tipo_inserimento === 'scraped' ? '' : 'scraped')}
-                  className={`px-4 py-2 text-sm font-condensed font-bold uppercase tracking-wide border transition-all duration-200 ${
-                    filters.tipo_inserimento === 'scraped'
-                      ? 'bg-industrial-green-900 border-industrial-green-600 text-white'
-                      : 'bg-transparent border-asphalt-500 text-gray-400 hover:border-industrial-green-600'
-                  }`}
-                >
-                  🤖 SCRAPED
-                </button>
-                <button
-                  onClick={() => handleFilterChange('tipo_inserimento', filters.tipo_inserimento === 'manual' ? '' : 'manual')}
-                  className={`px-4 py-2 text-sm font-condensed font-bold uppercase tracking-wide border transition-all duration-200 ${
-                    filters.tipo_inserimento === 'manual'
-                      ? 'bg-industrial-green-900 border-industrial-green-600 text-white'
-                      : 'bg-transparent border-asphalt-500 text-gray-400 hover:border-industrial-green-600'
-                  }`}
-                >
-                  👤 MANUAL
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}
