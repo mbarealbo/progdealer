@@ -776,7 +776,7 @@ function EditEventModal({
                       onClick={() => removeArtist(index)}
                       className="bg-burgundy-800 border-2 border-burgundy-600 text-white p-2 hover:bg-burgundy-700 transition-all duration-200"
                     >
-                      <X className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   )}
                 </div>
@@ -784,9 +784,9 @@ function EditEventModal({
               <button
                 type="button"
                 onClick={addArtist}
-                className="flex items-center space-x-2 bg-industrial-green-800 border-2 border-industrial-green-600 text-white px-3 py-2 hover:bg-industrial-green-700 transition-all duration-200 text-sm font-condensed font-bold uppercase tracking-wide"
+                className="industrial-button flex items-center space-x-2 text-sm"
               >
-                <Plus className="h-4 w-4" />
+                <Users className="h-4 w-4" />
                 <span>ADD ARTIST</span>
               </button>
             </div>
