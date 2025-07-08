@@ -29,33 +29,7 @@ function App() {
 
   // Get unique values for filters
   const uniqueLocations = [...new Set(events.map(event => event.città))].sort();
-  const uniqueCountries = [...new Set(events.map(event => {
-    // Extract country from city data or use a mapping
-    // For now, we'll extract from existing city names or use a simple mapping
-    const city = event.città.toLowerCase();
-    
-    // Simple country mapping based on common European cities
-    if (city.includes('london') || city.includes('manchester') || city.includes('birmingham') || city.includes('liverpool') || city.includes('bristol') || city.includes('leeds') || city.includes('glasgow') || city.includes('edinburgh')) return 'United Kingdom';
-    if (city.includes('paris') || city.includes('lyon') || city.includes('marseille') || city.includes('toulouse') || city.includes('nice') || city.includes('nantes') || city.includes('strasbourg') || city.includes('montpellier') || city.includes('bordeaux') || city.includes('lille')) return 'France';
-    if (city.includes('berlin') || city.includes('munich') || city.includes('hamburg') || city.includes('cologne') || city.includes('frankfurt') || city.includes('stuttgart') || city.includes('düsseldorf') || city.includes('dortmund') || city.includes('essen') || city.includes('leipzig')) return 'Germany';
-    if (city.includes('rome') || city.includes('milan') || city.includes('naples') || city.includes('turin') || city.includes('palermo') || city.includes('genoa') || city.includes('bologna') || city.includes('florence') || city.includes('bari') || city.includes('catania')) return 'Italy';
-    if (city.includes('madrid') || city.includes('barcelona') || city.includes('valencia') || city.includes('seville') || city.includes('zaragoza') || city.includes('málaga') || city.includes('murcia') || city.includes('palma') || city.includes('bilbao') || city.includes('alicante')) return 'Spain';
-    if (city.includes('amsterdam') || city.includes('rotterdam') || city.includes('the hague') || city.includes('utrecht') || city.includes('eindhoven') || city.includes('tilburg') || city.includes('groningen') || city.includes('almere') || city.includes('breda') || city.includes('nijmegen')) return 'Netherlands';
-    if (city.includes('brussels') || city.includes('antwerp') || city.includes('ghent') || city.includes('charleroi') || city.includes('liège') || city.includes('bruges') || city.includes('namur') || city.includes('leuven') || city.includes('mons') || city.includes('aalst')) return 'Belgium';
-    if (city.includes('zurich') || city.includes('geneva') || city.includes('basel') || city.includes('bern') || city.includes('lausanne') || city.includes('winterthur') || city.includes('lucerne') || city.includes('st. gallen') || city.includes('lugano') || city.includes('biel')) return 'Switzerland';
-    if (city.includes('vienna') || city.includes('graz') || city.includes('linz') || city.includes('salzburg') || city.includes('innsbruck') || city.includes('klagenfurt') || city.includes('villach') || city.includes('wels') || city.includes('sankt pölten') || city.includes('dornbirn')) return 'Austria';
-    if (city.includes('prague') || city.includes('brno') || city.includes('ostrava') || city.includes('plzen') || city.includes('liberec') || city.includes('olomouc') || city.includes('budweis') || city.includes('hradec králové') || city.includes('ústí nad labem') || city.includes('pardubice')) return 'Czech Republic';
-    if (city.includes('warsaw') || city.includes('krakow') || city.includes('lodz') || city.includes('wroclaw') || city.includes('poznan') || city.includes('gdansk') || city.includes('szczecin') || city.includes('bydgoszcz') || city.includes('lublin') || city.includes('katowice')) return 'Poland';
-    if (city.includes('stockholm') || city.includes('gothenburg') || city.includes('malmö') || city.includes('uppsala') || city.includes('västerås') || city.includes('örebro') || city.includes('linköping') || city.includes('helsingborg') || city.includes('jönköping') || city.includes('norrköping')) return 'Sweden';
-    if (city.includes('copenhagen') || city.includes('aarhus') || city.includes('odense') || city.includes('aalborg') || city.includes('esbjerg') || city.includes('randers') || city.includes('kolding') || city.includes('horsens') || city.includes('vejle') || city.includes('roskilde')) return 'Denmark';
-    if (city.includes('oslo') || city.includes('bergen') || city.includes('trondheim') || city.includes('stavanger') || city.includes('drammen') || city.includes('fredrikstad') || city.includes('kristiansand') || city.includes('sandnes') || city.includes('tromsø') || city.includes('sarpsborg')) return 'Norway';
-    if (city.includes('helsinki') || city.includes('espoo') || city.includes('tampere') || city.includes('vantaa') || city.includes('oulu') || city.includes('turku') || city.includes('jyväskylä') || city.includes('lahti') || city.includes('kuopio') || city.includes('pori')) return 'Finland';
-    if (city.includes('dublin') || city.includes('cork') || city.includes('limerick') || city.includes('galway') || city.includes('waterford') || city.includes('drogheda') || city.includes('dundalk') || city.includes('swords') || city.includes('bray') || city.includes('navan')) return 'Ireland';
-    if (city.includes('lisbon') || city.includes('porto') || city.includes('vila nova de gaia') || city.includes('amadora') || city.includes('braga') || city.includes('funchal') || city.includes('coimbra') || city.includes('setúbal') || city.includes('almada') || city.includes('agualva-cacém')) return 'Portugal';
-    
-    // Default fallback - try to extract from city name or return "Other"
-    return 'Other';
-  }))].filter(country => country !== 'Other').sort();
+  const uniqueCountries = [...new Set(events.map(event => event.country).filter(country => country))].sort();
 
   const fetchEvents = async () => {
     try {
@@ -132,8 +106,7 @@ function App() {
 
     if (filters.countries && filters.countries.length > 0) {
       filtered = filtered.filter(event => {
-        const eventCountry = getEventCountry(event.città);
-        return filters.countries.includes(eventCountry);
+        return event.country && filters.countries.includes(event.country);
       });
     }
 
@@ -196,30 +169,6 @@ function App() {
     setFilters(newFilters);
   };
 
-  // Helper function to get country from city
-  const getEventCountry = (city: string): string => {
-    const cityLower = city.toLowerCase();
-    
-    if (cityLower.includes('london') || cityLower.includes('manchester') || cityLower.includes('birmingham') || cityLower.includes('liverpool') || cityLower.includes('bristol') || cityLower.includes('leeds') || cityLower.includes('glasgow') || cityLower.includes('edinburgh')) return 'United Kingdom';
-    if (cityLower.includes('paris') || cityLower.includes('lyon') || cityLower.includes('marseille') || cityLower.includes('toulouse') || cityLower.includes('nice') || cityLower.includes('nantes') || cityLower.includes('strasbourg') || cityLower.includes('montpellier') || cityLower.includes('bordeaux') || cityLower.includes('lille')) return 'France';
-    if (cityLower.includes('berlin') || cityLower.includes('munich') || cityLower.includes('hamburg') || cityLower.includes('cologne') || cityLower.includes('frankfurt') || cityLower.includes('stuttgart') || cityLower.includes('düsseldorf') || cityLower.includes('dortmund') || cityLower.includes('essen') || cityLower.includes('leipzig')) return 'Germany';
-    if (cityLower.includes('rome') || cityLower.includes('milan') || cityLower.includes('naples') || cityLower.includes('turin') || cityLower.includes('palermo') || cityLower.includes('genoa') || cityLower.includes('bologna') || cityLower.includes('florence') || cityLower.includes('bari') || cityLower.includes('catania')) return 'Italy';
-    if (cityLower.includes('madrid') || cityLower.includes('barcelona') || cityLower.includes('valencia') || cityLower.includes('seville') || cityLower.includes('zaragoza') || cityLower.includes('málaga') || cityLower.includes('murcia') || cityLower.includes('palma') || cityLower.includes('bilbao') || cityLower.includes('alicante')) return 'Spain';
-    if (cityLower.includes('amsterdam') || cityLower.includes('rotterdam') || cityLower.includes('the hague') || cityLower.includes('utrecht') || cityLower.includes('eindhoven') || cityLower.includes('tilburg') || cityLower.includes('groningen') || cityLower.includes('almere') || cityLower.includes('breda') || cityLower.includes('nijmegen')) return 'Netherlands';
-    if (cityLower.includes('brussels') || cityLower.includes('antwerp') || cityLower.includes('ghent') || cityLower.includes('charleroi') || cityLower.includes('liège') || cityLower.includes('bruges') || cityLower.includes('namur') || cityLower.includes('leuven') || cityLower.includes('mons') || cityLower.includes('aalst')) return 'Belgium';
-    if (cityLower.includes('zurich') || cityLower.includes('geneva') || cityLower.includes('basel') || cityLower.includes('bern') || cityLower.includes('lausanne') || cityLower.includes('winterthur') || cityLower.includes('lucerne') || cityLower.includes('st. gallen') || cityLower.includes('lugano') || cityLower.includes('biel')) return 'Switzerland';
-    if (cityLower.includes('vienna') || cityLower.includes('graz') || cityLower.includes('linz') || cityLower.includes('salzburg') || cityLower.includes('innsbruck') || cityLower.includes('klagenfurt') || cityLower.includes('villach') || cityLower.includes('wels') || cityLower.includes('sankt pölten') || cityLower.includes('dornbirn')) return 'Austria';
-    if (cityLower.includes('prague') || cityLower.includes('brno') || cityLower.includes('ostrava') || cityLower.includes('plzen') || cityLower.includes('liberec') || cityLower.includes('olomouc') || cityLower.includes('budweis') || cityLower.includes('hradec králové') || cityLower.includes('ústí nad labem') || cityLower.includes('pardubice')) return 'Czech Republic';
-    if (cityLower.includes('warsaw') || cityLower.includes('krakow') || cityLower.includes('lodz') || cityLower.includes('wroclaw') || cityLower.includes('poznan') || cityLower.includes('gdansk') || cityLower.includes('szczecin') || cityLower.includes('bydgoszcz') || cityLower.includes('lublin') || cityLower.includes('katowice')) return 'Poland';
-    if (cityLower.includes('stockholm') || cityLower.includes('gothenburg') || cityLower.includes('malmö') || cityLower.includes('uppsala') || cityLower.includes('västerås') || cityLower.includes('örebro') || cityLower.includes('linköping') || cityLower.includes('helsingborg') || cityLower.includes('jönköping') || cityLower.includes('norrköping')) return 'Sweden';
-    if (cityLower.includes('copenhagen') || cityLower.includes('aarhus') || cityLower.includes('odense') || cityLower.includes('aalborg') || cityLower.includes('esbjerg') || cityLower.includes('randers') || cityLower.includes('kolding') || cityLower.includes('horsens') || cityLower.includes('vejle') || cityLower.includes('roskilde')) return 'Denmark';
-    if (cityLower.includes('oslo') || cityLower.includes('bergen') || cityLower.includes('trondheim') || cityLower.includes('stavanger') || cityLower.includes('drammen') || cityLower.includes('fredrikstad') || cityLower.includes('kristiansand') || cityLower.includes('sandnes') || cityLower.includes('tromsø') || cityLower.includes('sarpsborg')) return 'Norway';
-    if (cityLower.includes('helsinki') || cityLower.includes('espoo') || cityLower.includes('tampere') || cityLower.includes('vantaa') || cityLower.includes('oulu') || cityLower.includes('turku') || cityLower.includes('jyväskylä') || cityLower.includes('lahti') || cityLower.includes('kuopio') || cityLower.includes('pori')) return 'Finland';
-    if (cityLower.includes('dublin') || cityLower.includes('cork') || cityLower.includes('limerick') || cityLower.includes('galway') || cityLower.includes('waterford') || cityLower.includes('drogheda') || cityLower.includes('dundalk') || cityLower.includes('swords') || cityLower.includes('bray') || cityLower.includes('navan')) return 'Ireland';
-    if (cityLower.includes('lisbon') || cityLower.includes('porto') || cityLower.includes('vila nova de gaia') || cityLower.includes('amadora') || cityLower.includes('braga') || cityLower.includes('funchal') || cityLower.includes('coimbra') || cityLower.includes('setúbal') || cityLower.includes('almada') || cityLower.includes('agualva-cacém')) return 'Portugal';
-    
-    return 'Other';
-  };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
