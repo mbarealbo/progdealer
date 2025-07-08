@@ -66,4 +66,15 @@
     background: rgba(0, 0, 0, 0.8);
     z-index: 2;
   }
+
+  /* Ensure mobile menu doesn't cause horizontal scroll */
+  @media (max-width: 768px) {
+    body {
+      overflow-x: hidden;
+    }
+    
+    .hero-video-container {
+      min-height: 300px;
+    }
+  }
 }
