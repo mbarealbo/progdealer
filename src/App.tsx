@@ -214,8 +214,7 @@ function App() {
             PROGRESSIVE MUSIC CULTURE DATABASE
           </p>
           <p className="text-gray-300 text-lg font-condensed max-w-2xl mx-auto leading-relaxed">
-            Automated collection of progressive, metal, and alternative concerts across Europe. 
-            Multi-source aggregation with intelligent deduplication and subgenre classification.
+            Europe's best progressive music events, all in one place.
           </p>
         </div>
       </section>
