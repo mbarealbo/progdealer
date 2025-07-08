@@ -23,6 +23,7 @@ import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
 import CityAutocomplete from './CityAutocomplete';
 import ImportEvents from './ImportEvents';
+import EventImage from './EventImage';
 
 interface AdminPanelProps {
   isAuthenticated: boolean;
@@ -472,22 +473,12 @@ function EventDetailsModal({
           {/* Event Image */}
           <div className="lg:col-span-1">
             <div className="w-full h-48 bg-asphalt-700 border border-asphalt-500 flex items-center justify-center relative overflow-hidden">
-              {event.immagine ? (
-                <img 
-                  src={event.immagine} 
-                  alt={event.nome_evento}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <>
-                  <span className="text-6xl">🎸</span>
-                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                    <span className="text-white text-lg font-condensed font-bold uppercase tracking-wider opacity-60">
-                      PROGDEALER
-                    </span>
-                  </div>
-                </>
-              )}
+              <EventImage
+                src={event.immagine}
+                alt={event.nome_evento}
+                className="w-full h-full object-cover"
+                placeholderClassName="w-full h-48"
+              />
             </div>
           </div>
 

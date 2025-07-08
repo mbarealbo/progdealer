@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ExternalLink, Loader2, ChevronDown } from 'lucide-react';
 import { Event } from '../types/event';
+import EventImage from './EventImage';
 
 interface EventListProps {
   events: Event[];
@@ -157,15 +158,12 @@ export default function EventList({ events, loading }: EventListProps) {
               <div className="flex space-x-4 mb-4">
                 {/* Event Image */}
                 <div className="w-24 h-24 bg-black bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden border border-white border-opacity-10">
-                  {event.immagine ? (
-                    <img 
-                      src={event.immagine} 
-                      alt={event.nome_evento}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-3xl">🎸</span>
-                  )}
+                  <EventImage
+                    src={event.immagine}
+                    alt={event.nome_evento}
+                    className="w-full h-full object-cover rounded-lg"
+                    placeholderClassName="w-full h-full rounded-lg"
+                  />
                 </div>
                 
                 {/* Date Card */}
@@ -260,15 +258,12 @@ export default function EventList({ events, loading }: EventListProps) {
               <div className="flex space-x-6">
                 {/* Event Image */}
                 <div className="w-40 h-32 bg-black bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden border border-white border-opacity-10">
-                  {event.immagine ? (
-                    <img 
-                      src={event.immagine} 
-                      alt={event.nome_evento}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-4xl">🎸</span>
-                  )}
+                  <EventImage
+                    src={event.immagine}
+                    alt={event.nome_evento}
+                    className="w-full h-full object-cover rounded-lg"
+                    placeholderClassName="w-full h-full rounded-lg"
+                  />
                 </div>
 
                 {/* Date Card */}

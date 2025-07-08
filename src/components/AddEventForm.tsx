@@ -3,6 +3,7 @@ import { Plus, X, Check, ChevronDown, ChevronUp, Minus } from 'lucide-react';
 import { supabase, classifySubgenre } from '../lib/supabase';
 import { PROG_SUBGENRES } from '../types/event';
 import CityAutocomplete from './CityAutocomplete';
+import EventImage from './EventImage';
 
 interface AddEventFormProps {
   onEventAdded: () => void;
@@ -52,7 +53,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
           : [],
         orario: formData.orario || null,
         link: formData.link || null,
-        immagine: formData.immagine || null,
+        immagine: formData.immagine?.trim() || null,
         fonte: 'manual-submission',
         tipo_inserimento: 'manual' as const
       };
@@ -355,6 +356,18 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
                   placeholder="IMAGE URL (OPTIONAL)"
                 />
               </div>
+              {formData.immagine && (
+                <div className="mt-2">
+                  <div className="w-32 h-20 border border-asphalt-500 overflow-hidden">
+                    <EventImage
+                      src={formData.immagine}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                      placeholderClassName="w-full h-full"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

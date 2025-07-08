@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { Event, ImportEvent } from '../types/event';
+import { shouldUsePlaceholder } from '../utils/imageUtils';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -54,6 +55,9 @@ export async function importEvents(events: ImportEvent[]) {
   
   for (const event of events) {
     try {
+      // Clean up image URL - set to null if it should use placeholder
+      const cleanedImageUrl = shouldUsePlaceholder(event.immagine) ? null : event.immagine;
+      
       const { data, error } = await supabase.rpc('upsert_evento', {
         p_nome_evento: event.nome_evento,
         p_data_ora: event.data_ora,
@@ -64,7 +68,7 @@ export async function importEvents(events: ImportEvent[]) {
         p_artisti: event.artisti,
         p_orario: event.orario,
         p_link: event.link,
-        p_immagine: event.immagine,
+        p_immagine: cleanedImageUrl,
         p_fonte: event.fonte,
         p_tipo_inserimento: event.tipo_inserimento,
         p_event_id: event.event_id

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Upload, X, Check, AlertTriangle, FileText } from 'lucide-react';
 import { importEvents, classifySubgenre } from '../lib/supabase';
 import { ImportEvent } from '../types/event';
+import { shouldUsePlaceholder } from '../utils/imageUtils';
 
 interface ImportEventsProps {
   onEventsImported: () => void;
@@ -109,7 +110,13 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
               const descrizione = event.description || event.descrizione || null;
               const artisti = event.artists || event.artisti || null;
               const orario = event.time || event.orario || null;
-              const immagine = event.image || event.immagine || null;
+              let immagine = event.image || event.immagine || null;
+              
+              // Clean up image URL - set to null if it should use placeholder
+              if (shouldUsePlaceholder(immagine)) {
+                immagine = null;
+              }
+              
               const event_id = event.event_id || event.id || null;
               
               const mappedEvent: ImportEvent = {
