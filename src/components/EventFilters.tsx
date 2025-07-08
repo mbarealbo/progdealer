@@ -59,7 +59,7 @@ export default function EventFiltersComponent({
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-3 industrial-button mb-6"
       >
-        <Filter className="h-5 w-5" />
+        <span className="text-lg">🎚️</span>
         <span className="text-lg font-industrial tracking-wide uppercase">
           FILTERS
         </span>
