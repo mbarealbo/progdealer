@@ -54,7 +54,6 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
         orario: formData.orario || null,
         link: formData.link || null,
         immagine: formData.immagine?.trim() || null,
-        country: cityData?.country || null,
         fonte: 'manual-submission',
         tipo_inserimento: 'manual' as const,
         status: 'pending'
@@ -217,7 +216,9 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
                 value={formData.città}
                 onChange={(value, data) => {
                   setFormData({ ...formData, città: value });
-                  setCityData(data || null);
+                  if (data) {
+                    setCityData({ city: data.city, region: data.region, country: data.country });
+                  }
                 }}
                 required
                 placeholder="CITY"

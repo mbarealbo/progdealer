@@ -12,7 +12,6 @@ export interface Event {
   immagine?: string;
   fonte: string;
   tipo_inserimento: 'scraped' | 'manual';
-  country?: string;
   event_id?: string;
   status?: 'pending' | 'approved' | 'rejected';
   created_at: string;
@@ -42,7 +41,6 @@ export interface ImportEvent {
   immagine?: string;
   fonte: string;
   tipo_inserimento: 'scraped' | 'manual';
-  country?: string;
   event_id?: string;
 }
 
