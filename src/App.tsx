@@ -398,38 +398,41 @@ function App() {
                     handleRefresh();
                     closeMobileMenu();
                   }}
+                  className="industrial-button"
+                >
+                  <RefreshCw className="h-4 w-4" />
                 </button>
+              </div>
 
-                {/* Admin Button */}
+              {/* Admin Button */}
+              <button
+                onClick={() => {
+                  handleAdminAccess();
+                  closeMobileMenu();
+                }}
+                className="w-full flex items-center justify-center space-x-2 bg-transparent border-2 border-asphalt-500 text-gray-300 px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:border-industrial-green-500 hover:text-white transition-all duration-200"
+              >
+                <Shield className="h-5 w-5" />
+                <span>ADMIN PANEL</span>
+                {pendingCount > 0 && (
+                  <span className="bg-yellow-600 text-black px-2 py-1 text-xs font-bold rounded ml-2">
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Logout Button - Only show if authenticated */}
+              {isAuthenticated && (
                 <button
                   onClick={() => {
-                    handleAdminAccess();
+                    handleLogout();
                     closeMobileMenu();
                   }}
-                  className="w-full flex items-center justify-center space-x-2 bg-transparent border-2 border-asphalt-500 text-gray-300 px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:border-industrial-green-500 hover:text-white transition-all duration-200"
+                  className="w-full flex items-center justify-center space-x-2 bg-transparent border-2 border-burgundy-500 text-burgundy-300 px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:border-burgundy-400 hover:text-white transition-all duration-200"
                 >
-                  <Shield className="h-5 w-5" />
-                  <span>ADMIN PANEL</span>
-                  {pendingCount > 0 && (
-                    <span className="bg-yellow-600 text-black px-2 py-1 text-xs font-bold rounded ml-2">
-                      {pendingCount}
-                    </span>
-                  )}
+                  <span>LOGOUT</span>
                 </button>
-
-                {/* Logout Button - Only show if authenticated */}
-                {isAuthenticated && (
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      closeMobileMenu();
-                    }}
-                    className="w-full flex items-center justify-center space-x-2 bg-transparent border-2 border-burgundy-500 text-burgundy-300 px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:border-burgundy-400 hover:text-white transition-all duration-200"
-                  >
-                    <span>LOGOUT</span>
-                  </button>
-                )}
-              </div>
+              )}
             </div>
           </div>
         )}
