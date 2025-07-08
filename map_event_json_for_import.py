@@ -1,52 +1,99 @@
+#!/usr/bin/env python3
 import json
+import sys
 from dateutil import parser
 
-def map_event_json_for_import(input_file, output_file):
-    with open(input_file, 'r') as f:
-        data = json.load(f)
-    
-    mapped_events = []
-    for event in data:
-        try:
-            nome_evento = event.get('name', '').strip()
-            # Cerca la data evento
-            data_ora = event.get('startDate', '') or event.get('data_ora', '')
-            if not data_ora:
-                continue
-            # Normalizza data
+def main():
+    try:
+        # Read JSON from stdin or file argument
+        if len(sys.argv) > 1:
+            input_file = sys.argv[1]
+            with open(input_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        else:
+            data = json.load(sys.stdin)
+
+        mapped_events = []
+        
+        # Ensure data is a list
+        events_list = data if isinstance(data, list) else [data]
+        
+        for event in events_list:
             try:
-                data_ora_norm = parser.parse(data_ora).isoformat()
-            except Exception:
+                # Extract event name
+                nome_evento = (event.get('name') or event.get('nome_evento') or '').strip()
+                if not nome_evento:
+                    continue
+                
+                # Extract and normalize date
+                data_ora = event.get('startDate') or event.get('data_ora') or ''
+                if not data_ora:
+                    continue
+                
+                try:
+                    # Parse and normalize date to ISO format
+                    parsed_date = parser.parse(data_ora)
+                    data_ora_norm = parsed_date.isoformat()
+                except Exception:
+                    continue
+                
+                # Extract location information
+                location = event.get('location', {})
+                if isinstance(location, dict):
+                    venue = (location.get('name') or '').strip()
+                    address = location.get('address', {})
+                    if isinstance(address, dict):
+                        città = (address.get('addressLocality') or address.get('city') or '').strip()
+                    else:
+                        città = (location.get('city') or '').strip()
+                else:
+                    venue = str(location or '').strip()
+                    città = (event.get('city') or '').strip()
+                
+                # Extract other fields with fallbacks
+                sottogenere = (event.get('subgenre') or event.get('sottogenere') or 'Progressive').strip()
+                descrizione = event.get('description') or event.get('descrizione')
+                artisti = event.get('artists') or event.get('artisti')
+                orario = event.get('time') or event.get('orario')
+                link = event.get('url') or event.get('link') or ''
+                immagine = event.get('image') or event.get('immagine')
+                fonte = event.get('fonte') or event.get('source') or 'import'
+                tipo_inserimento = event.get('tipo_inserimento') or 'scraped'
+                event_id = event.get('event_id') or event.get('id')
+                
+                # Create mapped event object
+                mapped_event = {
+                    "nome_evento": nome_evento,
+                    "data_ora": data_ora_norm,
+                    "venue": venue,
+                    "città": città,
+                    "sottogenere": sottogenere,
+                    "descrizione": descrizione,
+                    "artisti": artisti,
+                    "orario": orario,
+                    "link": link,
+                    "immagine": immagine,
+                    "fonte": fonte,
+                    "tipo_inserimento": tipo_inserimento,
+                    "event_id": event_id
+                }
+                
+                # Remove null values to keep JSON clean
+                mapped_event = {k: v for k, v in mapped_event.items() if v is not None and v != ''}
+                
+                mapped_events.append(mapped_event)
+                
+            except Exception as e:
+                # Skip invalid events silently
                 continue
-            # Venue/location: gestisce sia dict che stringa
-            location = event.get('location', {})
-            if isinstance(location, dict):
-                venue = location.get('name', '').strip()
-                città = location.get('address', {}).get('addressLocality', '').strip()
-            else:
-                venue = location
-                città = event.get('city', '').strip()
-            # Altri campi
-            sottogenere = event.get('subgenre', event.get('sottogenere', 'Prog')).strip()
-            link = event.get('url', event.get('link', ''))
-            fonte = event.get('fonte', 'concertful.com')
-            tipo_inserimento = event.get('tipo_inserimento', 'scraped')
-            mapped = {
-                "nome_evento": nome_evento,
-                "data_ora": data_ora_norm,
-                "venue": venue,
-                "città": città,
-                "sottogenere": sottogenere,
-                "link": link,
-                "fonte": fonte,
-                "tipo_inserimento": tipo_inserimento
-            }
-            mapped_events.append(mapped)
-        except Exception:
-            continue
 
-    with open(output_file, 'w') as f:
-        json.dump(mapped_events, f, indent=2)
+        # Output the transformed JSON to stdout
+        print(json.dumps(mapped_events, indent=2, ensure_ascii=False))
+        
+    except Exception as e:
+        # Output error to stderr and exit with error code
+        print(f"Error processing JSON: {str(e)}", file=sys.stderr)
+        sys.exit(1)
 
-# Esempio di esecuzione:
-# map_event_json_for_import("eventi_ldjson_prog_all.json", "eventi_bolt_ready.json")
+if __name__ == "__main__":
+    main()
