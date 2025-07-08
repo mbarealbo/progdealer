@@ -44,6 +44,7 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [duplicatingEvent, setDuplicatingEvent] = useState<Event | null>(null);
+  const [tempDuplicateEvent, setTempDuplicateEvent] = useState<Event | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -153,44 +154,20 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
     }
   };
 
-  const duplicateEvent = async (originalEvent: Event) => {
-    try {
-      // Create a copy of the event with new ID and pending status
-      const duplicatedEventData = {
-        nome_evento: originalEvent.nome_evento,
-        data_ora: '', // Clear date to avoid unique constraint conflicts
-        venue: originalEvent.venue,
-        città: originalEvent.città,
-        sottogenere: originalEvent.sottogenere,
-        descrizione: originalEvent.descrizione,
-        artisti: originalEvent.artisti,
-        orario: originalEvent.orario,
-        link: originalEvent.link,
-        immagine: originalEvent.immagine,
-        fonte: originalEvent.fonte,
-        tipo_inserimento: originalEvent.tipo_inserimento,
-        event_id: null, // Clear the original event_id to avoid conflicts
-        status: 'pending' // Set as pending for admin review
-      };
-
-      const { data, error } = await supabase
-        .from('eventi_prog')
-        .insert([duplicatedEventData])
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      // Add the new event to the local state
-      setEvents([data, ...events]);
-      setDuplicatingEvent(null);
-      
-      // Show success message
-      alert(`Event "${originalEvent.nome_evento}" has been duplicated successfully. Please set a new date/time for the duplicate before approval.`);
-    } catch (error) {
-      console.error('Error duplicating event:', error);
-      alert('Error duplicating event');
-    }
+  const createTempDuplicate = (originalEvent: Event) => {
+    // Create a temporary duplicate with cleared date and new temporary ID
+    const tempDuplicate: Event = {
+      ...originalEvent,
+      id: `temp-${Date.now()}`, // Temporary ID
+      data_ora: '', // Clear date to avoid conflicts
+      status: 'pending',
+      event_id: null, // Clear original event_id
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    setTempDuplicateEvent(tempDuplicate);
+    setDuplicatingEvent(null);
   };
 
   const saveEditedEvent = async (updatedEvent: Event) => {
@@ -221,6 +198,43 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
     } catch (error) {
       console.error('Error updating event:', error);
       alert('Error updating event');
+    }
+  };
+
+  const saveTempDuplicateEvent = async (tempEvent: Event) => {
+    try {
+      // Validate required fields
+      if (!tempEvent.nome_evento || !tempEvent.data_ora || !tempEvent.venue || !tempEvent.città) {
+        alert('Please fill in all required fields (Event Name, Date/Time, Venue, City) before saving.');
+        return;
+      }
+
+      // Validate date format
+      const eventDate = new Date(tempEvent.data_ora);
+      if (isNaN(eventDate.getTime())) {
+        alert('Please enter a valid date and time.');
+        return;
+      }
+
+      // Remove temporary ID and save to Supabase
+      const { id, created_at, updated_at, ...eventDataToSave } = tempEvent;
+      
+      const { data, error } = await supabase
+        .from('eventi_prog')
+        .insert([eventDataToSave])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      // Add the new event to the local state
+      setEvents([data, ...events]);
+      setTempDuplicateEvent(null);
+      
+      alert(`Event "${tempEvent.nome_evento}" has been saved successfully with pending status.`);
+    } catch (error) {
+      console.error('Error saving duplicate event:', error);
+      alert('Error saving event. Please check for conflicts with existing events.');
     }
   };
 
@@ -419,7 +433,9 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
                               <Edit className="h-4 w-4" />
                             </button>
                             <button
-                              onClick={() => setDuplicatingEvent(event)}
+                              onClick={() => {
+                                setDuplicatingEvent(event);
+                              }}
                               className="bg-transparent border border-asphalt-500 text-gray-300 p-1 hover:border-blue-600 hover:text-white transition-all duration-200"
                               title="DUPLICATE EVENT"
                             >
@@ -469,8 +485,17 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
       {duplicatingEvent && (
         <DuplicateEventModal
           event={duplicatingEvent}
-          onConfirm={() => duplicateEvent(duplicatingEvent)}
+          onConfirm={() => createTempDuplicate(duplicatingEvent)}
           onCancel={() => setDuplicatingEvent(null)}
+        />
+      )}
+
+      {/* Temporary Duplicate Event Editor */}
+      {tempDuplicateEvent && (
+        <TempDuplicateEventModal
+          event={tempDuplicateEvent}
+          onSave={saveTempDuplicateEvent}
+          onCancel={() => setTempDuplicateEvent(null)}
         />
       )}
 
@@ -560,8 +585,8 @@ function DuplicateEventModal({
           </div>
           
           <p className="text-gray-300 font-condensed mb-6 leading-relaxed">
-            This will create a copy of the event with <strong className="text-yellow-400">PENDING</strong> status and <strong className="text-orange-400">NO DATE SET</strong>. 
-            You must edit the duplicate to set a new date/time before approving it.
+            This will create a <strong className="text-blue-400">TEMPORARY COPY</strong> of the event that you can edit before saving. 
+            The copy will have <strong className="text-orange-400">NO DATE SET</strong> and must be completed before it can be saved to the database.
           </p>
           
           <div className="flex space-x-4">
@@ -576,10 +601,274 @@ function DuplicateEventModal({
               className="flex-1 bg-blue-800 border-2 border-blue-600 text-white px-4 py-2 uppercase tracking-wide font-condensed font-bold hover:bg-blue-700 transition-all duration-200 text-sm flex items-center justify-center space-x-2"
             >
               <Copy className="h-4 w-4" />
-              <span>DUPLICATE EVENT</span>
+              <span>CREATE COPY</span>
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Temporary Duplicate Event Editor Modal
+function TempDuplicateEventModal({ 
+  event, 
+  onSave, 
+  onCancel 
+}: { 
+  event: Event; 
+  onSave: (event: Event) => void; 
+  onCancel: () => void;
+}) {
+  const [editedEvent, setEditedEvent] = useState<Event>({ ...event });
+  const [artists, setArtists] = useState<string[]>(
+    event.artisti && event.artisti.length > 0 ? event.artisti : ['']
+  );
+
+  const handleChange = (field: keyof Event, value: any) => {
+    setEditedEvent({ ...editedEvent, [field]: value });
+  };
+
+  const handleArtistChange = (index: number, value: string) => {
+    const newArtists = [...artists];
+    newArtists[index] = value;
+    setArtists(newArtists);
+  };
+
+  const addArtist = () => {
+    setArtists([...artists, '']);
+  };
+
+  const removeArtist = (index: number) => {
+    if (artists.length > 1) {
+      setArtists(artists.filter((_, i) => i !== index));
+    }
+  };
+
+  const handleSave = () => {
+    const filteredArtists = artists.filter(artist => artist.trim() !== '');
+    const finalEvent = {
+      ...editedEvent,
+      artisti: filteredArtists.length > 0 ? filteredArtists : []
+    };
+    onSave(finalEvent);
+  };
+
+  const isFormValid = editedEvent.nome_evento && editedEvent.data_ora && editedEvent.venue && editedEvent.città;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
+      <div className="bg-coal-800 border-2 border-asphalt-600 p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <Copy className="h-6 w-6 text-blue-600" />
+            <h2 className="text-2xl font-industrial text-gray-100 tracking-wide uppercase">
+              EDIT DUPLICATE EVENT
+            </h2>
+            <span className="bg-blue-600 text-white px-3 py-1 text-sm font-bold rounded uppercase">
+              TEMPORARY
+            </span>
+          </div>
+          <button
+            onClick={onCancel}
+            className="bg-transparent border-2 border-asphalt-500 text-gray-300 p-2 hover:border-burgundy-500 hover:text-white transition-all duration-200"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <div className="bg-yellow-900 border-2 border-yellow-600 text-yellow-300 p-4 mb-6 font-condensed text-sm uppercase tracking-wide">
+          ⚠️ This is a temporary copy. You must fill in all required fields and save to make it permanent.
+        </div>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                EVENT NAME *
+              </label>
+              <input
+                type="text"
+                value={editedEvent.nome_evento}
+                onChange={(e) => handleChange('nome_evento', e.target.value)}
+                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                DATE & TIME * {!editedEvent.data_ora && <span className="text-orange-400">(REQUIRED)</span>}
+              </label>
+              <input
+                type="datetime-local"
+                value={editedEvent.data_ora ? editedEvent.data_ora.slice(0, 16) : ''}
+                onChange={(e) => handleChange('data_ora', e.target.value)}
+                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                VENUE *
+              </label>
+              <input
+                type="text"
+                value={editedEvent.venue}
+                onChange={(e) => handleChange('venue', e.target.value)}
+                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                CITY *
+              </label>
+              <CityAutocomplete
+                value={editedEvent.città}
+                onChange={(value, data) => {
+                  handleChange('città', value);
+                }}
+                placeholder="CITY"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                SUBGENRE
+              </label>
+              <input
+                type="text"
+                value={editedEvent.sottogenere}
+                onChange={(e) => handleChange('sottogenere', e.target.value)}
+                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                TIME INFO
+              </label>
+              <input
+                type="text"
+                value={editedEvent.orario || ''}
+                onChange={(e) => handleChange('orario', e.target.value)}
+                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Artists */}
+          <div>
+            <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+              ARTISTS
+            </label>
+            <div className="space-y-2">
+              {artists.map((artist, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={artist}
+                    onChange={(e) => handleArtistChange(index, e.target.value)}
+                    className="flex-1 bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+                    placeholder={`ARTIST ${index + 1}`}
+                  />
+                  {artists.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeArtist(index)}
+                      className="bg-burgundy-800 border-2 border-burgundy-600 text-white p-2 hover:bg-burgundy-700 transition-all duration-200"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addArtist}
+                className="industrial-button flex items-center space-x-2 text-sm"
+              >
+                <Users className="h-4 w-4" />
+                <span>ADD ARTIST</span>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+              DESCRIPTION
+            </label>
+            <textarea
+              value={editedEvent.descrizione || ''}
+              onChange={(e) => handleChange('descrizione', e.target.value)}
+              rows={3}
+              className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm resize-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                EVENT LINK
+              </label>
+              <input
+                type="url"
+                value={editedEvent.link || ''}
+                onChange={(e) => handleChange('link', e.target.value)}
+                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                IMAGE URL
+              </label>
+              <input
+                type="url"
+                value={editedEvent.immagine || ''}
+                onChange={(e) => handleChange('immagine', e.target.value)}
+                className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex space-x-4 pt-6 mt-6 border-t border-asphalt-600">
+          <button
+            onClick={onCancel}
+            className="flex-1 bg-transparent border-2 border-asphalt-500 text-gray-300 px-4 py-2 uppercase tracking-wide font-condensed font-bold hover:border-burgundy-500 hover:text-white transition-all duration-200 text-sm"
+          >
+            DISCARD COPY
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!isFormValid}
+            className={`flex-1 px-4 py-2 uppercase tracking-wide font-condensed font-bold transition-all duration-200 text-sm flex items-center justify-center space-x-2 ${
+              isFormValid
+                ? 'bg-industrial-green-800 border-2 border-industrial-green-600 text-white hover:bg-industrial-green-700'
+                : 'bg-gray-700 border-2 border-gray-600 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            <Check className="h-4 w-4" />
+            <span>SAVE EVENT</span>
+          </button>
+        </div>
+
+        {!isFormValid && (
+          <div className="mt-4 text-center">
+            <p className="text-orange-400 text-sm font-condensed uppercase tracking-wide">
+              Please fill in all required fields (*) to save the event
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
