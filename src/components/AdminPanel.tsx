@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Shield, 
   Eye, 
@@ -16,7 +17,8 @@ import {
   MapPin,
   Music,
   Users,
-  Clock
+  Clock,
+  ArrowLeft
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
@@ -24,9 +26,11 @@ import { Event } from '../types/event';
 interface AdminPanelProps {
   isAuthenticated: boolean;
   onAuthRequired: () => void;
+  onLogout: () => void;
 }
 
-export default function AdminPanel({ isAuthenticated, onAuthRequired }: AdminPanelProps) {
+export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout }: AdminPanelProps) {
+  const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -217,7 +221,15 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired }: AdminPan
       <header className="bg-coal-800 border-b-2 border-asphalt-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            <div className="flex items-center">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/')}
+                className="industrial-button flex items-center space-x-2"
+                title="BACK TO MAIN"
+              >
+                <ArrowLeft className="h-5 w-5" />
+                <span className="hidden md:inline">BACK</span>
+              </button>
               <Shield className="h-8 w-8 text-industrial-green-600 mr-4" />
               <h1 className="text-3xl font-industrial text-gray-100 tracking-wide uppercase">
                 ADMIN PANEL
@@ -228,10 +240,19 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired }: AdminPan
                 </span>
               )}
             </div>
-            <div className="text-gray-400 font-condensed uppercase tracking-wide">
-              <span className="text-lg font-bold">
-                {filteredEvents.length} / {events.length} EVENTS
-              </span>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={onLogout}
+                className="industrial-button text-sm"
+                title="LOGOUT"
+              >
+                LOGOUT
+              </button>
+              <div className="text-gray-400 font-condensed uppercase tracking-wide">
+                <span className="text-lg font-bold">
+                  {filteredEvents.length} / {events.length} EVENTS
+                </span>
+              </div>
             </div>
           </div>
         </div>

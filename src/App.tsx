@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Music, Database, RefreshCw, Shield } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { Event, EventFilters } from './types/event';
@@ -11,7 +12,8 @@ import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
 
 function App() {
-  const [currentView, setCurrentView] = useState<'events' | 'admin'>('events');
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
@@ -117,7 +119,7 @@ function App() {
 
   const handleAdminAccess = () => {
     if (isAuthenticated) {
-      setCurrentView('admin');
+      navigate('/prog_admin');
     } else {
       setShowAuthModal(true);
     }
@@ -125,127 +127,133 @@ function App() {
 
   const handleAuthenticated = () => {
     setIsAuthenticated(true);
-    setCurrentView('admin');
+    navigate('/prog_admin');
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setIsAuthenticated(false);
-    setCurrentView('events');
+    navigate('/');
   };
 
   // Get pending events count for admin badge
   const pendingCount = events.filter(event => (event.status || 'approved') === 'pending').length;
 
-  if (currentView === 'admin') {
-    return (
-      <AdminPanel 
-        isAuthenticated={isAuthenticated}
-        onAuthRequired={() => setShowAuthModal(true)}
-      />
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-coal-900 bg-noise">
-      {/* Header */}
-      <header className="bg-coal-800 border-b-2 border-asphalt-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <div className="flex items-center">
-              <div className="text-4xl mr-4">🎸</div>
-              <h1 className="text-4xl font-industrial text-gray-100 tracking-mega-wide">
-                PROGDEALER
-              </h1>
-            </div>
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center text-gray-400 font-condensed uppercase tracking-wide">
-                <Database className="h-5 w-5 mr-2" />
-                <span className="text-lg font-bold">
-                  {filteredEvents.length} EVENTS
-                </span>
+    <Routes>
+      <Route path="/" element={<MainApp />} />
+      <Route path="/prog_admin" element={
+        <AdminPanel 
+          isAuthenticated={isAuthenticated}
+          onAuthRequired={() => setShowAuthModal(true)}
+          onLogout={handleLogout}
+        />
+      } />
+    </Routes>
+  );
+
+  function MainApp() {
+    return (
+      <div className="min-h-screen bg-coal-900 bg-noise">
+        {/* Header */}
+        <header className="bg-coal-800 border-b-2 border-asphalt-600">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-20">
+              <div className="flex items-center">
+                <div className="text-4xl mr-4">🎸</div>
+                <h1 className="text-4xl font-industrial text-gray-100 tracking-mega-wide">
+                  PROGDEALER
+                </h1>
               </div>
-              <button
-                onClick={handleRefresh}
-                className="industrial-button"
-                title="REFRESH EVENTS"
-              >
-                <RefreshCw className="h-5 w-5" />
-              </button>
-              <button
-                onClick={handleAdminAccess}
-                className="industrial-button flex items-center space-x-2"
-                title="ADMIN PANEL"
-              >
-                <Shield className="h-5 w-5" />
-                {pendingCount > 0 && (
-                  <span className="bg-yellow-600 text-black px-2 py-1 text-xs font-bold rounded">
-                    {pendingCount}
+              <div className="flex items-center space-x-6">
+                <div className="flex items-center text-gray-400 font-condensed uppercase tracking-wide">
+                  <Database className="h-5 w-5 mr-2" />
+                  <span className="text-lg font-bold">
+                    {filteredEvents.length} EVENTS
                   </span>
-                )}
-              </button>
-              {isAuthenticated && (
+                </div>
                 <button
-                  onClick={handleLogout}
-                  className="industrial-button text-sm"
-                  title="LOGOUT"
+                  onClick={handleRefresh}
+                  className="industrial-button"
+                  title="REFRESH EVENTS"
                 >
-                  LOGOUT
+                  <RefreshCw className="h-5 w-5" />
                 </button>
-              )}
+                <button
+                  onClick={handleAdminAccess}
+                  className="industrial-button flex items-center space-x-2"
+                  title="ADMIN PANEL"
+                >
+                  <Shield className="h-5 w-5" />
+                  {pendingCount > 0 && (
+                    <span className="bg-yellow-600 text-black px-2 py-1 text-xs font-bold rounded">
+                      {pendingCount}
+                    </span>
+                  )}
+                </button>
+                {isAuthenticated && (
+                  <button
+                    onClick={handleLogout}
+                    className="industrial-button text-sm"
+                    title="LOGOUT"
+                  >
+                    LOGOUT
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-6xl font-industrial text-gray-100 mb-6 tracking-ultra-wide">
-            PROG EVENTS
-          </h2>
-          <div className="w-32 h-1 bg-industrial-green-600 mx-auto mb-6"></div>
-          <p className="text-gray-400 text-xl font-condensed uppercase tracking-wide mb-4">
-            PROGRESSIVE MUSIC CULTURE DATABASE
-          </p>
-          <p className="text-gray-300 text-lg font-condensed max-w-2xl mx-auto leading-relaxed">
-            Automated collection of progressive, metal, and alternative concerts across Europe. 
-            Multi-source aggregation with intelligent deduplication and subgenre classification.
-          </p>
-        </div>
-      </section>
+        {/* Hero Section */}
+        <section className="py-20 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-6xl font-industrial text-gray-100 mb-6 tracking-ultra-wide">
+              PROG EVENTS
+            </h2>
+            <div className="w-32 h-1 bg-industrial-green-600 mx-auto mb-6"></div>
+            <p className="text-gray-400 text-xl font-condensed uppercase tracking-wide mb-4">
+              PROGRESSIVE MUSIC CULTURE DATABASE
+            </p>
+            <p className="text-gray-300 text-lg font-condensed max-w-2xl mx-auto leading-relaxed">
+              Automated collection of progressive, metal, and alternative concerts across Europe. 
+              Multi-source aggregation with intelligent deduplication and subgenre classification.
+            </p>
+          </div>
+        </section>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        {/* Filters */}
-        <EventFiltersComponent
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-          uniqueLocations={uniqueLocations}
-          uniqueSources={uniqueSources}
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+          {/* Filters */}
+          <EventFiltersComponent
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            uniqueLocations={uniqueLocations}
+            uniqueSources={uniqueSources}
+          />
+
+          {/* Events List */}
+          <EventList events={filteredEvents} loading={loading} />
+        </main>
+
+        {/* Import Events */}
+        <ImportEvents onEventsImported={fetchEvents} />
+
+        {/* Add Event Form */}
+        <AddEventForm onEventAdded={fetchEvents} />
+
+        {/* Footer */}
+        <Footer />
+
+        {/* Auth Modal */}
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onAuthenticated={handleAuthenticated}
         />
-
-        {/* Events List */}
-        <EventList events={filteredEvents} loading={loading} />
-      </main>
-
-      {/* Import Events */}
-      <ImportEvents onEventsImported={fetchEvents} />
-
-      {/* Add Event Form */}
-      <AddEventForm onEventAdded={fetchEvents} />
-
-      {/* Footer */}
-      <Footer />
-
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onAuthenticated={handleAuthenticated}
-      />
-    </div>
-  );
+      </div>
+    );
+  }
 }
 
 export default App;
