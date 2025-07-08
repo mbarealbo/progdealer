@@ -18,6 +18,7 @@ function App() {
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [filters, setFilters] = useState<EventFilters>({
     città: '',
     sottogenere: '',
@@ -71,6 +72,7 @@ function App() {
         (event.status || 'approved') === 'approved'
       );
       setEvents(approvedEvents);
+      setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching events:', error);
     } finally {
@@ -301,19 +303,6 @@ function App() {
             </div>
             
             <div className="flex items-center space-x-4 md:space-x-6">
-              <div className="hidden md:flex items-center text-gray-400 font-condensed uppercase tracking-wide">
-                <Database className="h-5 w-5 mr-2" />
-                <span className="text-lg font-bold">
-                  {filteredEvents.length} EVENTS
-                </span>
-              </div>
-              <button
-                onClick={handleRefresh}
-                className="industrial-button"
-                title="REFRESH EVENTS"
-              >
-                <RefreshCw className="h-5 w-5" />
-              </button>
               <button
                 onClick={handleAdminAccess}
                 className="industrial-button flex items-center space-x-2"
@@ -375,6 +364,55 @@ function App() {
           uniqueLocations={uniqueLocations}
           uniqueCountries={uniqueCountries}
         />
+
+        {/* Events Header with Controls */}
+        <div className="mb-6 bg-coal-800 border-2 border-asphalt-600 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+            {/* Event Count */}
+            <div className="flex items-center text-gray-300 font-condensed uppercase tracking-wide">
+              <Database className="h-5 w-5 mr-2 text-industrial-green-600" />
+              <span className="text-lg font-bold">
+                {filteredEvents.length} EVENTS
+              </span>
+              {filteredEvents.length !== events.length && (
+                <span className="text-gray-500 ml-2 text-sm">
+                  (of {events.length} total)
+                </span>
+              )}
+            </div>
+
+            {/* Controls and Last Updated */}
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+              {/* Last Updated */}
+              {lastUpdated && (
+                <div className="flex items-center text-gray-500 font-condensed text-sm uppercase tracking-wide">
+                  <span className="mr-2">⏱️</span>
+                  <span>LAST UPDATED:</span>
+                  <span className="ml-1 text-gray-400">
+                    {lastUpdated.toLocaleTimeString('en-US', { 
+                      hour: '2-digit', 
+                      minute: '2-digit',
+                      hour12: false 
+                    })}
+                  </span>
+                </div>
+              )}
+
+              {/* Reload Button */}
+              <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className="industrial-button flex items-center space-x-2"
+                title="REFRESH EVENTS"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                <span className="text-sm font-bold uppercase tracking-wide">
+                  {loading ? 'REFRESHING...' : 'REFRESH'}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* Events List */}
         <EventList events={filteredEvents} loading={loading} />
