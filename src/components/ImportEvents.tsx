@@ -299,7 +299,7 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
             <button
               onClick={handleImport}
               disabled={loading || !selectedFile}
-              className="flex-1 bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:border-industrial-green-600 hover:text-white transition-all duration-200 disabled:opacity-50 flex items-center justify-center space-x-2"
+              className="flex-1 bg-industrial-green-600 border-2 border-industrial-green-600 text-white px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:bg-industrial-green-700 hover:border-industrial-green-700 transition-all duration-200 disabled:opacity-50 flex items-center justify-center space-x-2"
             >
               {loading ? (
                 <>
@@ -308,8 +308,8 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
                 </>
               ) : (
                 <>
-                  <Upload className="h-4 w-4" />
-                  <span>IMPORT EVENTS</span>
+                  <span className="text-lg">🤖</span>
+                  <span>IMPORT</span>
                 </>
               )}
             </button>
