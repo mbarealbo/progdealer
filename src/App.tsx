@@ -1,8 +1,187 @@
-The file appears to have some duplicate sections and missing closing brackets. Here's the corrected version with the duplicates removed and proper closure:
+import React, { useState, useEffect } from 'react';
+import { supabase } from './lib/supabase';
+import { Event } from './types/event';
+import EventList from './components/EventList';
+import EventFiltersComponent from './components/EventFilters';
+import AddEventForm from './components/AddEventForm';
+import Footer from './components/Footer';
+import AuthModal from './components/AuthModal';
+import AdminPanel from './components/AdminPanel';
+import SearchInput from './components/SearchInput';
+import { RefreshCw, Shield, Database, Menu, X } from 'lucide-react';
 
-[Previous content remains the same until the first return statement]
+function App() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState({
+    country: '',
+    city: '',
+    subgenre: '',
+    dateRange: { start: '', end: '' }
+  });
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-```javascript
+  const uniqueLocations = [...new Set(events.map(event => event.città))].sort();
+  const uniqueCountries = [...new Set(events.map(event => event.country).filter(Boolean))].sort();
+
+  useEffect(() => {
+    checkAuthStatus();
+    fetchEvents();
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchPendingCount();
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [events, searchQuery, filters]);
+
+  const checkAuthStatus = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setIsAuthenticated(!!session);
+  };
+
+  const fetchEvents = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('eventi_prog')
+        .select('*')
+        .order('data_ora', { ascending: true });
+
+      if (error) throw error;
+      setEvents(data || []);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPendingCount = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('eventi_prog')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+
+      if (error) throw error;
+      setPendingCount(count || 0);
+    } catch (error) {
+      console.error('Error fetching pending count:', error);
+    }
+  };
+
+  const applyFilters = () => {
+    let filtered = events;
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(event =>
+        event.nome_evento.toLowerCase().includes(query) ||
+        event.città.toLowerCase().includes(query) ||
+        event.venue.toLowerCase().includes(query) ||
+        event.artisti?.some(artist => artist.toLowerCase().includes(query)) ||
+        event.sottogenere.toLowerCase().includes(query)
+      );
+    }
+
+    if (filters.country) {
+      filtered = filtered.filter(event => event.country === filters.country);
+    }
+
+    if (filters.city) {
+      filtered = filtered.filter(event => event.città === filters.city);
+    }
+
+    if (filters.subgenre) {
+      filtered = filtered.filter(event => event.sottogenere === filters.subgenre);
+    }
+
+    if (filters.dateRange.start) {
+      filtered = filtered.filter(event => 
+        new Date(event.data_ora) >= new Date(filters.dateRange.start)
+      );
+    }
+
+    if (filters.dateRange.end) {
+      filtered = filtered.filter(event => 
+        new Date(event.data_ora) <= new Date(filters.dateRange.end)
+      );
+    }
+
+    setFilteredEvents(filtered);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleSelectEvent = (event: Event) => {
+    // Scroll to the event in the list
+    const eventElement = document.getElementById(`event-${event.id}`);
+    if (eventElement) {
+      eventElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      eventElement.classList.add('highlight-event');
+      setTimeout(() => {
+        eventElement.classList.remove('highlight-event');
+      }, 3000);
+    }
+  };
+
+  const handleFiltersChange = (newFilters: typeof filters) => {
+    setFilters(newFilters);
+  };
+
+  const handleRefresh = () => {
+    fetchEvents();
+    if (isAuthenticated) {
+      fetchPendingCount();
+    }
+  };
+
+  const handleAdminAccess = () => {
+    if (isAuthenticated) {
+      setShowAdminPanel(true);
+    } else {
+      setShowAuthModal(true);
+    }
+  };
+
+  const handleAuthenticated = () => {
+    setIsAuthenticated(true);
+    setShowAuthModal(false);
+    fetchPendingCount();
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsAuthenticated(false);
+    setShowAdminPanel(false);
+    setPendingCount(0);
+  };
+
+  if (showAdminPanel) {
+    return (
+      <AdminPanel
+        onClose={() => setShowAdminPanel(false)}
+        onEventUpdated={fetchEvents}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-coal-900 bg-noise">
       {/* Header */}
@@ -133,7 +312,6 @@ The file appears to have some duplicate sections and missing closing brackets. H
         </div>
       </header>
 
-      {/* Rest of the components remain the same */}
       {/* Mobile Search */}
       <div className="lg:hidden bg-coal-800 border-b border-asphalt-600 px-4 py-3">
         <SearchInput
@@ -238,4 +416,3 @@ The file appears to have some duplicate sections and missing closing brackets. H
 }
 
 export default App;
-```
