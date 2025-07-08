@@ -161,7 +161,7 @@ export default function AdminPanel({ isAuthenticated, onAuthRequired, onLogout, 
       id: `temp-${Date.now()}`, // Temporary ID
       data_ora: '', // Clear date to avoid conflicts
       status: 'pending',
-      event_id: null, // Clear original event_id
+      event_id: undefined, // Clear original event_id
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
