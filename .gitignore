@@ -22,4 +22,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables - NEVER COMMIT THESE
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Supabase
+.supabase
+
+# Security sensitive files
+**/secrets/**
+**/*secret*
+**/*password*
+**/*credential*
