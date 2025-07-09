@@ -1,4 +1,4 @@
-export interface User {
+interface User {
   id: string;
   email: string | null;
   created_at?: string;
@@ -12,3 +12,5 @@ export interface User {
   identities?: any[];
   role?: string;
 }
+
+export { User };
