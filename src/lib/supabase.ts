@@ -59,13 +59,14 @@ export async function importEvents(events: ImportEvent[]) {
       const cleanedImageUrl = shouldUsePlaceholder(event.immagine) ? null : event.immagine;
       
       // Check if user is admin before allowing import
+      const { data: { user } } = await supabase.auth.getUser();
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .select('user_role')
+        .eq('id', user?.id)
         .single();
       
-      if (!profile || profile.role !== 'admin') {
+      if (!profile || profile.user_role !== 'admin') {
         results.push({ success: false, event: event.nome_evento, error: 'Admin access required' });
         continue;
       }

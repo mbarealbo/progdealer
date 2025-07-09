@@ -48,13 +48,11 @@ export default function UserPanel({
     try {
       setLoading(true);
       
-      // Fetch events submitted by this user (manual submissions)
-      // Since we don't have user tracking in the current schema, 
-      // we'll show all manual submissions for now
+      // Fetch events submitted by this specific user only
       const { data, error } = await supabase
         .from('eventi_prog')
         .select('*')
-        .eq('tipo_inserimento', 'manual')
+        .eq('user_id', currentUser.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

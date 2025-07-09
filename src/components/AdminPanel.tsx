@@ -47,6 +47,8 @@ export default function AdminPanel({
   const fetchEvents = async () => {
     try {
       setLoading(true);
+      
+      // Admin can see all events regardless of user_id
       const { data, error } = await supabase
         .from('eventi_prog')
         .select('*')

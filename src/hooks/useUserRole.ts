@@ -119,3 +119,19 @@ export function useUserRole(user: User | null) {
     refreshProfile
   };
 }
+
+// Utility function to check if current user is admin
+export async function checkIsAdmin(): Promise<boolean> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_role')
+      .eq('id', user?.id)
+      .single();
+    
+    return profile?.user_role === 'admin';
+  } catch {
+    return false;
+  }
+}

@@ -63,7 +63,8 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
         immagine: formData.immagine?.trim() || null,
         fonte: 'manual-submission',
         tipo_inserimento: 'manual',
-        status: 'pending'
+        status: 'pending',
+        user_id: null // Will be automatically set by RLS/trigger
       };
 
       console.log('Final event data being inserted:', eventData);
