@@ -168,46 +168,6 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
     }
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-
-    setLoading(true);
-    setError('');
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        // Wait a moment for any profile operations to complete
-        setTimeout(() => {
-          onAuthenticated();
-          onClose();
-          resetForm();
-        }, 200);
-      }
-    } catch (error: any) {
-      // Handle specific Supabase auth errors
-      if (error.message?.includes('email_address_invalid')) {
-        setError('Please enter a valid email address. Make sure it\'s properly formatted (e.g., user@example.com).');
-      } else if (error.message?.includes('User already registered')) {
-        setError('An account with this email already exists. Please try logging in instead.');
-        setMode('login');
-      } else if (error.message?.includes('Password should be at least')) {
-        setError('Password must be at least 6 characters long.');
-      } else {
-        setError(error.message || 'Registration failed');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const resetForm = () => {
     setEmail('');
     setPassword('');
