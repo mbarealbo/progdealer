@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, User, Trash2, Eye, Clock, CheckCircle, XCircle, Plus } from 'lucide-react';
-import { User as SupabaseUser } from '../types/user';
+import type { User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
 import { UserProfile } from '../hooks/useUserRole';
@@ -170,7 +170,7 @@ export default function UserPanel({
                   {userProfile?.role?.toUpperCase() || 'USER'}
                 </span>
                 <span className="uppercase tracking-wide">
-                  {userProfile?.email || currentUser?.email}
+                  {userProfile?.email || currentUser?.email || 'User'}
                 </span>
               </div>
               <button

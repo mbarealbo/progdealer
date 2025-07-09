@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Shield, Check, X, Eye, Clock, CheckCircle, XCircle, Trash2, Upload, Download } from 'lucide-react';
-import { User } from '../types/user';
+import type { User } from '@supabase/auth-js';
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
 import { UserProfile } from '../hooks/useUserRole';

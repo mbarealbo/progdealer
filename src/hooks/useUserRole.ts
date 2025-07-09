@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { User } from '../types/user';
+import type { User } from '@supabase/auth-js';
 
 export interface UserProfile {
   id: string;
-  email: string;
+  email: string | undefined;
   role: 'user' | 'admin';
   created_at: string;
   updated_at: string;
@@ -97,7 +97,7 @@ export function useUserRole(user: User | null) {
       // Set default values even if profile creation fails
       setProfile({
         id: user.id,
-        email: user.email || '',
+        email: user.email,
         role: 'user',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()

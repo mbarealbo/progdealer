@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Music, RefreshCw, User } from 'lucide-react';
-import { User as SupabaseUser } from './types/user';
+import type { User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from './lib/supabase';
 import { Event, EventFilters } from './types/event';
 import { useUserRole } from './hooks/useUserRole';
