@@ -1,15 +1,3 @@
-/*
-  # Clean migration for profiles table and role-based access
-
-  This migration creates the profiles table and role-based access system
-  without complex error handling or logging that might cause compilation issues.
-
-  1. Creates profiles table with proper structure
-  2. Sets up RLS policies for role-based access
-  3. Creates trigger function for automatic profile creation
-  4. Updates eventi_prog policies to use role-based access
-  5. Ensures admin user has correct profile
-*/
 
 -- Create profiles table
 CREATE TABLE IF NOT EXISTS profiles (
