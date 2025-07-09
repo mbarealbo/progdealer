@@ -99,16 +99,97 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
       if (error) throw error;
 
       if (data.user) {
+        // Ensure profile exists after registration
+        await ensureUserProfile(data.user);
+        
         if (data.user.email_confirmed_at) {
           // User is immediately confirmed
-          onAuthenticated();
-          onClose();
-          resetForm();
+          // Wait a moment for profile creation trigger to complete
+          setTimeout(() => {
+            onAuthenticated();
+            onClose();
+            resetForm();
+          }, 500);
         } else {
           // User needs to confirm email
           setSuccess('Registration successful! Please check your email to confirm your account. You will have standard user access once confirmed.');
           setMode('login');
         }
+      }
+    } catch (error: any) {
+      // Handle specific Supabase auth errors
+      if (error.message?.includes('email_address_invalid')) {
+        setError('Please enter a valid email address. Make sure it\'s properly formatted (e.g., user@example.com).');
+      } else if (error.message?.includes('User already registered')) {
+        setError('An account with this email already exists. Please try logging in instead.');
+        setMode('login');
+      } else if (error.message?.includes('Password should be at least')) {
+        setError('Password must be at least 6 characters long.');
+      } else if (error.message?.includes('signup_disabled')) {
+        setError('New user registration is currently disabled. Please contact support.');
+      } else {
+        setError(error.message || 'Registration failed. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper function to ensure user profile exists
+  const ensureUserProfile = async (user: any) => {
+    try {
+      // Check if profile exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (!existingProfile) {
+        // Create profile if it doesn't exist
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: user.id,
+              email: user.email || email, // Use form email as fallback
+              role: 'user'
+            }
+          ]);
+
+        if (profileError) {
+          console.warn('Profile creation failed, but user registration succeeded:', profileError);
+          // Don't throw error - user can still use the app
+        }
+      }
+    } catch (error) {
+      console.warn('Profile check/creation failed:', error);
+      // Don't throw error - user registration succeeded
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        // Wait a moment for any profile operations to complete
+        setTimeout(() => {
+          onAuthenticated();
+          onClose();
+          resetForm();
+        }, 200);
       }
     } catch (error: any) {
       // Handle specific Supabase auth errors

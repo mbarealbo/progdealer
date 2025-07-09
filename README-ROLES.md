@@ -25,7 +25,9 @@ CREATE TABLE profiles (
 ### Automatic Profile Creation
 - Every new user automatically gets a profile with `role = 'user'`
 - Profiles are created via database trigger on user signup
+- Fallback mechanism ensures profile creation even if trigger fails
 - No manual intervention required for standard users
+- Default role is enforced at database level with NOT NULL constraint
 
 ## Access Control
 
@@ -174,9 +176,11 @@ const isUserAdmin = await checkIsAdmin();
 
 #### Profile Not Created
 1. Check if trigger function exists
-2. Verify auth.users table has the user
-3. Manually create profile if needed
-4. Check database logs for errors
+2. Verify role column has default value 'user'
+3. Check if NOT NULL constraint is properly set
+4. Verify auth.users table has the user
+5. Manually create profile if needed
+6. Check database logs for errors
 
 #### Role Changes Not Reflected
 1. User needs to log out and back in

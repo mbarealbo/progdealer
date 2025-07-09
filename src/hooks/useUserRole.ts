@@ -62,13 +62,27 @@ export function useUserRole(user: User | null) {
     if (!user) return;
 
     try {
+      // First check if profile already exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (existingProfile) {
+        setProfile(existingProfile);
+        setIsAdmin(existingProfile.role === 'admin');
+        return;
+      }
+
+      // Create new profile with explicit default role
       const { data, error } = await supabase
         .from('profiles')
         .insert([
           {
             id: user.id,
             email: user.email || '',
-            role: 'user'
+            role: 'user' // Explicit default role
           }
         ])
         .select()
@@ -80,6 +94,15 @@ export function useUserRole(user: User | null) {
       setIsAdmin(data.role === 'admin');
     } catch (error) {
       console.error('Error creating user profile:', error);
+      // Set default values even if profile creation fails
+      setProfile({
+        id: user.id,
+        email: user.email || '',
+        role: 'user',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+      setIsAdmin(false);
     }
   };
 

@@ -276,13 +276,19 @@ function App() {
 
   const handleAuthenticated = () => {
     setIsAuthenticated(true);
-    checkAuthStatus(); // Update user info
+    // Update user info with a slight delay to ensure profile is ready
+    setTimeout(() => {
+      checkAuthStatus();
+    }, 300);
   };
 
   const handleUserAuthenticated = () => {
     setIsAuthenticated(true);
     setCurrentView('user');
-    checkAuthStatus(); // Update user info
+    // Update user info with a slight delay to ensure profile is ready
+    setTimeout(() => {
+      checkAuthStatus();
+    }, 300);
   };
 
   const handleLogout = async () => {
