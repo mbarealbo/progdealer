@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, User, Trash2, Eye, Clock, CheckCircle, XCircle, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
+import { UserProfile } from '../hooks/useUserRole';
 import EventImage from './EventImage';
 import AddEventForm from './AddEventForm';
 
 interface UserPanelProps {
   isAuthenticated: boolean;
   currentUser: any;
+  userProfile: UserProfile | null;
   onAuthRequired: () => void;
   onLogout: () => void;
   onBackToMain: () => void;
@@ -16,6 +18,7 @@ interface UserPanelProps {
 export default function UserPanel({ 
   isAuthenticated, 
   currentUser,
+  userProfile,
   onAuthRequired, 
   onLogout, 
   onBackToMain 
@@ -157,9 +160,16 @@ export default function UserPanel({
             </div>
 
             <div className="flex items-center space-x-4">
-              <div className="text-gray-400 font-condensed text-sm">
+              <div className="text-gray-400 font-condensed text-sm flex items-center space-x-2">
+                <span className={`px-2 py-1 text-xs font-bold uppercase tracking-wide ${
+                  userProfile?.role === 'admin' 
+                    ? 'bg-burgundy-600 text-white' 
+                    : 'bg-blue-600 text-white'
+                }`}>
+                  {userProfile?.role?.toUpperCase() || 'USER'}
+                </span>
                 <span className="uppercase tracking-wide">
-                  {currentUser?.email}
+                  {userProfile?.email || currentUser?.email}
                 </span>
               </div>
               <button

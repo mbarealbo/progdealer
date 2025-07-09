@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Shield, Check, X, Eye, Clock, CheckCircle, XCircle, Trash2, Upload, Download } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
+import { UserProfile } from '../hooks/useUserRole';
 import EventImage from './EventImage';
 import ImportEvents from './ImportEvents';
+import UserManagement from './UserManagement';
 
 interface AdminPanelProps {
   isAuthenticated: boolean;
   currentUser: any;
+  userProfile: UserProfile | null;
   onAuthRequired: () => void;
   onLogout: () => void;
   onBackToMain: () => void;
@@ -16,6 +19,7 @@ interface AdminPanelProps {
 export default function AdminPanel({ 
   isAuthenticated, 
   currentUser,
+  userProfile,
   onAuthRequired, 
   onLogout, 
   onBackToMain 
@@ -24,15 +28,16 @@ export default function AdminPanel({
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [showUserManagement, setShowUserManagement] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !userProfile || userProfile.role !== 'admin') {
       onAuthRequired();
       return;
     }
     fetchEvents();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, userProfile]);
 
   useEffect(() => {
     applyFilter();
@@ -185,9 +190,12 @@ export default function AdminPanel({
             </div>
 
             <div className="flex items-center space-x-4">
-              <div className="text-gray-400 font-condensed text-sm">
+              <div className="text-gray-400 font-condensed text-sm flex items-center space-x-2">
+                <span className="bg-burgundy-600 text-white px-2 py-1 text-xs font-bold uppercase tracking-wide">
+                  ADMIN
+                </span>
                 <span className="uppercase tracking-wide">
-                  {currentUser?.email || 'Admin User'}
+                  {userProfile?.email || currentUser?.email || 'Admin User'}
                 </span>
               </div>
               <button
@@ -290,6 +298,15 @@ export default function AdminPanel({
           {/* Action Buttons */}
           <div className="flex space-x-2">
             <button
+              onClick={() => setShowUserManagement(!showUserManagement)}
+              className={`industrial-button flex items-center space-x-2 ${
+                showUserManagement ? 'bg-industrial-green-600 border-industrial-green-600 text-white' : ''
+              }`}
+            >
+              <User className="h-4 w-4" />
+              <span>USERS</span>
+            </button>
+            <button
               onClick={() => setShowImportModal(true)}
               className="industrial-button flex items-center space-x-2"
             >
@@ -305,6 +322,9 @@ export default function AdminPanel({
             </button>
           </div>
         </div>
+
+        {/* User Management Section */}
+        <UserManagement isVisible={showUserManagement} />
 
         {/* Events List */}
         <div className="bg-coal-800 border-2 border-asphalt-600">

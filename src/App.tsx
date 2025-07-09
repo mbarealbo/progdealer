@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Music, RefreshCw, User } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { Event, EventFilters } from './types/event';
+import { useUserRole } from './hooks/useUserRole';
 import EventList from './components/EventList';
 import EventFiltersComponent from './components/EventFilters';
 import AddEventForm from './components/AddEventForm';
@@ -10,12 +11,14 @@ import AdminPanel from './components/AdminPanel';
 import UserPanel from './components/UserPanel';
 import AuthModal from './components/AuthModal';
 import UserAuthModal from './components/UserAuthModal';
+import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
 
 function App() {
   const [currentView, setCurrentView] = useState<'events' | 'admin' | 'user'>('events');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const { profile, isAdmin, loading: roleLoading } = useUserRole(currentUser);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserAuthModal, setShowUserAuthModal] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
@@ -248,7 +251,12 @@ function App() {
 
   const handleAdminAccess = () => {
     if (isAuthenticated) {
-      setCurrentView('admin');
+      if (isAdmin) {
+        setCurrentView('admin');
+      } else {
+        // User is authenticated but not admin - show access denied
+        setCurrentView('admin'); // This will be handled by ProtectedRoute
+      }
     } else {
       setShowAuthModal(true);
     }
@@ -268,7 +276,6 @@ function App() {
 
   const handleAuthenticated = () => {
     setIsAuthenticated(true);
-    // Don't automatically redirect to admin - let user choose
     checkAuthStatus(); // Update user info
   };
 
@@ -286,29 +293,49 @@ function App() {
   };
 
   // Get pending events count for admin badge
-  const pendingCount = events.filter(event => (event.status || 'approved') === 'pending').length;
+  const pendingCount = isAdmin ? events.filter(event => (event.status || 'approved') === 'pending').length : 0;
 
   if (currentView === 'admin') {
     return (
-      <AdminPanel 
+      <ProtectedRoute
         isAuthenticated={isAuthenticated}
-        currentUser={currentUser}
+        isAdmin={isAdmin}
+        loading={roleLoading}
         onAuthRequired={() => setShowAuthModal(true)}
-        onLogout={handleLogout}
         onBackToMain={handleBackToMain}
-      />
+        requireAdmin={true}
+      >
+        <AdminPanel 
+          isAuthenticated={isAuthenticated}
+          currentUser={currentUser}
+          userProfile={profile}
+          onAuthRequired={() => setShowAuthModal(true)}
+          onLogout={handleLogout}
+          onBackToMain={handleBackToMain}
+        />
+      </ProtectedRoute>
     );
   }
 
   if (currentView === 'user') {
     return (
-      <UserPanel 
+      <ProtectedRoute
         isAuthenticated={isAuthenticated}
-        currentUser={currentUser}
-        onAuthRequired={() => setShowAuthModal(true)}
-        onLogout={handleLogout}
+        isAdmin={isAdmin}
+        loading={roleLoading}
+        onAuthRequired={() => setShowUserAuthModal(true)}
         onBackToMain={handleBackToMain}
-      />
+        requireAdmin={false}
+      >
+        <UserPanel 
+          isAuthenticated={isAuthenticated}
+          currentUser={currentUser}
+          userProfile={profile}
+          onAuthRequired={() => setShowUserAuthModal(true)}
+          onLogout={handleLogout}
+          onBackToMain={handleBackToMain}
+        />
+      </ProtectedRoute>
     );
   }
 
@@ -348,7 +375,11 @@ function App() {
                 title="USER AREA"
               >
                 <User className="h-5 w-5" />
-                {isAuthenticated && <span className="ml-2 text-sm">USER</span>}
+                {isAuthenticated && (
+                  <span className="ml-2 text-sm">
+                    {isAdmin ? 'ADMIN' : 'USER'}
+                  </span>
+                )}
               </button>
               {isAuthenticated && (
                 <button
@@ -435,6 +466,7 @@ function App() {
       <Footer 
         onAdminAccess={handleAdminAccess}
         isAuthenticated={isAuthenticated}
+        isAdmin={isAdmin}
         pendingCount={pendingCount}
       />
 

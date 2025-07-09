@@ -58,6 +58,18 @@ export async function importEvents(events: ImportEvent[]) {
       // Clean up image URL - set to null if it should use placeholder
       const cleanedImageUrl = shouldUsePlaceholder(event.immagine) ? null : event.immagine;
       
+      // Check if user is admin before allowing import
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+      
+      if (!profile || profile.role !== 'admin') {
+        results.push({ success: false, event: event.nome_evento, error: 'Admin access required' });
+        continue;
+      }
+      
       const { data, error } = await supabase.rpc('upsert_evento', {
         p_nome_evento: event.nome_evento,
         p_data_ora: event.data_ora,
@@ -87,6 +99,21 @@ export async function importEvents(events: ImportEvent[]) {
   }
   
   return results;
+}
+
+// Utility function to check if current user is admin
+export async function checkIsAdmin(): Promise<boolean> {
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', (await supabase.auth.getUser()).data.user?.id)
+      .single();
+    
+    return profile?.role === 'admin';
+  } catch {
+    return false;
+  }
 }
 
 // Utility function to classify subgenre based on keywords

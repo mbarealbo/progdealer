@@ -31,6 +31,10 @@ export default function AuthModal({ isOpen, onClose, onAuthenticated }: AuthModa
       if (data.user) {
         onAuthenticated();
         onClose();
+        // Reset form
+        setEmail('');
+        setPassword('');
+        setError('');
       }
     } catch (error: any) {
       setError(error.message || 'Authentication failed');
@@ -123,7 +127,10 @@ export default function AuthModal({ isOpen, onClose, onAuthenticated }: AuthModa
 
         <div className="mt-6 pt-4 border-t border-asphalt-600">
           <p className="text-gray-500 text-xs font-condensed uppercase tracking-wide text-center">
-            Admin access required for event moderation
+            Admin access required for event moderation and management
+          </p>
+          <p className="text-gray-600 text-xs font-condensed mt-2 text-center">
+            Only users with admin role can access the admin panel
           </p>
         </div>
       </div>

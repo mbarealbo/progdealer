@@ -4,10 +4,11 @@ import { Music, Heart, Globe, Key } from 'lucide-react';
 interface FooterProps {
   onAdminAccess: () => void;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   pendingCount: number;
 }
 
-export default function Footer({ onAdminAccess, isAuthenticated, pendingCount }: FooterProps) {
+export default function Footer({ onAdminAccess, isAuthenticated, isAdmin, pendingCount }: FooterProps) {
   return (
     <footer className="bg-coal-800 border-t-2 border-asphalt-600 mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -37,19 +38,45 @@ export default function Footer({ onAdminAccess, isAuthenticated, pendingCount }:
             </div>
             
             {/* Admin Button */}
-            <button
+            {isAdmin && (
+              <button
+                onClick={onAdminAccess}
+                className="flex items-center space-x-2 text-gray-500 hover:text-industrial-green-400 transition-colors duration-200"
+                title="ADMIN PANEL"
+              >
+                <Key className="h-3 w-3" />
+                <span className="text-xs uppercase tracking-wide">Admin</span>
+                {pendingCount > 0 && (
+                  <span className="bg-yellow-600 text-black px-1 py-0.5 text-xs font-bold rounded">
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+            )}
+            
+            {/* Show admin button for non-admins but with different styling */}
+            {isAuthenticated && !isAdmin && (
+              <button
+                onClick={onAdminAccess}
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-500 transition-colors duration-200 cursor-not-allowed"
+                title="ADMIN ACCESS REQUIRED"
+              >
+                <Key className="h-3 w-3" />
+                <span className="text-xs uppercase tracking-wide">Admin</span>
+              </button>
+            )}
+            
+            {/* Show admin button for unauthenticated users */}
+            {!isAuthenticated && (
+              <button
               onClick={onAdminAccess}
               className="flex items-center space-x-2 text-gray-500 hover:text-industrial-green-400 transition-colors duration-200"
               title="ADMIN PANEL"
             >
               <Key className="h-3 w-3" />
               <span className="text-xs uppercase tracking-wide">Admin</span>
-              {pendingCount > 0 && (
-                <span className="bg-yellow-600 text-black px-1 py-0.5 text-xs font-bold rounded">
-                  {pendingCount}
-                </span>
-              )}
             </button>
+            )}
           </div>
 
           {/* Copyright */}

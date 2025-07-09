@@ -106,7 +106,7 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
           resetForm();
         } else {
           // User needs to confirm email
-          setSuccess('Registration successful! Please check your email to confirm your account.');
+          setSuccess('Registration successful! Please check your email to confirm your account. You will have standard user access once confirmed.');
           setMode('login');
         }
       }
@@ -314,6 +314,9 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
               ? 'New user? Click Register above to create an account.'
               : 'Already have an account? Click Login above.'
             }
+          </p>
+          <p className="text-gray-600 text-xs font-condensed mt-2 text-center">
+            New users get standard user access. Contact admin for role upgrades.
           </p>
           {mode === 'login' && (
             <p className="text-gray-600 text-xs font-condensed mt-2 text-center">
