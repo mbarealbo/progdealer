@@ -163,11 +163,11 @@ export default function UserPanel({
             <div className="flex items-center space-x-4">
               <div className="text-gray-400 font-condensed text-sm flex items-center space-x-2">
                 <span className={`px-2 py-1 text-xs font-bold uppercase tracking-wide ${
-                  userProfile?.role === 'admin' 
+                  userProfile?.user_role === 'admin' 
                     ? 'bg-burgundy-600 text-white' 
                     : 'bg-blue-600 text-white'
                 }`}>
-                  {userProfile?.role?.toUpperCase() || 'USER'}
+                  {userProfile?.user_role?.toUpperCase() || 'USER'}
                 </span>
                 <span className="uppercase tracking-wide">
                   {userProfile?.email || currentUser?.email || 'User'}

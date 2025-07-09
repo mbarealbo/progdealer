@@ -106,11 +106,11 @@ export async function checkIsAdmin(): Promise<boolean> {
   try {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('user_role')
       .eq('id', (await supabase.auth.getUser()).data.user?.id)
       .single();
     
-    return profile?.role === 'admin';
+    return profile?.user_role === 'admin';
   } catch {
     return false;
   }

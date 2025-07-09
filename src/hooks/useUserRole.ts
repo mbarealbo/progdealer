@@ -5,7 +5,7 @@ import type { User } from '@supabase/auth-js';
 export interface UserProfile {
   id: string;
   email: string | undefined;
-  role: 'user' | 'admin';
+  user_role: 'user' | 'admin';
   created_at: string;
   updated_at: string;
 }
@@ -48,7 +48,7 @@ export function useUserRole(user: User | null) {
       }
 
       setProfile(data);
-      setIsAdmin(data.role === 'admin');
+      setIsAdmin(data.user_role === 'admin');
     } catch (error) {
       console.error('Error fetching user profile:', error);
       setProfile(null);
@@ -71,7 +71,7 @@ export function useUserRole(user: User | null) {
 
       if (existingProfile) {
         setProfile(existingProfile);
-        setIsAdmin(existingProfile.role === 'admin');
+        setIsAdmin(existingProfile.user_role === 'admin');
         return;
       }
 
@@ -82,7 +82,7 @@ export function useUserRole(user: User | null) {
           {
             id: user.id,
             email: user.email || '',
-            role: 'user' // Explicit default role
+            user_role: 'user' // Explicit default user_role
           }
         ])
         .select()
@@ -91,14 +91,14 @@ export function useUserRole(user: User | null) {
       if (error) throw error;
 
       setProfile(data);
-      setIsAdmin(data.role === 'admin');
+      setIsAdmin(data.user_role === 'admin');
     } catch (error) {
       console.error('Error creating user profile:', error);
       // Set default values even if profile creation fails
       setProfile({
         id: user.id,
         email: user.email,
-        role: 'user',
+        user_role: 'user',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });

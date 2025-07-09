@@ -33,7 +33,7 @@ export default function AdminPanel({
   const [showImportModal, setShowImportModal] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated || !userProfile || userProfile.role !== 'admin') {
+    if (!isAuthenticated || !userProfile || userProfile.user_role !== 'admin') {
       onAuthRequired();
       return;
     }
