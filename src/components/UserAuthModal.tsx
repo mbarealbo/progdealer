@@ -168,7 +168,7 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
             {
               id: user.id,
               email: user.email || email,
-              role: 'user'
+              user_role: 'user'
             }
           ]);
 
