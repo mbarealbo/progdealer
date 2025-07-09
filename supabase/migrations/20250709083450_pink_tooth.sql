@@ -1,4 +1,4 @@
-@@ .. @@
+
    -- Check if eventi_prog table exists
    IF NOT EXISTS (
 -    SELECT 1 FROM information_schema.tables 
@@ -10,7 +10,7 @@
    ) THEN
      
      RAISE NOTICE 'Table eventi_prog does not exist. Creating it now...';
-@@ .. @@
+
    -- Recreate the upsert function if it doesn't exist
    IF NOT EXISTS (
 -    SELECT 1 FROM information_schema.routines 
