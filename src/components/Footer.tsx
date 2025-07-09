@@ -1,14 +1,11 @@
 import React from 'react';
-import { Music, Heart, Globe, Key } from 'lucide-react';
+import { Music, Heart, Globe } from 'lucide-react';
 
 interface FooterProps {
-  onAdminAccess: () => void;
-  isAuthenticated: boolean;
-  isAdmin: boolean;
-  pendingCount: number;
+  // No props needed anymore
 }
 
-export default function Footer({ onAdminAccess, isAuthenticated, isAdmin, pendingCount }: FooterProps) {
+export default function Footer(): FooterProps {
   return (
     <footer className="bg-coal-800 border-t-2 border-asphalt-600 mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -470,12 +470,7 @@ function App() {
       <AddEventForm onEventAdded={fetchEvents} />
 
       {/* Footer */}
-      <Footer 
-        onAdminAccess={handleAdminAccess}
-        isAuthenticated={isAuthenticated}
-        isAdmin={isAdmin}
-        pendingCount={pendingCount}
-      />
+      <Footer />
 
       {/* Auth Modal */}
       <AuthModal
