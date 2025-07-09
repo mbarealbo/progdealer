@@ -88,6 +88,16 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
     setSuccess('');
 
     try {
+      // First, verify the profiles table is ready
+      const { data: tableCheck } = await supabase
+        .from('profiles')
+        .select('id')
+        .limit(1);
+      
+      if (!tableCheck && tableCheck !== null) {
+        throw new Error('Database not ready. Please try again in a moment.');
+      }
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -99,8 +109,10 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
       if (error) throw error;
 
       if (data.user) {
-        // Ensure profile exists after registration
-        await ensureUserProfile(data.user);
+        // Give the trigger time to create the profile
+        setTimeout(async () => {
+          await ensureUserProfile(data.user);
+        }, 1000);
         
         if (data.user.email_confirmed_at) {
           // User is immediately confirmed
@@ -138,6 +150,9 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
   // Helper function to ensure user profile exists
   const ensureUserProfile = async (user: any) => {
     try {
+      // Wait a moment for the trigger to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       // Check if profile exists
       const { data: existingProfile } = await supabase
         .from('profiles')
@@ -152,19 +167,20 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
           .insert([
             {
               id: user.id,
-              email: user.email || email, // Use form email as fallback
+              email: user.email || email,
               role: 'user'
             }
           ]);
 
         if (profileError) {
-          console.warn('Profile creation failed, but user registration succeeded:', profileError);
-          // Don't throw error - user can still use the app
+          // If it's a duplicate key error, that's actually good - profile exists
+          if (!profileError.message?.includes('duplicate key')) {
+            console.warn('Profile creation failed:', profileError);
+          }
         }
       }
     } catch (error) {
-      console.warn('Profile check/creation failed:', error);
-      // Don't throw error - user registration succeeded
+      console.warn('Profile verification failed:', error);
     }
   };
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Shield, Check, X, Eye, Clock, CheckCircle, XCircle, Trash2, Upload, Download } from 'lucide-react';
+import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
 import { UserProfile } from '../hooks/useUserRole';
@@ -9,7 +10,7 @@ import UserManagement from './UserManagement';
 
 interface AdminPanelProps {
   isAuthenticated: boolean;
-  currentUser: any;
+  currentUser: User | null;
   userProfile: UserProfile | null;
   onAuthRequired: () => void;
   onLogout: () => void;

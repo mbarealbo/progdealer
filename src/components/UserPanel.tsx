@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, User, Trash2, Eye, Clock, CheckCircle, XCircle, Plus } from 'lucide-react';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
 import { UserProfile } from '../hooks/useUserRole';
@@ -8,7 +9,7 @@ import AddEventForm from './AddEventForm';
 
 interface UserPanelProps {
   isAuthenticated: boolean;
-  currentUser: any;
+  currentUser: SupabaseUser | null;
   userProfile: UserProfile | null;
   onAuthRequired: () => void;
   onLogout: () => void;

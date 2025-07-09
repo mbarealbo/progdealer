@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Music, RefreshCw, User } from 'lucide-react';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from './lib/supabase';
 import { Event, EventFilters } from './types/event';
 import { useUserRole } from './hooks/useUserRole';
@@ -17,7 +18,7 @@ import Footer from './components/Footer';
 function App() {
   const [currentView, setCurrentView] = useState<'events' | 'admin' | 'user'>('events');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
   const { profile, isAdmin, loading: roleLoading } = useUserRole(currentUser);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserAuthModal, setShowUserAuthModal] = useState(false);
