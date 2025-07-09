@@ -50,13 +50,13 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
         descrizione: formData.descrizione || null,
         artisti: artists.filter(artist => artist.trim() !== '').length > 0 
           ? artists.filter(artist => artist.trim() !== '')
-          : [],
+          : null,
         orario: formData.orario || null,
         link: formData.link || null,
         immagine: formData.immagine?.trim() || null,
         fonte: 'manual-submission',
         tipo_inserimento: 'manual' as const,
-        status: 'pending'
+        status: 'pending' as const
       };
 
       const { error } = await supabase
