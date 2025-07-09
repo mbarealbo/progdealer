@@ -31,6 +31,15 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
+    console.log('Attempting to insert event with data:', {
+      nome_evento: formData.nome_evento,
+      data_ora: formData.data_ora,
+      venue: formData.venue,
+      città: formData.città,
+      sottogenere: formData.sottogenere || classifySubgenre(formData.nome_evento, formData.descrizione, artists.filter(artist => artist.trim() !== '')),
+      artists: artists.filter(artist => artist.trim() !== '')
+    });
 
     try {
       // Auto-classify subgenre if not manually selected
@@ -48,22 +57,27 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
         città: formData.città,
         sottogenere: finalSubgenre,
         descrizione: formData.descrizione || null,
-        artisti: artists.filter(artist => artist.trim() !== '').length > 0 
-          ? artists.filter(artist => artist.trim() !== '')
-          : null,
+        artisti: artists.filter(artist => artist.trim() !== ''),
         orario: formData.orario || null,
-        link: formData.link || null,
+        link: formData.link || '',
         immagine: formData.immagine?.trim() || null,
         fonte: 'manual-submission',
-        tipo_inserimento: 'manual' as const,
-        status: 'pending' as const
+        tipo_inserimento: 'manual',
+        status: 'pending'
       };
+
+      console.log('Final event data being inserted:', eventData);
 
       const { error } = await supabase
         .from('eventi_prog')
         .insert([eventData]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw error;
+      }
+
+      console.log('Event inserted successfully');
 
       // Reset form
       setFormData({
@@ -90,7 +104,14 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
       }, 3000);
     } catch (error) {
       console.error('Error adding event:', error);
-      alert('ERRORE NELL\'INVIO DELLA SEGNALAZIONE');
+      
+      // More detailed error message
+      let errorMessage = 'ERRORE NELL\'INVIO DELLA SEGNALAZIONE';
+      if (error instanceof Error) {
+        errorMessage += ': ' + error.message;
+      }
+      
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
