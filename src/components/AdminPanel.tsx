@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Shield, Check, X, Eye, Clock, CheckCircle, XCircle, Trash2, Upload, Download } from 'lucide-react';
+import { ArrowLeft, Shield, Check, X, Eye, Clock, CheckCircle, XCircle, Trash2, Upload, Download, User as UserIcon } from 'lucide-react';
 import type { User } from '@supabase/auth-js';
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
@@ -304,7 +304,7 @@ export default function AdminPanel({
                 showUserManagement ? 'bg-industrial-green-600 border-industrial-green-600 text-white' : ''
               }`}
             >
-              <User className="h-4 w-4" />
+              <UserIcon className="h-4 w-4" />
               <span>USERS</span>
             </button>
             <button

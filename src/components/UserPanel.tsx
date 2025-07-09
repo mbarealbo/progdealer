@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, User, Trash2, Eye, Clock, CheckCircle, XCircle, Plus } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Trash2, Eye, Clock, CheckCircle, XCircle, Plus } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
@@ -148,7 +148,7 @@ export default function UserPanel({
               </button>
               
               <div className="flex items-center space-x-4">
-                <User className="h-8 w-8 text-industrial-green-600" />
+                <UserIcon className="h-8 w-8 text-industrial-green-600" />
                 <div>
                   <h1 className="text-2xl font-industrial text-gray-100 tracking-wide uppercase">
                     USER AREA

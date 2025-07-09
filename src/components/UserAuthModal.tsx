@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, X, Eye, EyeOff, UserPlus, LogIn } from 'lucide-react';
+import { User as UserIcon, X, Eye, EyeOff, UserPlus, LogIn } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface UserAuthModalProps {
@@ -208,7 +208,7 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
       <div className="bg-coal-800 border-2 border-asphalt-600 p-6 w-full max-w-md">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
-            <User className="h-6 w-6 text-industrial-green-600" />
+            <UserIcon className="h-6 w-6 text-industrial-green-600" />
             <h2 className="text-xl font-industrial text-gray-100 tracking-wide uppercase">
               USER AREA
             </h2>

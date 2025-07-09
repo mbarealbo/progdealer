@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Music, RefreshCw, User } from 'lucide-react';
+import { Music, RefreshCw, User as UserIcon } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from './lib/supabase';
 import { Event, EventFilters } from './types/event';
@@ -381,7 +381,7 @@ function App() {
                 className="industrial-button"
                 title="USER AREA"
               >
-                <User className="h-5 w-5" />
+                <UserIcon className="h-5 w-5" />
                 {isAuthenticated && (
                   <span className="ml-2 text-sm">
                     {isAdmin ? 'ADMIN' : 'USER'}

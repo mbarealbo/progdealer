@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Shield, User, Edit3, Check, X } from 'lucide-react';
+import { Users, Shield, User as UserIcon, Edit3, Check, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { UserProfile } from '../hooks/useUserRole';
 
@@ -89,7 +89,7 @@ export default function UserManagement({ isVisible }: UserManagementProps) {
                     {user.role === 'admin' ? (
                       <Shield className="h-5 w-5 text-burgundy-400" />
                     ) : (
-                      <User className="h-5 w-5 text-blue-400" />
+                      <UserIcon className="h-5 w-5 text-blue-400" />
                     )}
                   </div>
                   
