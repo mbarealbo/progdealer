@@ -1,6 +1,4 @@
-@@ .. @@
- -- Drop existing table and policies
--DROP TABLE IF EXISTS eventi_prog CASCADE;
+
 +-- Check if table exists before operations
 +DO $$
 +BEGIN
