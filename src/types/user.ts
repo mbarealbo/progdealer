@@ -1,4 +1,6 @@
-interface User {
+// /src/types/user.ts
+
+export interface User {
   id: string;
   email: string | null;
   created_at?: string;
@@ -12,5 +14,3 @@ interface User {
   identities?: any[];
   role?: string;
 }
-
-export { User };
