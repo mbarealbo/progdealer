@@ -382,4 +382,5 @@ export default function UserPanel({
         />
       )}
     </div>
+  );
 }
