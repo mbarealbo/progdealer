@@ -1,4 +1,5 @@
 import React from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { Shield, AlertTriangle, ArrowLeft } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -6,8 +7,6 @@ interface ProtectedRouteProps {
   isAuthenticated: boolean;
   isAdmin: boolean;
   loading: boolean;
-  onAuthRequired: () => void;
-  onBackToMain: () => void;
   requireAdmin?: boolean;
 }
 
@@ -16,10 +15,10 @@ export default function ProtectedRoute({
   isAuthenticated,
   isAdmin,
   loading,
-  onAuthRequired,
-  onBackToMain,
   requireAdmin = false
 }: ProtectedRouteProps) {
+  const location = useLocation();
+
   // Show loading state
   if (loading) {
     return (
@@ -36,8 +35,8 @@ export default function ProtectedRoute({
 
   // Check authentication
   if (!isAuthenticated) {
-    onAuthRequired();
-    return null;
+    // Redirect to login with return URL
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Check admin access if required
@@ -50,7 +49,7 @@ export default function ProtectedRoute({
             <div className="flex items-center justify-between h-20">
               <div className="flex items-center space-x-6">
                 <button
-                  onClick={onBackToMain}
+                  onClick={() => window.history.back()}
                   className="industrial-button flex items-center space-x-2"
                 >
                   <ArrowLeft className="h-5 w-5" />
@@ -116,7 +115,7 @@ export default function ProtectedRoute({
             
             <div className="mt-8">
               <button
-                onClick={onBackToMain}
+                onClick={() => window.location.href = '/'}
                 className="bg-industrial-green-600 border-2 border-industrial-green-600 text-white px-8 py-3 uppercase tracking-wide font-condensed font-bold hover:bg-industrial-green-700 hover:border-industrial-green-700 transition-all duration-200"
               >
                 RETURN TO MAIN SITE

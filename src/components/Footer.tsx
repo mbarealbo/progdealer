@@ -43,9 +43,9 @@ export default function Footer({
             </div>
             
             {/* Admin Button - Only show for admin users */}
-            {isAuthenticated && isAdmin && onAdminAccess && (
+            {isAuthenticated && isAdmin && (
               <button
-                onClick={onAdminAccess}
+                onClick={() => window.location.href = '/adminarea'}
                 className="flex items-center space-x-2 text-gray-400 hover:text-industrial-green-400 transition-colors duration-200"
                 title="ADMIN PANEL"
               >

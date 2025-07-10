@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Music, RefreshCw, User as UserIcon } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from './lib/supabase';
@@ -10,18 +11,15 @@ import AddEventForm from './components/AddEventForm';
 import SearchInput from './components/SearchInput';
 import AdminPanel from './components/AdminPanel';
 import UserPanel from './components/UserPanel';
-import AuthModal from './components/AuthModal';
-import UserAuthModal from './components/UserAuthModal';
+import LoginPage from './components/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
 
-function App() {
-  const [currentView, setCurrentView] = useState<'events' | 'admin' | 'user'>('events');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+// Main page component
+function MainPage() {
   const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { profile, isAdmin, loading: roleLoading } = useUserRole(currentUser);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [showUserAuthModal, setShowUserAuthModal] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,8 +36,6 @@ function App() {
   // Get unique values for filters
   const uniqueLocations = [...new Set(events.map(event => event.città))].sort();
   const uniqueCountries = [...new Set(events.map(event => {
-    // Extract country from city data or use a mapping
-    // For now, we'll extract from existing city names or use a simple mapping
     const city = event.città.toLowerCase();
     
     // Simple country mapping based on common European cities
@@ -61,7 +57,6 @@ function App() {
     if (city.includes('dublin') || city.includes('cork') || city.includes('limerick') || city.includes('galway') || city.includes('waterford') || city.includes('drogheda') || city.includes('dundalk') || city.includes('swords') || city.includes('bray') || city.includes('navan')) return 'Ireland';
     if (city.includes('lisbon') || city.includes('porto') || city.includes('vila nova de gaia') || city.includes('amadora') || city.includes('braga') || city.includes('funchal') || city.includes('coimbra') || city.includes('setúbal') || city.includes('almada') || city.includes('agualva-cacém')) return 'Portugal';
     
-    // Default fallback - try to extract from city name or return "Other"
     return 'Other';
   }))].filter(country => country !== 'Other').sort();
 
@@ -250,42 +245,8 @@ function App() {
     }
   };
 
-  const handleAdminAccess = () => {
-    if (isAuthenticated) {
-      if (isAdmin) {
-        setCurrentView('admin');
-      } else {
-        // User is authenticated but not admin - show access denied
-        setCurrentView('admin'); // This will be handled by ProtectedRoute
-      }
-    } else {
-      setShowAuthModal(true);
-    }
-  };
-
-  const handleBackToMain = () => {
-    setCurrentView('events');
-  };
-
-  const handleUserAccess = () => {
-    if (isAuthenticated) {
-      setCurrentView('user');
-    } else {
-      setShowUserAuthModal(true);
-    }
-  };
-
   const handleAuthenticated = () => {
     setIsAuthenticated(true);
-    // Update user info with a slight delay to ensure profile is ready
-    setTimeout(() => {
-      checkAuthStatus();
-    }, 300);
-  };
-
-  const handleUserAuthenticated = () => {
-    setIsAuthenticated(true);
-    setCurrentView('user');
     // Update user info with a slight delay to ensure profile is ready
     setTimeout(() => {
       checkAuthStatus();
@@ -296,55 +257,10 @@ function App() {
     await supabase.auth.signOut();
     setIsAuthenticated(false);
     setCurrentUser(null);
-    setCurrentView('events');
   };
 
   // Get pending events count for admin badge
   const pendingCount = isAdmin ? events.filter(event => (event.status || 'approved') === 'pending').length : 0;
-
-  if (currentView === 'admin') {
-    return (
-      <ProtectedRoute
-        isAuthenticated={isAuthenticated}
-        isAdmin={isAdmin}
-        loading={roleLoading}
-        onAuthRequired={() => setShowAuthModal(true)}
-        onBackToMain={handleBackToMain}
-        requireAdmin={true}
-      >
-        <AdminPanel 
-          isAuthenticated={isAuthenticated}
-          currentUser={currentUser}
-          userProfile={profile}
-          onAuthRequired={() => setShowAuthModal(true)}
-          onLogout={handleLogout}
-          onBackToMain={handleBackToMain}
-        />
-      </ProtectedRoute>
-    );
-  }
-
-  if (currentView === 'user') {
-    return (
-      <ProtectedRoute
-        isAuthenticated={isAuthenticated}
-        isAdmin={isAdmin}
-        loading={roleLoading}
-        onAuthRequired={() => setShowUserAuthModal(true)}
-        onBackToMain={handleBackToMain}
-        requireAdmin={false}
-      >
-        <UserPanel 
-          isAuthenticated={isAuthenticated}
-          currentUser={currentUser}
-          userProfile={profile}
-          onAuthRequired={() => setShowUserAuthModal(true)}
-          onLogout={handleLogout}
-          onBackToMain={handleBackToMain}
-        />
-      </ProtectedRoute>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-coal-900 bg-noise">
@@ -376,8 +292,8 @@ function App() {
               >
                 <RefreshCw className="h-5 w-5" />
               </button>
-              <button
-                onClick={handleUserAccess}
+              <a
+                href="/userarea"
                 className="industrial-button"
                 title="USER AREA"
               >
@@ -387,7 +303,7 @@ function App() {
                     {isAdmin ? 'ADMIN' : 'USER'}
                   </span>
                 )}
-              </button>
+              </a>
               {isAuthenticated && (
                 <button
                   onClick={handleLogout}
@@ -473,24 +389,111 @@ function App() {
       <Footer 
         isAuthenticated={isAuthenticated}
         isAdmin={isAdmin}
-        onAdminAccess={handleAdminAccess}
+        onAdminAccess={() => window.location.href = '/adminarea'}
         pendingCount={pendingCount}
       />
-
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onAuthenticated={handleAuthenticated}
-      />
-
-      {/* User Auth Modal */}
-      <UserAuthModal
-        isOpen={showUserAuthModal}
-        onClose={() => setShowUserAuthModal(false)}
-        onAuthenticated={handleUserAuthenticated}
-      />
     </div>
+  );
+}
+
+function App() {
+  const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { profile, isAdmin, loading: roleLoading } = useUserRole(currentUser);
+
+  useEffect(() => {
+    checkAuthStatus();
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+      setCurrentUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setIsAuthenticated(!!session);
+    setCurrentUser(session?.user || null);
+  };
+
+  const handleAuthenticated = () => {
+    setIsAuthenticated(true);
+    setTimeout(() => {
+      checkAuthStatus();
+    }, 300);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+  };
+
+  return (
+    <Router>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<MainPage />} />
+        <Route 
+          path="/login" 
+          element={
+            <LoginPage 
+              isAuthenticated={isAuthenticated}
+              onAuthenticated={handleAuthenticated}
+            />
+          } 
+        />
+
+        {/* Protected User Routes */}
+        <Route 
+          path="/userarea" 
+          element={
+            <ProtectedRoute
+              isAuthenticated={isAuthenticated}
+              isAdmin={isAdmin}
+              loading={roleLoading}
+            >
+              <UserPanel 
+                isAuthenticated={isAuthenticated}
+                currentUser={currentUser}
+                userProfile={profile}
+                onAuthRequired={() => {}}
+                onLogout={handleLogout}
+                onBackToMain={() => window.location.href = '/'}
+              />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Protected Admin Routes */}
+        <Route 
+          path="/adminarea" 
+          element={
+            <ProtectedRoute
+              isAuthenticated={isAuthenticated}
+              isAdmin={isAdmin}
+              loading={roleLoading}
+              requireAdmin={true}
+            >
+              <AdminPanel 
+                isAuthenticated={isAuthenticated}
+                currentUser={currentUser}
+                userProfile={profile}
+                onAuthRequired={() => {}}
+                onLogout={handleLogout}
+                onBackToMain={() => window.location.href = '/'}
+              />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Catch all route - redirect to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 }
 
