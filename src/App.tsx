@@ -9,13 +9,11 @@ import EventList from './components/EventList';
 import EventFiltersComponent from './components/EventFilters';
 import AddEventForm from './components/AddEventForm';
 import SearchInput from './components/SearchInput';
-import Navbar from './components/Navbar';
 import AdminPanel from './components/AdminPanel';
 import UserPanel from './components/UserPanel';
 import LoginPage from './components/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
-import AuthenticatedLayout from './layouts/AuthenticatedLayout';
 
 // Main page component
 function MainPage() {
@@ -267,16 +265,67 @@ function MainPage() {
   return (
     <div className="min-h-screen bg-coal-900 bg-noise">
       {/* Header */}
-      <Navbar 
-        events={events}
-        onSearch={handleSearch}
-        onSelectEvent={handleSelectEvent}
-        onRefresh={handleRefresh}
-        isAuthenticated={isAuthenticated}
-        isAdmin={isAdmin}
-        onLogout={handleLogout}
-        showSearch={true}
-      />
+      <header className="bg-coal-800 border-b-2 border-asphalt-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center">
+              <div className="text-4xl mr-4">🎸</div>
+              <h1 className="text-3xl md:text-4xl font-industrial text-gray-100 tracking-mega-wide">
+                PROGDEALER
+              </h1>
+            </div>
+            
+            {/* Search Input - Desktop */}
+            <div className="hidden lg:block flex-1 max-w-md mx-8">
+              <SearchInput
+                events={events}
+                onSearch={handleSearch}
+                onSelectEvent={handleSelectEvent}
+              />
+            </div>
+            
+            <div className="flex items-center space-x-4 md:space-x-6">
+              <button
+                onClick={handleRefresh}
+                className="industrial-button"
+                title="REFRESH EVENTS"
+              >
+                <RefreshCw className="h-5 w-5" />
+              </button>
+              <a
+                href="/userarea"
+                className="industrial-button"
+                title="USER AREA"
+              >
+                <UserIcon className="h-5 w-5" />
+                {isAuthenticated && (
+                  <span className="ml-2 text-sm">
+                    {isAdmin ? 'ADMIN' : 'USER'}
+                  </span>
+                )}
+              </a>
+              {isAuthenticated && (
+                <button
+                  onClick={handleLogout}
+                  className="industrial-button text-sm"
+                  title="LOGOUT"
+                >
+                  LOGOUT
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Search */}
+      <div className="lg:hidden bg-coal-800 border-b border-asphalt-600 px-4 py-3">
+        <SearchInput
+          events={events}
+          onSearch={handleSearch}
+          onSelectEvent={handleSelectEvent}
+        />
+      </div>
 
       {/* Hero Section */}
       <section className="hero-video-container py-20 px-4 sm:px-6 lg:px-8">
@@ -383,30 +432,6 @@ function App() {
     setCurrentUser(null);
   };
 
-  // Get pending events count for admin badge
-  const [pendingCount, setPendingCount] = useState(0);
-
-  useEffect(() => {
-    if (isAdmin) {
-      const fetchPendingCount = async () => {
-        try {
-          const { data, error } = await supabase
-            .from('eventi_prog')
-            .select('id')
-            .eq('status', 'pending');
-          
-          if (!error && data) {
-            setPendingCount(data.length);
-          }
-        } catch (error) {
-          console.error('Error fetching pending count:', error);
-        }
-      };
-      
-      fetchPendingCount();
-    }
-  }, [isAdmin]);
-
   return (
     <Router>
       <Routes>
@@ -431,21 +456,14 @@ function App() {
               isAdmin={isAdmin}
               loading={roleLoading}
             >
-              <AuthenticatedLayout
+              <UserPanel 
                 isAuthenticated={isAuthenticated}
-                isAdmin={isAdmin}
+                currentUser={currentUser}
+                userProfile={profile}
+                onAuthRequired={() => {}}
                 onLogout={handleLogout}
-                pendingCount={pendingCount}
-              >
-                <UserPanel 
-                  isAuthenticated={isAuthenticated}
-                  currentUser={currentUser}
-                  userProfile={profile}
-                  onAuthRequired={() => {}}
-                  onLogout={handleLogout}
-                  onBackToMain={() => window.location.href = '/'}
-                />
-              </AuthenticatedLayout>
+                onBackToMain={() => window.location.href = '/'}
+              />
             </ProtectedRoute>
           } 
         />
@@ -460,21 +478,14 @@ function App() {
               loading={roleLoading}
               requireAdmin={true}
             >
-              <AuthenticatedLayout
+              <AdminPanel 
                 isAuthenticated={isAuthenticated}
-                isAdmin={isAdmin}
+                currentUser={currentUser}
+                userProfile={profile}
+                onAuthRequired={() => {}}
                 onLogout={handleLogout}
-                pendingCount={pendingCount}
-              >
-                <AdminPanel 
-                  isAuthenticated={isAuthenticated}
-                  currentUser={currentUser}
-                  userProfile={profile}
-                  onAuthRequired={() => {}}
-                  onLogout={handleLogout}
-                  onBackToMain={() => window.location.href = '/'}
-                />
-              </AuthenticatedLayout>
+                onBackToMain={() => window.location.href = '/'}
+              />
             </ProtectedRoute>
           } 
         />

@@ -135,23 +135,56 @@ export default function UserPanel({
   }
 
   return (
-    <div>
-      {/* Page Header */}
-      <div className="bg-coal-800 border-b-2 border-asphalt-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center space-x-4">
-            <UserIcon className="h-8 w-8 text-industrial-green-600" />
-            <div>
-              <h1 className="text-2xl font-industrial text-gray-100 tracking-wide uppercase">
-                USER AREA
-              </h1>
-              <p className="text-gray-400 text-sm font-condensed uppercase tracking-wide">
-                Manage Your Events
-              </p>
+    <div className="min-h-screen bg-coal-900 bg-noise">
+      {/* Header */}
+      <header className="bg-coal-800 border-b-2 border-asphalt-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center space-x-6">
+              <button
+                onClick={onBackToMain}
+                className="industrial-button flex items-center space-x-2"
+              >
+                <ArrowLeft className="h-5 w-5" />
+                <span>BACK</span>
+              </button>
+              
+              <div className="flex items-center space-x-4">
+                <UserIcon className="h-8 w-8 text-industrial-green-600" />
+                <div>
+                  <h1 className="text-2xl font-industrial text-gray-100 tracking-wide uppercase">
+                    USER AREA
+                  </h1>
+                  <p className="text-gray-400 text-sm font-condensed uppercase tracking-wide">
+                    Manage Your Events
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <div className="text-gray-400 font-condensed text-sm flex items-center space-x-2">
+                <span className={`px-2 py-1 text-xs font-bold uppercase tracking-wide ${
+                  userProfile?.user_role === 'admin' 
+                    ? 'bg-burgundy-600 text-white' 
+                    : 'bg-blue-600 text-white'
+                }`}>
+                  {userProfile?.user_role?.toUpperCase() || 'USER'}
+                </span>
+                <span className="uppercase tracking-wide">
+                  {userProfile?.email || currentUser?.email || 'User'}
+                </span>
+              </div>
+              <button
+                onClick={onLogout}
+                className="industrial-button"
+              >
+                LOGOUT
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
