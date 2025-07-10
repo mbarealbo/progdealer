@@ -50,6 +50,13 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
           artists.filter(artist => artist.trim() !== '')
         );
 
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        throw new Error('User not authenticated');
+      }
+
       const eventData = {
         nome_evento: formData.nome_evento,
         data_ora: formData.data_ora,
@@ -64,7 +71,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
         fonte: 'manual-submission',
         tipo_inserimento: 'manual',
         status: 'pending',
-        user_id: null // Will be automatically set by RLS/trigger
+        user_id: user.id // Explicitly set user_id
       };
 
       console.log('Final event data being inserted:', eventData);

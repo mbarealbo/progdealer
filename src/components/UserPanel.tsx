@@ -48,6 +48,8 @@ export default function UserPanel({
     try {
       setLoading(true);
       
+      console.log('Fetching events for user:', currentUser.id);
+      
       // Fetch events submitted by this specific user only
       const { data, error } = await supabase
         .from('eventi_prog')
@@ -56,6 +58,8 @@ export default function UserPanel({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      
+      console.log('User events fetched:', data);
       setUserEvents(data || []);
     } catch (error) {
       console.error('Error fetching user events:', error);
