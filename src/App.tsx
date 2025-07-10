@@ -268,12 +268,16 @@ function MainPage() {
       <header className="bg-coal-800 border-b-2 border-asphalt-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            <div className="flex items-center">
+            <button
+              onClick={() => window.location.href = '/'}
+              className="flex items-center hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+              title="BACK TO HOME"
+            >
               <div className="text-4xl mr-4">🎸</div>
               <h1 className="text-3xl md:text-4xl font-industrial text-gray-100 tracking-mega-wide">
                 PROGDEALER
               </h1>
-            </div>
+            </button>
             
             {/* Search Input - Desktop */}
             <div className="hidden lg:block flex-1 max-w-md mx-8">

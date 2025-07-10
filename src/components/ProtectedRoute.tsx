@@ -113,7 +113,19 @@ export default function ProtectedRoute({
               </p>
             </div>
             
-            <div className="mt-8">
+            <div className="flex items-center space-x-6">
+              {/* Clickable Logo */}
+              <button
+                onClick={() => window.location.href = '/'}
+                className="flex items-center hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+                title="BACK TO HOME"
+              >
+                <div className="text-2xl mr-2">🎸</div>
+                <div className="text-lg font-industrial text-gray-100 tracking-wide uppercase">
+                  PROGDEALER
+                </div>
+              </button>
+              
               <button
                 onClick={() => window.location.href = '/'}
                 className="bg-industrial-green-600 border-2 border-industrial-green-600 text-white px-8 py-3 uppercase tracking-wide font-condensed font-bold hover:bg-industrial-green-700 hover:border-industrial-green-700 transition-all duration-200"

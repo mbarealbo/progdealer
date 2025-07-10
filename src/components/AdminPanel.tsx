@@ -171,6 +171,18 @@ export default function AdminPanel({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center space-x-6">
+              {/* Clickable Logo */}
+              <button
+                onClick={() => window.location.href = '/'}
+                className="flex items-center hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+                title="BACK TO HOME"
+              >
+                <div className="text-2xl mr-2">🎸</div>
+                <div className="text-lg font-industrial text-gray-100 tracking-wide uppercase">
+                  PROGDEALER
+                </div>
+              </button>
+              
               <button
                 onClick={onBackToMain}
                 className="industrial-button flex items-center space-x-2"
