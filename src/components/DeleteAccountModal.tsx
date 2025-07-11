@@ -56,7 +56,7 @@ export default function DeleteAccountModal({
       const result = await response.json();
       console.log('Delete account result:', result);
 
-      // If the Edge Function succeeds, sign out the user from the client
+      // If the Edge Function succeeds, sign out the user and redirect to goodbye page
       const { error: signOutError } = await supabase.auth.signOut();
       
       if (signOutError) {
@@ -64,8 +64,8 @@ export default function DeleteAccountModal({
         // Don't block the flow, the account has already been deleted on the backend
       }
 
-      // Notify the parent component that the account was deleted
-      onAccountDeleted();
+      // Redirect to goodbye page instead of calling onAccountDeleted
+      window.location.href = '/goodbye';
       
     } catch (error: any) {
       console.error('Error deleting account:', error);

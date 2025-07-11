@@ -13,6 +13,7 @@ import AdminPanel from './components/AdminPanel';
 import UserPanel from './components/UserPanel';
 import LoginPage from './components/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import GoodbyePage from './components/GoodbyePage';
 import Footer from './components/Footer';
 
 // Main page component
@@ -441,6 +442,7 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<MainPage />} />
+        <Route path="/goodbye" element={<GoodbyePage />} />
         <Route 
           path="/login" 
           element={
