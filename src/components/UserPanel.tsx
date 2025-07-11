@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, User as UserIcon, Trash2, Eye, Clock, CheckCircle, XCircle, Plus } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Trash2, Eye, Clock, CheckCircle, XCircle, Plus, UserX } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
 import { UserProfile } from '../hooks/useUserRole';
 import EventImage from './EventImage';
 import AddEventForm from './AddEventForm';
+import DeleteAccountModal from './DeleteAccountModal';
 
 interface UserPanelProps {
   isAuthenticated: boolean;
@@ -29,6 +30,7 @@ export default function UserPanel({
   const [showAddForm, setShowAddForm] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -130,6 +132,11 @@ export default function UserPanel({
     }
   };
 
+  const handleAccountDeleted = () => {
+    // Account has been deleted, redirect to homepage
+    window.location.href = '/';
+  };
+
   if (!isAuthenticated) {
     return null;
   }
@@ -187,6 +194,14 @@ export default function UserPanel({
                   {userProfile?.email || currentUser?.email || 'User'}
                 </span>
               </div>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="bg-burgundy-800 border-2 border-burgundy-600 text-white px-3 py-2 text-sm font-condensed font-bold uppercase tracking-wide hover:bg-burgundy-700 transition-all duration-200 flex items-center space-x-2"
+                title="DELETE ACCOUNT"
+              >
+                <UserX className="h-4 w-4" />
+                <span>DELETE ACCOUNT</span>
+              </button>
               <button
                 onClick={onLogout}
                 className="industrial-button"
@@ -424,6 +439,16 @@ export default function UserPanel({
             fetchUserEvents();
             setShowAddForm(false);
           }} 
+        />
+      )}
+
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <DeleteAccountModal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onAccountDeleted={handleAccountDeleted}
+          userEmail={userProfile?.email || currentUser?.email || ''}
         />
       )}
     </div>
