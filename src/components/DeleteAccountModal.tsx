@@ -29,35 +29,42 @@ export default function DeleteAccountModal({
     setError('');
 
     try {
-      // Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      // Get the current session to retrieve the JWT token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (userError || !user) {
-        throw new Error('User not authenticated');
+      if (sessionError || !session) {
+        throw new Error('User session not found. Please log in again.');
       }
 
-      // First, delete the user's profile from the profiles table
-      // This will also cascade delete any events due to foreign key constraints
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', user.id);
+      console.log('Calling delete-user Edge Function...');
 
-      if (profileError) {
-        console.error('Error deleting profile:', profileError);
-        throw new Error('Failed to delete user profile');
+      // Call the Supabase Edge Function to delete the user
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Edge Function error:', errorData);
+        throw new Error(errorData.error || 'Failed to delete account');
       }
 
-      // Then delete the user from Supabase Auth
-      // Note: This requires admin privileges, so we'll sign out the user instead
-      // The profile deletion above is the main cleanup
+      const result = await response.json();
+      console.log('Delete account result:', result);
+
+      // If the Edge Function succeeds, sign out the user from the client
       const { error: signOutError } = await supabase.auth.signOut();
       
       if (signOutError) {
         console.error('Error signing out:', signOutError);
+        // Don't block the flow, the account has already been deleted on the backend
       }
 
-      // Notify parent component that account was deleted
+      // Notify the parent component that the account was deleted
       onAccountDeleted();
       
     } catch (error: any) {
