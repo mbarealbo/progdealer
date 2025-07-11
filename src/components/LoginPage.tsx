@@ -13,6 +13,7 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
   const location = useLocation();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
