@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Shield, X, Eye, EyeOff, UserPlus, LogIn, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import ForgotPasswordModal from './ForgotPasswordModal';
 
 
 interface LoginPageProps {
@@ -226,18 +225,6 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
             </button>
           </div>
 
-          {/* Forgot Password Link - Only show in login mode */}
-          {mode === 'login' && (
-            <div className="pt-4 text-center">
-              <button
-                type="button"
-                onClick={() => setShowForgotPassword(true)}
-                className="text-gray-400 hover:text-industrial-green-400 text-sm font-condensed uppercase tracking-wide transition-colors duration-200"
-              >
-                FORGOT PASSWORD?
-              </button>
-            </div>
-          )}
 
           {/* Success Message */}
           {success && (
