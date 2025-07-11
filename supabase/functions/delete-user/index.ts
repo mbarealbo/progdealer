@@ -6,6 +6,59 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
+// Function to send confirmation email via Resend
+async function sendDeletionConfirmationEmail(userEmail: string): Promise<void> {
+  const resendApiKey = Deno.env.get('RESEND_API_KEY')
+  
+  if (!resendApiKey) {
+    console.warn('RESEND_API_KEY not found, skipping confirmation email')
+    return
+  }
+
+  const emailHtml = `
+<!DOCTYPE html>
+<html>
+  <body style="font-family: sans-serif; font-size: 16px; line-height: 1.6; color: #111111; background-color: #ffffff; padding: 32px;">
+    <h2 style="color: #D72638; margin-bottom: 8px;">Goodbye from ProgDealer 👋</h2>
+    <p style="margin-top: 0;">Your account has been permanently deleted from our system.</p>
+    <p>If this was a mistake, you're always welcome to rejoin the world of progressive events, great bands and cult live shows.</p>
+
+    <hr style="margin-top: 40px; border: none; border-top: 1px solid #eeeeee;">
+
+    <p style="font-size: 12px; color: #999999;">This message was sent by ProgDealer • <a href="https://progdealer.online" style="color: #D72638; text-decoration: none;">progdealer.online</a></p>
+  </body>
+</html>
+  `.trim()
+
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'hello@progdealer.online',
+        to: [userEmail],
+        subject: 'Your ProgDealer account has been deleted',
+        html: emailHtml,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.text()
+      console.error('Failed to send confirmation email via Resend:', errorData)
+      throw new Error(`Resend API error: ${response.status}`)
+    }
+
+    const result = await response.json()
+    console.log('Confirmation email sent successfully via Resend:', result.id)
+  } catch (error) {
+    console.error('Error sending confirmation email:', error)
+    // Don't throw - we don't want email failures to block account deletion
+  }
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -77,6 +130,29 @@ Deno.serve(async (req) => {
 
     // Store user email for confirmation email before deletion
     const userEmail = user.email
+
+    // Delete the user from Supabase Auth
+    // This will cascade delete the profile due to foreign key constraints
+    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id)
+
+    if (deleteError) {
+      console.error('Delete user error:', deleteError)
+      return new Response(
+        JSON.stringify({ error: `Failed to delete user: ${deleteError.message}` }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    console.log(`Successfully deleted user: ${user.id}`)
+
+    // Send confirmation email after successful deletion
+    if (userEmail) {
+      console.log(`Sending confirmation email to: ${userEmail}`)
+      await sendDeletionConfirmationEmail(userEmail)
+    }
 
     // Send account deletion confirmation email before deleting the user
     // This uses the "Account Deleted" email template configured in Supabase
