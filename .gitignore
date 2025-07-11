@@ -38,3 +38,5 @@ dist-ssr
 **/*secret*
 **/*password*
 **/*credential*
+.DS_Store
+._*
