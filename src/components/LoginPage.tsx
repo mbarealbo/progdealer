@@ -345,13 +345,7 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
         </div>
       </main>
 
-      {/* Forgot Password Modal */}
-      {showForgotPassword && (
-        <ForgotPasswordModal
-          isOpen={showForgotPassword}
-          onClose={() => setShowForgotPassword(false)}
-        />
-      )}
+      
     </div>
   );
 }
