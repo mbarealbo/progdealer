@@ -30,11 +30,11 @@ Users can report concerts, save their favorite bands and cities, and receive upd
 
 ---
 
-🤝 Contributing
+## 🤝 Contributing
 We welcome contributions via GitHub Pull Requests or directly via Bolt.new's AI integration.
 
-🧙‍♂️ Project Philosophy
+## 🧙‍♂️ Project Philosophy
 ProgDealer is a music ritual for lovers of King Crimson, Opeth, Leprous, and every odd time signature out there.
 
-📬 Contact
+## 📬 Contact
 Feel free to reach out via hello@progdealer.online
