@@ -30,36 +30,11 @@ Users can report concerts, save their favorite bands and cities, and receive upd
 
 ---
 
-## 🧪 Local Development
-
-```bash
-git clone https://github.com/your-username/progdealer.git
-cd progdealer
-npm install
-npm run dev
-📝 You'll need to configure your .env file with:
-
-VITE_SUPABASE_URL=...
-
-VITE_SUPABASE_ANON_KEY=...
-
-SUPABASE_SERVICE_ROLE_KEY=... (for functions)
-
-RESEND_API_KEY=...
-
-💾 Deployment
-Frontend is auto-deployed via Netlify (npm run build)
-
-Functions live in Supabase Edge (Deno runtime)
-
-GitHub is the source of truth for production
-
-
 🤝 Contributing
 We welcome contributions via GitHub Pull Requests or directly via Bolt.new's AI integration.
 
 🧙‍♂️ Project Philosophy
-ProgDealer is more than a scraper — it’s a music ritual for lovers of King Crimson, Opeth, Leprous, and every odd time signature out there.
+ProgDealer is a music ritual for lovers of King Crimson, Opeth, Leprous, and every odd time signature out there.
 
 📬 Contact
 Feel free to reach out via hello@progdealer.online
