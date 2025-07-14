@@ -179,7 +179,13 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
                 <span>BACK TO MAIN</span>
               </button>
               
-            
+              <div className="flex items-center space-x-4">
+                <div className="text-4xl">🎸</div>
+                <h1 className="text-3xl md:text-4xl font-industrial text-gray-100 tracking-mega-wide">
+                  PROGDEALER
+                </h1>
+              </div>
+            </div>
           </div>
         </div>
       </header>
