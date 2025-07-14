@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Music, RefreshCw, User as UserIcon } from 'lucide-react';
+import { Music, RefreshCw, User as UserIcon, LogOut } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from './lib/supabase';
 import { Event, EventFilters } from './types/event';
@@ -305,9 +305,7 @@ function MainPage() {
               >
                 <UserIcon className="h-5 w-5" />
                 {isAuthenticated && (
-                  <span className="ml-2 text-sm">
-                    {isAdmin ? 'ADMIN' : 'USER'}
-                  </span>
+                  <div className="ml-2 w-2 h-2 bg-green-500 rounded-full animate-pulse" title={isAdmin ? 'ADMIN ONLINE' : 'USER ONLINE'}></div>
                 )}
               </a>
               {isAuthenticated && (
@@ -316,7 +314,7 @@ function MainPage() {
                   className="industrial-button text-sm"
                   title="LOGOUT"
                 >
-                  LOGOUT
+                  <LogOut className="h-5 w-5" />
                 </button>
               )}
             </div>
