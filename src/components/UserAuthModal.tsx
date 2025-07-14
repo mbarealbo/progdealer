@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User as UserIcon, X, Eye, EyeOff, UserPlus, LogIn } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import ForgotPasswordModal from './ForgotPasswordModal';
 
 interface UserAuthModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const validateForm = () => {
     if (!email || !password) {
@@ -204,6 +206,7 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
   if (!isOpen) return null;
 
   return (
+    <>
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
       <div className="bg-coal-800 border-2 border-asphalt-600 p-6 w-full max-w-md">
         <div className="flex items-center justify-between mb-6">
@@ -306,6 +309,15 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
                 Minimum 6 characters
               </p>
             )}
+            {mode === 'login' && (
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-industrial-green-600 text-xs mt-2 font-condensed underline hover:text-industrial-green-500"
+              >
+                Forgot your password?
+              </button>
+            )}
           </div>
 
           {mode === 'register' && (
@@ -383,5 +395,10 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
         </div>
       </div>
     </div>
+    <ForgotPasswordModal
+      isOpen={showForgotPassword}
+      onClose={() => setShowForgotPassword(false)}
+    />
+    </>
   );
 }

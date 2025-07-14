@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Shield, X, Eye, EyeOff, UserPlus, LogIn, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import ForgotPasswordModal from './ForgotPasswordModal';
 
 
 interface LoginPageProps {
@@ -259,30 +260,39 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
               <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                 PASSWORD
               </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
                   className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 pr-10 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
-                  placeholder="PASSWORD"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              {mode === 'register' && (
-                <p className="text-xs text-gray-500 mt-1 font-condensed">
-                  Minimum 6 characters
-                </p>
-              )}
+                placeholder="PASSWORD"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
+            {mode === 'register' && (
+              <p className="text-xs text-gray-500 mt-1 font-condensed">
+                Minimum 6 characters
+              </p>
+            )}
+            {mode === 'login' && (
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-industrial-green-600 text-xs mt-2 font-condensed underline hover:text-industrial-green-500"
+              >
+                Forgot your password?
+              </button>
+            )}
+          </div>
 
             {mode === 'register' && (
               <div>
@@ -344,8 +354,10 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
           </div>
         </div>
       </main>
-
-      
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+      />
     </div>
   );
 }
