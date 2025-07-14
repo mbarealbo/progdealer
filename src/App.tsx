@@ -276,7 +276,7 @@ function MainPage() {
               title="BACK TO HOME"
             >
               <div className="text-4xl mr-4">🎸</div>
-              <h1 className="text-3xl md:text-4xl font-industrial text-gray-100 tracking-mega-wide">
+              <h1 className="text-xl md:text-2xl font-industrial text-gray-100 tracking-mega-wide">
                 PROGDEALER
               </h1>
             </button>
@@ -298,16 +298,18 @@ function MainPage() {
               >
                 <RefreshCw className="h-5 w-5" />
               </button>
-              <a
-                href="/userarea"
-                className="text-gray-300 hover:text-white transition-colors duration-200 p-2 flex items-center relative"
-                title="USER AREA"
-              >
-                <UserIcon className="h-5 w-5" />
+              <div className="relative">
+                <a
+                  href="/userarea"
+                  className="text-gray-300 hover:text-white transition-colors duration-200 p-2 flex items-center"
+                  title="USER AREA"
+                >
+                  <UserIcon className="h-5 w-5" />
+                </a>
                 {isAuthenticated && (
-                  <div className="absolute -right-1 -top-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" title={isAdmin ? 'ADMIN ONLINE' : 'USER ONLINE'}></div>
+                  <div className="absolute -right-0 top-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" title={isAdmin ? 'ADMIN ONLINE' : 'USER ONLINE'}></div>
                 )}
-              </a>
+              </div>
               {isAuthenticated && (
                 <button
                   onClick={handleLogout}
