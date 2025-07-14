@@ -25,9 +25,6 @@ export default function Footer({
               <h3 className="text-xl font-industrial text-gray-100 tracking-wide uppercase">
                 PROGDEALER
               </h3>
-              <p className="text-gray-400 text-sm font-condensed uppercase tracking-wide">
-                Live Electronic Music Culture
-              </p>
             </div>
           </div>
 
@@ -39,7 +36,7 @@ export default function Footer({
             </div>
             <div className="flex items-center space-x-2">
               <Globe className="h-4 w-4" />
-              <span className="uppercase tracking-wide">Europa</span>
+              <span className="uppercase tracking-wide">In Europe</span>
             </div>
             
             {/* Admin Button - Only show for admin users */}
