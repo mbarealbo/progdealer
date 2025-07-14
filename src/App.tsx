@@ -293,25 +293,25 @@ function MainPage() {
             <div className="flex items-center space-x-4 md:space-x-6">
               <button
                 onClick={handleRefresh}
-                className="industrial-button"
+                className="text-gray-300 hover:text-white transition-colors duration-200 p-2"
                 title="REFRESH EVENTS"
               >
                 <RefreshCw className="h-5 w-5" />
               </button>
               <a
                 href="/userarea"
-                className="industrial-button"
+                className="text-gray-300 hover:text-white transition-colors duration-200 p-2 flex items-center relative"
                 title="USER AREA"
               >
                 <UserIcon className="h-5 w-5" />
                 {isAuthenticated && (
-                  <div className="ml-2 w-2 h-2 bg-green-500 rounded-full animate-pulse" title={isAdmin ? 'ADMIN ONLINE' : 'USER ONLINE'}></div>
+                  <div className="absolute -right-1 -top-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" title={isAdmin ? 'ADMIN ONLINE' : 'USER ONLINE'}></div>
                 )}
               </a>
               {isAuthenticated && (
                 <button
                   onClick={handleLogout}
-                  className="industrial-button text-sm"
+                  className="text-gray-300 hover:text-white transition-colors duration-200 p-2"
                   title="LOGOUT"
                 >
                   <LogOut className="h-5 w-5" />
