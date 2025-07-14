@@ -12,6 +12,7 @@ import SearchInput from './components/SearchInput';
 import AdminPanel from './components/AdminPanel';
 import UserPanel from './components/UserPanel';
 import LoginPage from './components/LoginPage';
+import ResetPasswordPage from './components/ResetPasswordPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import GoodbyePage from './components/GoodbyePage';
 import Footer from './components/Footer';
@@ -443,15 +444,16 @@ function App() {
         {/* Public Routes */}
         <Route path="/" element={<MainPage />} />
         <Route path="/goodbye" element={<GoodbyePage />} />
-        <Route 
-          path="/login" 
+        <Route
+          path="/login"
           element={
-            <LoginPage 
+            <LoginPage
               isAuthenticated={isAuthenticated}
               onAuthenticated={handleAuthenticated}
             />
-          } 
+          }
         />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* Protected User Routes */}
         <Route 
