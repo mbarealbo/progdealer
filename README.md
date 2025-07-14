@@ -10,6 +10,7 @@ Users can report concerts, save their favorite bands and cities, and receive upd
 - 🧠 **AI-assisted scraping** of events from multiple sources (starting with [Concertful](https://concertful.com))
 - 📅 **Event database** powered by Supabase
 - 🧾 **User authentication** with email/password and email confirmation
+- 🛠️ **Forgot password module** to reset passwords via email
 - 💌 **Transactional emails** via Resend (signup confirmation, password reset, account deletion)
 - 🛠️ **Admin interface** to moderate events
 - 🌈 **Custom frontend** built with Vite + React + Tailwind
