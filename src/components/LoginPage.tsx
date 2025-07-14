@@ -179,9 +179,7 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
                 <span>BACK TO MAIN</span>
               </button>
               
-              <div className="flex items-center space-x-4">
-                
-            </div>
+            
           </div>
         </div>
       </header>
