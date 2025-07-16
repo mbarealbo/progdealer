@@ -16,6 +16,7 @@ import LoginPage from './components/LoginPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import GoodbyePage from './components/GoodbyePage';
+import PrivacyPolicyPage from './components/PrivacyPolicyPage';
 import Footer from './components/Footer';
 
 // Main page component
@@ -456,6 +457,7 @@ function App() {
         {/* Public Routes */}
         <Route path="/" element={<MainPage />} />
         <Route path="/goodbye" element={<GoodbyePage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route
           path="/login"
           element={

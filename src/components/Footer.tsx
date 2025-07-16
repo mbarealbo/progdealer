@@ -68,7 +68,7 @@ export default function Footer({
         {/* Bottom line */}
         <div className="mt-6 pt-4 border-t border-asphalt-600">
           <p className="text-center text-gray-500 text-xs font-condensed uppercase tracking-wide">
-            © 2025 ProgDealer - Raccogliamo concerti prog, metal e alternativi automaticamente
+            © 2025 ProgDealer - <a href="/privacy" className="underline hover:text-gray-300">Privacy Policy</a>
           </p>
         </div>
       </div>
