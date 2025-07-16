@@ -157,45 +157,40 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
       {/* Header */}
       <header className="bg-coal-800 border-b-2 border-asphalt-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <div className="flex items-center space-x-6">
+          <div className="flex items-center justify-between h-16 sm:h-20">
+            <div className="flex items-center space-x-4 sm:space-x-6">
               {/* Clickable Logo */}
               <button
                 onClick={() => navigate('/')}
                 className="flex items-center hover:opacity-80 transition-opacity duration-200 cursor-pointer"
                 title="BACK TO HOME"
               >
-                <div className="text-2xl mr-2">🎸</div>
-                <div className="text-lg font-industrial text-gray-100 tracking-wide uppercase">
+                <div className="text-xl sm:text-2xl mr-2">🎸</div>
+                <div className="text-sm sm:text-lg font-industrial text-gray-100 tracking-wide uppercase">
                   PROGDEALER
                 </div>
               </button>
               
               <button
                 onClick={() => navigate('/')}
-                className="industrial-button flex items-center space-x-2"
+                className="industrial-button flex items-center space-x-2 text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2"
               >
-                <ArrowLeft className="h-5 w-5" />
-                <span>BACK TO MAIN</span>
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">BACK TO MAIN</span>
+                <span className="sm:hidden">BACK</span>
               </button>
-              
-              <div className="flex items-center space-x-4">
-                <div className="text-4xl">🎸</div>
-                <h1 className="text-3xl md:text-4xl font-industrial text-gray-100 tracking-mega-wide">
-                  PROGDEALER
-                </h1>
-              </div>
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex items-center justify-center min-h-[calc(100vh-5rem)] p-4">
-        <div className="bg-coal-800 border-2 border-asphalt-600 p-8 w-full max-w-md">
-          <div className="flex items-center justify-center space-x-3 mb-8">
-            <Shield className="h-8 w-8 text-industrial-green-600" />
-            <h2 className="text-2xl font-industrial text-gray-100 tracking-wide uppercase">
+      <main className="flex items-center justify-center min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-5rem)] p-4">
+        <div className="bg-coal-800 border-2 border-asphalt-600 p-6 sm:p-8 w-full max-w-md">
+          {/* Page Title */}
+          <div className="flex items-center justify-center space-x-3 mb-6 sm:mb-8">
+            <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-industrial-green-600" />
+            <h2 className="text-xl sm:text-2xl font-industrial text-gray-100 tracking-wide uppercase">
               {mode === 'login' ? 'LOGIN' : 'REGISTER'}
             </h2>
           </div>
@@ -204,46 +199,45 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
           <div className="flex mb-6 bg-coal-900 border-2 border-asphalt-600">
             <button
               onClick={() => switchMode('login')}
-              className={`flex-1 py-3 px-4 font-condensed font-bold uppercase tracking-wide text-sm transition-all duration-200 flex items-center justify-center space-x-2 ${
+              className={`flex-1 py-2 sm:py-3 px-2 sm:px-4 font-condensed font-bold uppercase tracking-wide text-xs sm:text-sm transition-all duration-200 flex items-center justify-center space-x-1 sm:space-x-2 ${
                 mode === 'login'
                   ? 'bg-industrial-green-600 text-white border-r-2 border-industrial-green-600'
                   : 'text-gray-400 hover:text-white border-r-2 border-asphalt-600'
               }`}
             >
-              <LogIn className="h-4 w-4" />
+              <LogIn className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>LOGIN</span>
             </button>
             <button
               onClick={() => switchMode('register')}
-              className={`flex-1 py-3 px-4 font-condensed font-bold uppercase tracking-wide text-sm transition-all duration-200 flex items-center justify-center space-x-2 ${
+              className={`flex-1 py-2 sm:py-3 px-2 sm:px-4 font-condensed font-bold uppercase tracking-wide text-xs sm:text-sm transition-all duration-200 flex items-center justify-center space-x-1 sm:space-x-2 ${
                 mode === 'register'
                   ? 'bg-industrial-green-600 text-white'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              <UserPlus className="h-4 w-4" />
+              <UserPlus className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>REGISTER</span>
             </button>
           </div>
 
-
           {/* Success Message */}
           {success && (
-            <div className="bg-green-900 border-2 border-green-600 text-green-300 p-3 mb-4 font-condensed text-sm uppercase tracking-wide">
+            <div className="bg-green-900 border-2 border-green-600 text-green-300 p-3 mb-4 font-condensed text-xs sm:text-sm uppercase tracking-wide">
               {success}
             </div>
           )}
 
           {/* Error Message */}
           {error && (
-            <div className="bg-burgundy-900 border-2 border-burgundy-600 text-burgundy-300 p-3 mb-4 font-condensed text-sm tracking-wide">
+            <div className="bg-burgundy-900 border-2 border-burgundy-600 text-burgundy-300 p-3 mb-4 font-condensed text-xs sm:text-sm tracking-wide">
               {error}
             </div>
           )}
 
           <form onSubmit={mode === 'login' ? handleLogin : handleRegister} className="space-y-4">
             <div>
-              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+              <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                 EMAIL
               </label>
               <input
@@ -257,46 +251,46 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
             </div>
 
             <div>
-              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+              <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                 PASSWORD
               </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
                   className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 pr-10 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
-                placeholder="PASSWORD"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+                  placeholder="PASSWORD"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {mode === 'register' && (
+                <p className="text-xs text-gray-500 mt-1 font-condensed">
+                  Minimum 6 characters
+                </p>
+              )}
+              {mode === 'login' && (
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-industrial-green-600 text-xs mt-2 font-condensed underline hover:text-industrial-green-500"
+                >
+                  Forgot your password?
+                </button>
+              )}
             </div>
-            {mode === 'register' && (
-              <p className="text-xs text-gray-500 mt-1 font-condensed">
-                Minimum 6 characters
-              </p>
-            )}
-            {mode === 'login' && (
-              <button
-                type="button"
-                onClick={() => setShowForgotPassword(true)}
-                className="text-industrial-green-600 text-xs mt-2 font-condensed underline hover:text-industrial-green-500"
-              >
-                Forgot your password?
-              </button>
-            )}
-          </div>
 
             {mode === 'register' && (
               <div>
-                <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                   CONFIRM PASSWORD
                 </label>
                 <div className="relative">
@@ -320,11 +314,12 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
               </div>
             )}
 
+            {/* Action Buttons - Stack on mobile */}
             <div className="pt-4">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-industrial-green-800 border-2 border-industrial-green-600 text-white px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:bg-industrial-green-700 transition-all duration-200 disabled:opacity-50 flex items-center justify-center space-x-2"
+                className="w-full bg-industrial-green-800 border-2 border-industrial-green-600 text-white px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:bg-industrial-green-700 transition-all duration-200 disabled:opacity-50 flex items-center justify-center space-x-2 text-sm"
               >
                 {loading ? (
                   <>

@@ -92,11 +92,11 @@ export default function DeleteAccountModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
-      <div className="bg-coal-800 border-2 border-burgundy-600 p-6 w-full max-w-md">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-coal-800 border-2 border-burgundy-600 p-4 sm:p-6 w-full max-w-md">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
           <div className="flex items-center space-x-3">
-            <AlertTriangle className="h-6 w-6 text-burgundy-600" />
-            <h2 className="text-xl font-industrial text-gray-100 tracking-wide uppercase">
+            <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-burgundy-600" />
+            <h2 className="text-lg sm:text-xl font-industrial text-gray-100 tracking-wide uppercase">
               DELETE ACCOUNT
             </h2>
           </div>
@@ -105,19 +105,19 @@ export default function DeleteAccountModal({
             disabled={loading}
             className="bg-transparent border-2 border-asphalt-500 text-gray-300 p-2 hover:border-burgundy-500 hover:text-white transition-all duration-200 disabled:opacity-50"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
 
         {/* Warning Message */}
-        <div className="bg-burgundy-900 border-2 border-burgundy-600 p-4 mb-6">
+        <div className="bg-burgundy-900 border-2 border-burgundy-600 p-3 sm:p-4 mb-4 sm:mb-6">
           <div className="flex items-start space-x-3">
-            <Shield className="h-5 w-5 text-burgundy-400 mt-0.5 flex-shrink-0" />
+            <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-burgundy-400 mt-0.5 flex-shrink-0" />
             <div>
-              <h3 className="text-burgundy-300 font-condensed font-bold uppercase tracking-wide text-sm mb-2">
+              <h3 className="text-burgundy-300 font-condensed font-bold uppercase tracking-wide text-xs sm:text-sm mb-2">
                 PERMANENT ACTION WARNING
               </h3>
-              <p className="text-burgundy-300 text-sm font-condensed leading-relaxed">
+              <p className="text-burgundy-300 text-xs sm:text-sm font-condensed leading-relaxed">
                 Are you sure you want to permanently delete your account? This action cannot be undone.
               </p>
             </div>
@@ -125,21 +125,21 @@ export default function DeleteAccountModal({
         </div>
 
         {/* Account Info */}
-        <div className="bg-coal-900 border border-asphalt-600 p-4 mb-6">
-          <h4 className="text-gray-100 font-condensed font-bold uppercase tracking-wide text-sm mb-2">
+        <div className="bg-coal-900 border border-asphalt-600 p-3 sm:p-4 mb-4 sm:mb-6">
+          <h4 className="text-gray-100 font-condensed font-bold uppercase tracking-wide text-xs sm:text-sm mb-2">
             ACCOUNT TO BE DELETED
           </h4>
-          <p className="text-gray-300 font-condensed text-sm">
+          <p className="text-gray-300 font-condensed text-xs sm:text-sm">
             {userEmail}
           </p>
         </div>
 
         {/* What will be deleted */}
-        <div className="bg-coal-900 border border-asphalt-600 p-4 mb-6">
-          <h4 className="text-gray-100 font-condensed font-bold uppercase tracking-wide text-sm mb-3">
+        <div className="bg-coal-900 border border-asphalt-600 p-3 sm:p-4 mb-4 sm:mb-6">
+          <h4 className="text-gray-100 font-condensed font-bold uppercase tracking-wide text-xs sm:text-sm mb-3">
             WHAT WILL BE DELETED
           </h4>
-          <ul className="text-gray-300 font-condensed text-sm space-y-1">
+          <ul className="text-gray-300 font-condensed text-xs sm:text-sm space-y-1">
             <li>• Your user profile and account data</li>
             <li>• All events you have submitted</li>
             <li>• Your login credentials and access</li>
@@ -148,8 +148,8 @@ export default function DeleteAccountModal({
         </div>
 
         {/* Confirmation Input */}
-        <div className="mb-6">
-          <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+        <div className="mb-4 sm:mb-6">
+          <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
             TYPE "DELETE" TO CONFIRM
           </label>
           <input
@@ -165,24 +165,24 @@ export default function DeleteAccountModal({
 
         {/* Error Message */}
         {error && (
-          <div className="bg-burgundy-900 border-2 border-burgundy-600 text-burgundy-300 p-3 mb-4 font-condensed text-sm">
+          <div className="bg-burgundy-900 border-2 border-burgundy-600 text-burgundy-300 p-3 mb-4 font-condensed text-xs sm:text-sm">
             {error}
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex space-x-4">
+        {/* Action Buttons - Stack on mobile */}
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
           <button
             onClick={handleClose}
             disabled={loading}
-            className="flex-1 bg-transparent border-2 border-asphalt-500 text-gray-300 px-4 py-2 uppercase tracking-wide font-condensed font-bold hover:border-asphalt-400 hover:text-white transition-all duration-200 text-sm disabled:opacity-50"
+            className="w-full sm:flex-1 bg-transparent border-2 border-asphalt-500 text-gray-300 px-4 py-2 uppercase tracking-wide font-condensed font-bold hover:border-asphalt-400 hover:text-white transition-all duration-200 text-xs sm:text-sm disabled:opacity-50"
           >
             CANCEL
           </button>
           <button
             onClick={handleDeleteAccount}
             disabled={loading || confirmationText !== 'DELETE'}
-            className="flex-1 bg-burgundy-800 border-2 border-burgundy-600 text-white px-4 py-2 uppercase tracking-wide font-condensed font-bold hover:bg-burgundy-700 transition-all duration-200 disabled:opacity-50 text-sm flex items-center justify-center space-x-2"
+            className="w-full sm:flex-1 bg-burgundy-800 border-2 border-burgundy-600 text-white px-4 py-2 uppercase tracking-wide font-condensed font-bold hover:bg-burgundy-700 transition-all duration-200 disabled:opacity-50 text-xs sm:text-sm flex items-center justify-center space-x-2"
           >
             {loading ? (
               <>
@@ -191,7 +191,7 @@ export default function DeleteAccountModal({
               </>
             ) : (
               <>
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>DELETE ACCOUNT</span>
               </>
             )}

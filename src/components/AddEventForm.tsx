@@ -6,16 +6,33 @@ import CityAutocomplete from './CityAutocomplete';
 import EventImage from './EventImage';
 
 interface AddEventFormProps {
+  isOpen?: boolean;
+  onClose?: () => void;
   onEventAdded: () => void;
+  onAuthRequired?: () => void;
+  isAuthenticated?: boolean;
 }
 
-export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function AddEventForm({ 
+  isOpen: externalIsOpen, 
+  onClose: externalOnClose, 
+  onEventAdded,
+  onAuthRequired,
+  isAuthenticated = false
+}: AddEventFormProps) {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [artists, setArtists] = useState<string[]>(['']);
   const [cityData, setCityData] = useState<{city: string, region: string, country: string} | null>(null);
+  
+  // Use external control if provided, otherwise use internal state
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const setIsOpen = externalOnClose ? (value: boolean) => {
+    if (!value) externalOnClose();
+  } : setInternalIsOpen;
+
   const [formData, setFormData] = useState({
     nome_evento: '',
     data_ora: '',
@@ -152,9 +169,9 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
   // Success Toast
   if (showSuccess) {
     return (
-      <div className="fixed bottom-8 right-8 bg-industrial-green-800 border-2 border-industrial-green-600 text-white p-6 z-50 flex items-center space-x-3">
-        <Check className="h-6 w-6" />
-        <span className="font-condensed font-bold uppercase tracking-wide">
+      <div className="fixed bottom-4 sm:bottom-8 right-4 sm:right-8 bg-industrial-green-800 border-2 border-industrial-green-600 text-white p-4 sm:p-6 z-50 flex items-center space-x-3 max-w-xs sm:max-w-none">
+        <Check className="h-5 w-5 sm:h-6 sm:w-6" />
+        <span className="font-condensed font-bold uppercase tracking-wide text-sm sm:text-base">
           EVENT SUBMITTED SUCCESSFULLY
         </span>
       </div>
@@ -164,35 +181,41 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
   if (!isOpen) {
     return (
       <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-8 right-8 bg-coal-800 hover:bg-coal-700 border-2 border-asphalt-600 hover:border-industrial-green-600 text-white p-4 transition-all duration-200 z-50"
+        onClick={() => {
+          if (!isAuthenticated && onAuthRequired) {
+            onAuthRequired();
+          } else {
+            setIsOpen(true);
+          }
+        }}
+        className="fixed bottom-4 sm:bottom-8 right-4 sm:right-8 bg-coal-800 hover:bg-coal-700 border-2 border-asphalt-600 hover:border-industrial-green-600 text-white p-3 sm:p-4 transition-all duration-200 z-50"
         title="SUBMIT AN EVENT"
       >
-        <Plus className="h-8 w-8" />
+        <Plus className="h-6 w-6 sm:h-8 sm:w-8" />
       </button>
     );
   }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
-      <div className="bg-coal-800 border-2 border-asphalt-600 p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-industrial text-gray-100 tracking-wide uppercase">
+      <div className="bg-coal-800 border-2 border-asphalt-600 p-4 sm:p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-2xl font-industrial text-gray-100 tracking-wide uppercase">
             SUBMIT AN EVENT
           </h2>
           <button
             onClick={() => setIsOpen(false)}
             className="bg-transparent border-2 border-asphalt-500 text-gray-300 p-2 hover:border-burgundy-500 hover:text-white transition-all duration-200"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Main Fields - Always Visible */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div>
-              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+              <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                 EVENT NAME *
               </label>
               <input
@@ -207,7 +230,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+              <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                 DATE & TIME *
               </label>
               <input
@@ -221,9 +244,9 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div>
-              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+              <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                 VENUE *
               </label>
               <input
@@ -238,7 +261,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+              <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                 CITY *
               </label>
               <CityAutocomplete
@@ -256,7 +279,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+            <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
               EVENT LINK
             </label>
             <input
@@ -286,9 +309,9 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
           {/* Advanced Options Section */}
           {showAdvanced && (
             <div className="space-y-4 pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                  <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                     SUBGENRE
                   </label>
                   <select
@@ -307,7 +330,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                  <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                     TIME INFO
                   </label>
                   <input
@@ -323,7 +346,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
 
               {/* Artists Section with Add/Remove functionality */}
               <div>
-                <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                   ARTISTS
                 </label>
                 <div className="space-y-2">
@@ -360,7 +383,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                   DESCRIPTION
                 </label>
                 <textarea
@@ -374,7 +397,7 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                   IMAGE URL
                 </label>
                 <input
@@ -401,18 +424,19 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
             </div>
           )}
 
-          <div className="flex space-x-4 pt-4">
+          {/* Action Buttons - Stack on mobile */}
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 pt-4">
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="flex-1 bg-transparent border-2 border-asphalt-500 text-gray-300 px-4 py-2 uppercase tracking-wide font-condensed font-bold hover:border-burgundy-500 hover:text-white transition-all duration-200 text-sm"
+              className="w-full sm:flex-1 bg-transparent border-2 border-asphalt-500 text-gray-300 px-4 py-2 uppercase tracking-wide font-condensed font-bold hover:border-burgundy-500 hover:text-white transition-all duration-200 text-sm"
             >
               CANCEL
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-4 py-2 uppercase tracking-wide font-condensed font-bold hover:border-industrial-green-600 hover:text-white transition-all duration-200 disabled:opacity-50 text-sm"
+              className="w-full sm:flex-1 bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-4 py-2 uppercase tracking-wide font-condensed font-bold hover:border-industrial-green-600 hover:text-white transition-all duration-200 disabled:opacity-50 text-sm"
             >
               {loading ? 'SUBMITTING...' : 'SUBMIT EVENT'}
             </button>
