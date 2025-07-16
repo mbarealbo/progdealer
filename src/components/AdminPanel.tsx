@@ -169,53 +169,42 @@ export default function AdminPanel({
       {/* Header */}
       <header className="bg-coal-800 border-b-2 border-asphalt-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <div className="flex items-center space-x-6">
+          <div className="flex items-center justify-between h-16 sm:h-20">
+            <div className="flex items-center space-x-4 sm:space-x-6">
               {/* Clickable Logo */}
               <button
                 onClick={() => window.location.href = '/'}
                 className="flex items-center hover:opacity-80 transition-opacity duration-200 cursor-pointer"
                 title="BACK TO HOME"
               >
-                <div className="text-2xl mr-2">🎸</div>
-                <div className="text-lg font-industrial text-gray-100 tracking-wide uppercase">
+                <div className="text-xl sm:text-2xl mr-2">🎸</div>
+                <div className="text-sm sm:text-lg font-industrial text-gray-100 tracking-wide uppercase">
                   PROGDEALER
                 </div>
               </button>
               
               <button
                 onClick={onBackToMain}
-                className="industrial-button flex items-center space-x-2"
+                className="industrial-button flex items-center space-x-2 text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2"
               >
-                <ArrowLeft className="h-5 w-5" />
-                <span>BACK</span>
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="hidden sm:inline">BACK</span>
+                <span className="sm:hidden">BACK</span>
               </button>
-              
-              <div className="flex items-center space-x-4">
-                <Shield className="h-8 w-8 text-industrial-green-600" />
-                <div>
-                  <h1 className="text-2xl font-industrial text-gray-100 tracking-wide uppercase">
-                    ADMIN PANEL
-                  </h1>
-                  <p className="text-gray-400 text-sm font-condensed uppercase tracking-wide">
-                    Event Management System
-                  </p>
-                </div>
-              </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="text-gray-400 font-condensed text-sm flex items-center space-x-2">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <div className="text-gray-400 font-condensed text-xs sm:text-sm flex items-center space-x-2">
                 <span className="bg-burgundy-600 text-white px-2 py-1 text-xs font-bold uppercase tracking-wide">
                   ADMIN
                 </span>
-                <span className="uppercase tracking-wide">
+                <span className="uppercase tracking-wide hidden sm:inline">
                   {userProfile?.email || currentUser?.email || 'Admin User'}
                 </span>
               </div>
               <button
                 onClick={onLogout}
-                className="industrial-button"
+                className="industrial-button text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2"
               >
                 LOGOUT
               </button>
@@ -225,59 +214,72 @@ export default function AdminPanel({
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-coal-800 border-2 border-asphalt-600 p-6">
-            <div className="flex items-center space-x-3">
-              <Eye className="h-6 w-6 text-industrial-green-600" />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Page Title - Now visible on all screens */}
+        <div className="flex items-center space-x-4 mb-6 sm:mb-8">
+          <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-industrial-green-600" />
+          <div>
+            <h1 className="text-xl sm:text-2xl font-industrial text-gray-100 tracking-wide uppercase">
+              ADMIN PANEL
+            </h1>
+            <p className="text-gray-400 text-sm font-condensed uppercase tracking-wide">
+              Event Management System
+            </p>
+          </div>
+        </div>
+
+        {/* Stats - Better mobile spacing */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-coal-800 border-2 border-asphalt-600 p-3 sm:p-6">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-industrial-green-600" />
               <div>
-                <div className="text-2xl font-industrial text-gray-100">
+                <div className="text-lg sm:text-2xl font-industrial text-gray-100">
                   {events.length}
                 </div>
-                <div className="text-gray-400 text-sm font-condensed uppercase tracking-wide">
+                <div className="text-gray-400 text-xs sm:text-sm font-condensed uppercase tracking-wide">
                   Total Events
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-coal-800 border-2 border-asphalt-600 p-6">
-            <div className="flex items-center space-x-3">
-              <Clock className="h-6 w-6 text-yellow-500" />
+          <div className="bg-coal-800 border-2 border-asphalt-600 p-3 sm:p-6">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-500" />
               <div>
-                <div className="text-2xl font-industrial text-gray-100">
+                <div className="text-lg sm:text-2xl font-industrial text-gray-100">
                   {pendingCount}
                 </div>
-                <div className="text-gray-400 text-sm font-condensed uppercase tracking-wide">
+                <div className="text-gray-400 text-xs sm:text-sm font-condensed uppercase tracking-wide">
                   Pending Review
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-coal-800 border-2 border-asphalt-600 p-6">
-            <div className="flex items-center space-x-3">
-              <CheckCircle className="h-6 w-6 text-green-500" />
+          <div className="bg-coal-800 border-2 border-asphalt-600 p-3 sm:p-6">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
               <div>
-                <div className="text-2xl font-industrial text-gray-100">
+                <div className="text-lg sm:text-2xl font-industrial text-gray-100">
                   {approvedCount}
                 </div>
-                <div className="text-gray-400 text-sm font-condensed uppercase tracking-wide">
+                <div className="text-gray-400 text-xs sm:text-sm font-condensed uppercase tracking-wide">
                   Approved
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-coal-800 border-2 border-asphalt-600 p-6">
-            <div className="flex items-center space-x-3">
-              <XCircle className="h-6 w-6 text-red-500" />
+          <div className="bg-coal-800 border-2 border-asphalt-600 p-3 sm:p-6">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <XCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-500" />
               <div>
-                <div className="text-2xl font-industrial text-gray-100">
+                <div className="text-lg sm:text-2xl font-industrial text-gray-100">
                   {rejectedCount}
                 </div>
-                <div className="text-gray-400 text-sm font-condensed uppercase tracking-wide">
+                <div className="text-gray-400 text-xs sm:text-sm font-condensed uppercase tracking-wide">
                   Rejected
                 </div>
               </div>
@@ -285,15 +287,15 @@ export default function AdminPanel({
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 space-y-4 sm:space-y-0">
-          {/* Filter Buttons */}
+        {/* Controls - Better mobile layout */}
+        <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between mb-6">
+          {/* Filter Buttons - Better mobile spacing */}
           <div className="flex flex-wrap gap-2">
             {(['all', 'pending', 'approved', 'rejected'] as const).map((filterOption) => (
               <button
                 key={filterOption}
                 onClick={() => setFilter(filterOption)}
-                className={`px-4 py-2 text-sm font-condensed font-bold uppercase tracking-wide border-2 transition-all duration-200 ${
+                className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-condensed font-bold uppercase tracking-wide border-2 transition-all duration-200 ${
                   filter === filterOption
                     ? 'bg-industrial-green-600 border-industrial-green-600 text-white'
                     : 'bg-transparent border-asphalt-500 text-gray-300 hover:border-industrial-green-600 hover:text-white'
@@ -310,29 +312,29 @@ export default function AdminPanel({
             ))}
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex space-x-2">
+          {/* Action Buttons - Stack on mobile */}
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             <button
               onClick={() => setShowUserManagement(!showUserManagement)}
-              className={`industrial-button flex items-center space-x-2 ${
+              className={`industrial-button flex items-center justify-center space-x-2 text-xs sm:text-sm px-3 sm:px-4 py-2 ${
                 showUserManagement ? 'bg-industrial-green-600 border-industrial-green-600 text-white' : ''
               }`}
             >
-              <UserIcon className="h-4 w-4" />
+              <UserIcon className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>USERS</span>
             </button>
             <button
               onClick={() => setShowImportModal(true)}
-              className="industrial-button flex items-center space-x-2"
+              className="industrial-button flex items-center justify-center space-x-2 text-xs sm:text-sm px-3 sm:px-4 py-2"
             >
-              <Upload className="h-4 w-4" />
+              <Upload className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>IMPORT</span>
             </button>
             <button
               onClick={exportEvents}
-              className="industrial-button flex items-center space-x-2"
+              className="industrial-button flex items-center justify-center space-x-2 text-xs sm:text-sm px-3 sm:px-4 py-2"
             >
-              <Download className="h-4 w-4" />
+              <Download className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>EXPORT</span>
             </button>
           </div>
@@ -343,33 +345,33 @@ export default function AdminPanel({
 
         {/* Events List */}
         <div className="bg-coal-800 border-2 border-asphalt-600">
-          <div className="p-6 border-b border-asphalt-600">
-            <h2 className="text-xl font-industrial text-gray-100 tracking-wide uppercase">
+          <div className="p-4 sm:p-6 border-b border-asphalt-600">
+            <h2 className="text-lg sm:text-xl font-industrial text-gray-100 tracking-wide uppercase">
               EVENTS ({filteredEvents.length})
             </h2>
           </div>
 
           {loading ? (
-            <div className="p-8 text-center">
+            <div className="p-6 sm:p-8 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-industrial-green-600 mx-auto mb-4"></div>
-              <p className="text-gray-400 font-condensed uppercase tracking-wide">
+              <p className="text-gray-400 font-condensed uppercase tracking-wide text-sm">
                 Loading events...
               </p>
             </div>
           ) : filteredEvents.length === 0 ? (
-            <div className="p-8 text-center">
-              <div className="text-6xl mb-4">🎸</div>
-              <p className="text-gray-400 text-xl font-condensed uppercase tracking-wide">
+            <div className="p-6 sm:p-8 text-center">
+              <div className="text-4xl sm:text-6xl mb-4">🎸</div>
+              <p className="text-gray-400 text-lg sm:text-xl font-condensed uppercase tracking-wide">
                 No Events Found
               </p>
             </div>
           ) : (
             <div className="divide-y divide-asphalt-600">
               {filteredEvents.map((event) => (
-                <div key={event.id} className="p-6">
-                  <div className="flex items-start space-x-6">
+                <div key={event.id} className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
                     {/* Event Image */}
-                    <div className="w-24 h-20 bg-coal-700 border border-asphalt-500 flex-shrink-0 overflow-hidden">
+                    <div className="w-full sm:w-24 h-20 bg-coal-700 border border-asphalt-500 flex-shrink-0 overflow-hidden">
                       <EventImage
                         src={event.immagine}
                         alt={event.nome_evento}
@@ -380,19 +382,19 @@ export default function AdminPanel({
 
                     {/* Event Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="text-lg font-bold text-gray-100 leading-tight">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-2">
+                        <h3 className="text-base sm:text-lg font-bold text-gray-100 leading-tight mb-2 sm:mb-0">
                           {event.nome_evento}
                         </h3>
-                        <div className="flex items-center space-x-2 ml-4">
+                        <div className="flex items-center space-x-2">
                           {getStatusIcon(event.status)}
-                          <span className={`text-sm font-condensed font-bold uppercase tracking-wide ${getStatusColor(event.status)}`}>
+                          <span className={`text-xs sm:text-sm font-condensed font-bold uppercase tracking-wide ${getStatusColor(event.status)}`}>
                             {getStatusText(event.status)}
                           </span>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-3 text-xs sm:text-sm">
                         <div className="flex items-center space-x-2">
                           <span className="text-gray-400">📅</span>
                           <span className="text-gray-200">
@@ -419,7 +421,7 @@ export default function AdminPanel({
                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-4 mb-3 text-sm">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mb-3 text-xs sm:text-sm space-y-1 sm:space-y-0">
                         <div className="flex items-center space-x-2">
                           <span className="text-gray-400">📊</span>
                           <span className="text-gray-200">{event.fonte}</span>
@@ -431,13 +433,13 @@ export default function AdminPanel({
                       </div>
 
                       {event.descrizione && (
-                        <p className="text-gray-300 text-sm mb-3 leading-relaxed">
+                        <p className="text-gray-300 text-xs sm:text-sm mb-3 leading-relaxed">
                           {event.descrizione}
                         </p>
                       )}
 
                       {event.artisti && event.artisti.length > 0 && (
-                        <div className="flex items-center space-x-2 mb-3 text-sm">
+                        <div className="flex items-center space-x-2 mb-3 text-xs sm:text-sm">
                           <span className="text-gray-400">👥</span>
                           <span className="text-gray-200">
                             {event.artisti.join(', ')}
@@ -446,20 +448,20 @@ export default function AdminPanel({
                       )}
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex flex-col space-y-2">
+                    {/* Actions - Stack on mobile */}
+                    <div className="flex flex-row sm:flex-col space-x-2 sm:space-x-0 sm:space-y-2">
                       {(event.status || 'approved') === 'pending' && (
                         <>
                           <button
                             onClick={() => updateEventStatus(event.id, 'approved')}
-                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-sm font-condensed font-bold uppercase tracking-wide transition-colors duration-200 flex items-center space-x-1"
+                            className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white px-2 sm:px-3 py-2 text-xs sm:text-sm font-condensed font-bold uppercase tracking-wide transition-colors duration-200 flex items-center justify-center space-x-1"
                           >
                             <Check className="h-3 w-3" />
                             <span>APPROVE</span>
                           </button>
                           <button
                             onClick={() => updateEventStatus(event.id, 'rejected')}
-                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 text-sm font-condensed font-bold uppercase tracking-wide transition-colors duration-200 flex items-center space-x-1"
+                            className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white px-2 sm:px-3 py-2 text-xs sm:text-sm font-condensed font-bold uppercase tracking-wide transition-colors duration-200 flex items-center justify-center space-x-1"
                           >
                             <X className="h-3 w-3" />
                             <span>REJECT</span>
@@ -470,7 +472,7 @@ export default function AdminPanel({
                       {(event.status || 'approved') === 'rejected' && (
                         <button
                           onClick={() => updateEventStatus(event.id, 'approved')}
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-sm font-condensed font-bold uppercase tracking-wide transition-colors duration-200 flex items-center space-x-1"
+                          className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white px-2 sm:px-3 py-2 text-xs sm:text-sm font-condensed font-bold uppercase tracking-wide transition-colors duration-200 flex items-center justify-center space-x-1"
                         >
                           <Check className="h-3 w-3" />
                           <span>APPROVE</span>
@@ -480,7 +482,7 @@ export default function AdminPanel({
                       {(event.status || 'approved') === 'approved' && (
                         <button
                           onClick={() => updateEventStatus(event.id, 'rejected')}
-                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 text-sm font-condensed font-bold uppercase tracking-wide transition-colors duration-200 flex items-center space-x-1"
+                          className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white px-2 sm:px-3 py-2 text-xs sm:text-sm font-condensed font-bold uppercase tracking-wide transition-colors duration-200 flex items-center justify-center space-x-1"
                         >
                           <X className="h-3 w-3" />
                           <span>REJECT</span>
@@ -492,7 +494,7 @@ export default function AdminPanel({
                           href={event.link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="bg-industrial-green-600 hover:bg-industrial-green-700 text-white px-3 py-2 text-sm font-condensed font-bold uppercase tracking-wide transition-colors duration-200 text-center"
+                          className="flex-1 sm:flex-none bg-industrial-green-600 hover:bg-industrial-green-700 text-white px-2 sm:px-3 py-2 text-xs sm:text-sm font-condensed font-bold uppercase tracking-wide transition-colors duration-200 text-center"
                         >
                           VIEW
                         </a>
@@ -500,7 +502,7 @@ export default function AdminPanel({
                       
                       <button
                         onClick={() => deleteEvent(event.id)}
-                        className="bg-burgundy-600 hover:bg-burgundy-700 text-white px-3 py-2 text-sm font-condensed font-bold uppercase tracking-wide transition-colors duration-200 flex items-center justify-center space-x-1"
+                        className="flex-1 sm:flex-none bg-burgundy-600 hover:bg-burgundy-700 text-white px-2 sm:px-3 py-2 text-xs sm:text-sm font-condensed font-bold uppercase tracking-wide transition-colors duration-200 flex items-center justify-center space-x-1"
                         title="Delete Event"
                       >
                         <Trash2 className="h-3 w-3" />

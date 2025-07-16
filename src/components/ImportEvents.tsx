@@ -203,33 +203,33 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 right-8 bg-coal-800 hover:bg-coal-700 border-2 border-asphalt-600 hover:border-industrial-green-600 text-white p-4 transition-all duration-200 z-50"
+        className="fixed bottom-20 sm:bottom-24 right-4 sm:right-8 bg-coal-800 hover:bg-coal-700 border-2 border-asphalt-600 hover:border-industrial-green-600 text-white p-3 sm:p-4 transition-all duration-200 z-50"
         title="IMPORT EVENTS"
       >
-        <Upload className="h-6 w-6" />
+        <Upload className="h-5 w-5 sm:h-6 sm:w-6" />
       </button>
     );
   }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
-      <div className="bg-coal-800 border-2 border-asphalt-600 p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-industrial text-gray-100 tracking-wide uppercase">
+      <div className="bg-coal-800 border-2 border-asphalt-600 p-4 sm:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-2xl font-industrial text-gray-100 tracking-wide uppercase">
             IMPORT EVENTS
           </h2>
           <button
             onClick={() => setIsOpen(false)}
             className="bg-transparent border-2 border-asphalt-500 text-gray-300 p-2 hover:border-burgundy-500 hover:text-white transition-all duration-200"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* File Upload Area */}
           <div>
-            <label className="block text-sm font-condensed font-bold text-gray-100 mb-3 uppercase tracking-wide">
+            <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 sm:mb-3 uppercase tracking-wide">
               📁 UPLOAD JSON FILE
             </label>
             
@@ -238,7 +238,7 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
-              className={`border-2 border-dashed p-8 text-center transition-all duration-200 ${
+              className={`border-2 border-dashed p-6 sm:p-8 text-center transition-all duration-200 ${
                 dragActive
                   ? 'border-industrial-green-600 bg-industrial-green-900 bg-opacity-20'
                   : 'border-asphalt-500 hover:border-asphalt-400'
@@ -246,23 +246,23 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
             >
               {selectedFile ? (
                 <div className="flex items-center justify-center space-x-3">
-                  <FileText className="h-8 w-8 text-industrial-green-600" />
+                  <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-industrial-green-600" />
                   <div>
-                    <p className="text-gray-100 font-condensed font-bold uppercase tracking-wide">
+                    <p className="text-gray-100 font-condensed font-bold uppercase tracking-wide text-sm sm:text-base">
                       {selectedFile.name}
                     </p>
-                    <p className="text-gray-400 text-sm font-condensed uppercase tracking-wide">
+                    <p className="text-gray-400 text-xs sm:text-sm font-condensed uppercase tracking-wide">
                       {(selectedFile.size / 1024).toFixed(1)} KB
                     </p>
                   </div>
                 </div>
               ) : (
                 <div>
-                  <Upload className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-                  <p className="text-gray-300 font-condensed font-bold uppercase tracking-wide mb-2">
+                  <Upload className="h-8 w-8 sm:h-12 sm:w-12 text-gray-500 mx-auto mb-4" />
+                  <p className="text-gray-300 font-condensed font-bold uppercase tracking-wide mb-2 text-sm sm:text-base">
                     DROP JSON FILE HERE
                   </p>
-                  <p className="text-gray-500 text-sm font-condensed uppercase tracking-wide mb-4">
+                  <p className="text-gray-500 text-xs sm:text-sm font-condensed uppercase tracking-wide mb-4">
                     OR CLICK TO SELECT
                   </p>
                   <input
@@ -274,7 +274,7 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
                   />
                   <label
                     htmlFor="file-input"
-                    className="industrial-button cursor-pointer inline-block"
+                    className="industrial-button cursor-pointer inline-block text-xs sm:text-sm px-3 sm:px-4 py-2"
                   >
                     SELECT FILE
                   </label>
@@ -283,14 +283,14 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
             </div>
 
             {/* File Format Info */}
-            <div className="mt-4 p-4 bg-coal-900 border border-asphalt-600">
-              <h4 className="text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+            <div className="mt-4 p-3 sm:p-4 bg-coal-900 border border-asphalt-600">
+              <h4 className="text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
                 📋 SUPPORTED FORMAT
               </h4>
               <p className="text-xs text-gray-400 font-condensed mb-2">
                 Upload a JSON file containing an array of event objects. The Python script will automatically map fields like:
               </p>
-              <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 font-condensed">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-500 font-condensed">
                 <div>• <code>name</code> → <code>nome_evento</code></div>
                 <div>• <code>startDate</code> → <code>data_ora</code></div>
                 <div>• <code>location.name</code> → <code>venue</code></div>
@@ -301,12 +301,12 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
             </div>
           </div>
 
-          {/* Import Button */}
-          <div className="flex space-x-4">
+          {/* Import Button - Stack on mobile */}
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
             <button
               onClick={handleImport}
               disabled={loading || !selectedFile}
-              className="flex-1 bg-industrial-green-600 border-2 border-industrial-green-600 text-white px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:bg-industrial-green-700 hover:border-industrial-green-700 transition-all duration-200 disabled:opacity-50 flex items-center justify-center space-x-2"
+              className="w-full sm:flex-1 bg-industrial-green-600 border-2 border-industrial-green-600 text-white px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:bg-industrial-green-700 hover:border-industrial-green-700 transition-all duration-200 disabled:opacity-50 flex items-center justify-center space-x-2 text-sm"
             >
               {loading ? (
                 <>
@@ -315,7 +315,7 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
                 </>
               ) : (
                 <>
-                  <span className="text-lg">🤖</span>
+                  <span className="text-base sm:text-lg">🤖</span>
                   <span>IMPORT</span>
                 </>
               )}
@@ -323,7 +323,7 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
             {(results.length > 0 || selectedFile) && (
               <button
                 onClick={clearResults}
-                className="bg-transparent border-2 border-asphalt-500 text-gray-300 px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:border-burgundy-500 hover:text-white transition-all duration-200"
+                className="w-full sm:w-auto bg-transparent border-2 border-asphalt-500 text-gray-300 px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:border-burgundy-500 hover:text-white transition-all duration-200 text-sm"
               >
                 CLEAR
               </button>
@@ -332,27 +332,27 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
 
           {/* Results */}
           {results.length > 0 && (
-            <div className="bg-coal-900 border-2 border-asphalt-600 p-4">
-              <h3 className="text-lg font-industrial text-gray-100 mb-4 uppercase tracking-wide">
+            <div className="bg-coal-900 border-2 border-asphalt-600 p-3 sm:p-4">
+              <h3 className="text-base sm:text-lg font-industrial text-gray-100 mb-3 sm:mb-4 uppercase tracking-wide">
                 IMPORT RESULTS
               </h3>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
+              <div className="space-y-2 max-h-48 sm:max-h-60 overflow-y-auto">
                 {results.map((result, index) => (
                   <div
                     key={index}
-                    className={`flex items-center space-x-3 p-2 border ${
+                    className={`flex items-center space-x-2 sm:space-x-3 p-2 border text-xs sm:text-sm ${
                       result.success
                         ? 'border-industrial-green-600 bg-industrial-green-900'
                         : 'border-burgundy-600 bg-burgundy-900'
                     }`}
                   >
                     {result.success ? (
-                      <Check className="h-4 w-4 text-industrial-green-400" />
+                      <Check className="h-3 w-3 sm:h-4 sm:w-4 text-industrial-green-400" />
                     ) : (
-                      <AlertTriangle className="h-4 w-4 text-burgundy-400" />
+                      <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-burgundy-400" />
                     )}
                     <div className="flex-1">
-                      <span className="font-condensed font-bold text-sm uppercase">
+                      <span className="font-condensed font-bold uppercase">
                         {result.event}
                       </span>
                       {result.error && (
@@ -364,7 +364,7 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
                   </div>
                 ))}
               </div>
-              <div className="mt-4 text-sm font-condensed text-gray-400">
+              <div className="mt-3 sm:mt-4 text-xs sm:text-sm font-condensed text-gray-400">
                 <span className="text-industrial-green-400">
                   {results.filter(r => r.success).length} SUCCESS
                 </span>

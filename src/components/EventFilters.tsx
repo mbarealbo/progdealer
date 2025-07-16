@@ -60,15 +60,16 @@ export default function EventFiltersComponent({
     
     handleFilterChange('countries', newCountries);
   };
+  
   return (
-    <div className="mb-8">
+    <div className="mb-6 sm:mb-8">
       {/* Filter Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-3 industrial-button mb-6"
+        className="flex items-center space-x-3 industrial-button mb-4 sm:mb-6 w-full sm:w-auto justify-center sm:justify-start"
       >
-        <span className="text-lg">🎚️</span>
-        <span className="text-lg font-industrial tracking-wide uppercase">
+        <span className="text-base sm:text-lg">🎚️</span>
+        <span className="text-base sm:text-lg font-industrial tracking-wide uppercase">
           FILTERS
         </span>
         {hasActiveFilters && (
@@ -81,32 +82,34 @@ export default function EventFiltersComponent({
 
       {/* Collapsible Filter Panel */}
       {isOpen && (
-        <div className="bg-coal-800 border-2 border-asphalt-600 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-industrial text-gray-100 tracking-wide uppercase">
+        <div className="bg-coal-800 border-2 border-asphalt-600 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-2 sm:space-y-0">
+            <h2 className="text-lg sm:text-xl font-industrial text-gray-100 tracking-wide uppercase">
               FILTER EVENTS
             </h2>
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="industrial-button flex items-center text-sm"
-                title={searchQuery.trim() ? 'Clear filters (search will remain active)' : 'Clear all filters'}
-              >
-                <X className="h-4 w-4 mr-2" />
-                CLEAR FILTERS
-              </button>
-            )}
-            {searchQuery.trim() && (
-              <div className="text-sm text-gray-400 font-condensed uppercase tracking-wide">
-                🔍 SEARCH: "{searchQuery}"
-              </div>
-            )}
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="industrial-button flex items-center text-xs sm:text-sm px-3 py-2 w-full sm:w-auto justify-center"
+                  title={searchQuery.trim() ? 'Clear filters (search will remain active)' : 'Clear all filters'}
+                >
+                  <X className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                  CLEAR FILTERS
+                </button>
+              )}
+              {searchQuery.trim() && (
+                <div className="text-xs sm:text-sm text-gray-400 font-condensed uppercase tracking-wide text-center sm:text-left">
+                  🔍 SEARCH: "{searchQuery}"
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="space-y-6">
             {/* Progressive Subgenres - Chip Interface */}
             <div>
-              <label className="block text-sm font-condensed font-bold text-gray-400 mb-4 uppercase tracking-wide">
+              <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-400 mb-3 sm:mb-4 uppercase tracking-wide">
                 🎵 PROGRESSIVE SUBGENRES
               </label>
               <div className="flex flex-wrap gap-2">
@@ -117,7 +120,7 @@ export default function EventFiltersComponent({
                       key={subgenre}
                       onClick={() => toggleSubgenreExclusion(subgenre)}
                       className={`
-                        px-3 py-1 text-xs font-condensed font-bold uppercase tracking-wide
+                        px-2 sm:px-3 py-1 text-xs font-condensed font-bold uppercase tracking-wide
                         border transition-all duration-200 flex items-center space-x-1
                         ${isExcluded 
                           ? 'bg-asphalt-700 border-asphalt-500 text-gray-500 line-through' 
@@ -137,15 +140,15 @@ export default function EventFiltersComponent({
             </div>
 
             {/* Location, Date, and Source Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-condensed font-bold text-gray-400 mb-3 uppercase tracking-wide">
+                <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-400 mb-2 sm:mb-3 uppercase tracking-wide">
                   🏙️ CITY
                 </label>
                 <select
                   value={filters.città}
                   onChange={(e) => handleFilterChange('città', e.target.value)}
-                  className="brutal-input w-full text-sm"
+                  className="brutal-input w-full text-xs sm:text-sm"
                 >
                   <option value="">ALL CITIES</option>
                   {uniqueLocations.map((location) => (
@@ -157,33 +160,33 @@ export default function EventFiltersComponent({
               </div>
               
               <div>
-                <label className="block text-sm font-condensed font-bold text-gray-400 mb-3 uppercase tracking-wide">
+                <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-400 mb-2 sm:mb-3 uppercase tracking-wide">
                   📅 FROM DATE
                 </label>
                 <input
                   type="date"
                   value={filters.dataInizio}
                   onChange={(e) => handleFilterChange('dataInizio', e.target.value)}
-                  className="brutal-input w-full text-sm"
+                  className="brutal-input w-full text-xs sm:text-sm"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-condensed font-bold text-gray-400 mb-3 uppercase tracking-wide">
+                <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-400 mb-2 sm:mb-3 uppercase tracking-wide">
                   📅 TO DATE
                 </label>
                 <input
                   type="date"
                   value={filters.dataFine}
                   onChange={(e) => handleFilterChange('dataFine', e.target.value)}
-                  className="brutal-input w-full text-sm"
+                  className="brutal-input w-full text-xs sm:text-sm"
                 />
               </div>
             </div>
 
             {/* Countries Filter - Multi-select with chips */}
             <div>
-              <label className="block text-sm font-condensed font-bold text-gray-400 mb-4 uppercase tracking-wide">
+              <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-400 mb-3 sm:mb-4 uppercase tracking-wide">
                 🌍 COUNTRIES
               </label>
               <div className="flex flex-wrap gap-2">
@@ -194,7 +197,7 @@ export default function EventFiltersComponent({
                       key={country}
                       onClick={() => toggleCountrySelection(country)}
                       className={`
-                        px-3 py-1 text-xs font-condensed font-bold uppercase tracking-wide
+                        px-2 sm:px-3 py-1 text-xs font-condensed font-bold uppercase tracking-wide
                         border transition-all duration-200 flex items-center space-x-1
                         ${isSelected 
                           ? 'bg-industrial-green-600 border-industrial-green-600 text-white hover:bg-industrial-green-700' 
