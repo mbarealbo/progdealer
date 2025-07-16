@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Shield, Check, X, Eye, Clock, CheckCircle, XCircle, Trash2, Upload, Download, User as UserIcon } from 'lucide-react';
+import { ArrowLeft, Shield, Check, X, Eye, Clock, CheckCircle, XCircle, Trash2, Upload, Download, User as UserIcon, Settings, LogOut } from 'lucide-react';
 import type { User } from '@supabase/auth-js';
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
@@ -31,6 +31,7 @@ export default function AdminPanel({
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [showUserManagement, setShowUserManagement] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || !userProfile || userProfile.user_role !== 'admin') {
@@ -164,9 +165,141 @@ export default function AdminPanel({
   const approvedCount = events.filter(event => (event.status || 'approved') === 'approved').length;
   const rejectedCount = events.filter(event => (event.status || 'approved') === 'rejected').length;
 
+  // Settings Page (same as UserPanel but for admin)
+  if (showSettings) {
+    return (
+      <div className="min-h-screen bg-coal-900 bg-noise">
+        {/* Header */}
+        <header className="bg-coal-800 border-b-2 border-asphalt-600">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16 sm:h-20">
+              <div className="flex items-center space-x-4 sm:space-x-6">
+                {/* Clickable Logo */}
+                <button
+                  onClick={() => window.location.href = '/'}
+                  className="flex items-center hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+                  title="BACK TO HOME"
+                >
+                  <div className="text-xl sm:text-2xl mr-2">🎸</div>
+                  <div className="text-sm sm:text-lg font-industrial text-gray-100 tracking-wide uppercase">
+                    PROGDEALER
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="text-gray-300 hover:text-white transition-colors duration-200 p-2"
+                  title="BACK TO ADMIN AREA"
+                >
+                  <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
+              </div>
+
+              <div className="flex items-center space-x-2 sm:space-x-4">
+                <button
+                  onClick={onLogout}
+                  className="text-gray-300 hover:text-white transition-colors duration-200 p-2"
+                  title="LOGOUT"
+                >
+                  <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Settings Content - Same as UserPanel */}
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          {/* Page Title */}
+          <div className="flex items-center space-x-4 mb-6 sm:mb-8">
+            <Settings className="h-6 w-6 sm:h-8 sm:w-8 text-industrial-green-600" />
+            <div>
+              <h1 className="text-xl sm:text-2xl font-industrial text-gray-100 tracking-wide uppercase">
+                SETTINGS
+              </h1>
+              <p className="text-gray-400 text-sm font-condensed uppercase tracking-wide">
+                Account Configuration
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {/* User Info */}
+            <div className="bg-coal-800 border-2 border-asphalt-600 p-4 sm:p-6">
+              <h2 className="text-lg font-industrial text-gray-100 tracking-wide uppercase mb-4">
+                ACCOUNT INFO
+              </h2>
+              
+              {/* Email (Read-only) */}
+              <div className="mb-4">
+                <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                  USERNAME (EMAIL)
+                </label>
+                <div className="bg-coal-900 border-2 border-asphalt-600 text-gray-300 px-3 py-2 font-condensed text-sm">
+                  {userProfile?.email || currentUser?.email || 'Admin User'}
+                </div>
+              </div>
+
+              {/* Role Tag */}
+              <div className="mb-4">
+                <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                  ROLE
+                </label>
+                <span className="inline-block px-3 py-1 text-xs font-bold uppercase tracking-wide bg-burgundy-600 text-white">
+                  ADMIN
+                </span>
+              </div>
+            </div>
+
+            {/* Coming Soon Features */}
+            <div className="bg-coal-800 border-2 border-asphalt-600 p-4 sm:p-6">
+              <h2 className="text-lg font-industrial text-gray-100 tracking-wide uppercase mb-4">
+                PREFERENCES
+              </h2>
+              
+              {/* Notifications Toggle (Disabled) */}
+              <div className="mb-4">
+                <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                  NOTIFICATIONS
+                </label>
+                <div className="flex items-center space-x-3">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      disabled
+                      className="sr-only"
+                    />
+                    <div className="w-10 h-6 bg-gray-600 rounded-full shadow-inner opacity-50"></div>
+                    <div className="absolute w-4 h-4 bg-gray-400 rounded-full shadow left-1 top-1 transition"></div>
+                  </div>
+                  <span className="text-sm text-gray-500 font-condensed">
+                    Enable notifications – Coming soon
+                  </span>
+                </div>
+              </div>
+
+              {/* Favorite Band Dropdown (Disabled) */}
+              <div className="mb-4">
+                <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                  FAVORITE BAND
+                </label>
+                <select
+                  disabled
+                  className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-500 px-3 py-2 font-condensed text-sm opacity-50 cursor-not-allowed"
+                >
+                  <option>Choose your favorite band – Coming soon</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-coal-900 bg-noise">
-      {/* Header */}
+      {/* Header - Simplified for Mobile */}
       <header className="bg-coal-800 border-b-2 border-asphalt-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
@@ -185,28 +318,28 @@ export default function AdminPanel({
               
               <button
                 onClick={onBackToMain}
-                className="industrial-button flex items-center space-x-2 text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2"
+                className="text-gray-300 hover:text-white transition-colors duration-200 p-2"
+                title="BACK TO MAIN"
               >
                 <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden sm:inline">BACK</span>
-                <span className="sm:hidden">BACK</span>
               </button>
             </div>
 
+            {/* Simplified Mobile Header - Only Icons */}
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <div className="text-gray-400 font-condensed text-xs sm:text-sm flex items-center space-x-2">
-                <span className="bg-burgundy-600 text-white px-2 py-1 text-xs font-bold uppercase tracking-wide">
-                  ADMIN
-                </span>
-                <span className="uppercase tracking-wide hidden sm:inline">
-                  {userProfile?.email || currentUser?.email || 'Admin User'}
-                </span>
-              </div>
+              <button
+                onClick={() => setShowSettings(true)}
+                className="text-gray-300 hover:text-white transition-colors duration-200 p-2"
+                title="SETTINGS"
+              >
+                <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
               <button
                 onClick={onLogout}
-                className="industrial-button text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2"
+                className="text-gray-300 hover:text-white transition-colors duration-200 p-2"
+                title="LOGOUT"
               >
-                LOGOUT
+                <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
             </div>
           </div>
@@ -215,20 +348,21 @@ export default function AdminPanel({
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Page Title - Now visible on all screens */}
-        <div className="flex items-center space-x-4 mb-6 sm:mb-8">
-          <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-industrial-green-600" />
-          <div>
+        {/* Page Title - Now Visible on All Screens */}
+        <div className="flex flex-col items-center text-center mb-6 sm:mb-8">
+          <div className="flex items-center space-x-4 mb-2">
+            <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-industrial-green-600" />
             <h1 className="text-xl sm:text-2xl font-industrial text-gray-100 tracking-wide uppercase">
               ADMIN PANEL
             </h1>
-            <p className="text-gray-400 text-sm font-condensed uppercase tracking-wide">
-              Event Management System
-            </p>
           </div>
+          {/* Role Tag Under Title */}
+          <span className="inline-block px-3 py-1 text-xs font-bold uppercase tracking-wide bg-burgundy-600 text-white">
+            ADMIN
+          </span>
         </div>
 
-        {/* Stats - Better mobile spacing */}
+        {/* Stats - Better Mobile Spacing */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-coal-800 border-2 border-asphalt-600 p-3 sm:p-6">
             <div className="flex items-center space-x-2 sm:space-x-3">
@@ -287,9 +421,9 @@ export default function AdminPanel({
           </div>
         </div>
 
-        {/* Controls - Better mobile layout */}
+        {/* Controls - Better Mobile Layout */}
         <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between mb-6">
-          {/* Filter Buttons - Better mobile spacing */}
+          {/* Filter Buttons - Better Mobile Spacing */}
           <div className="flex flex-wrap gap-2">
             {(['all', 'pending', 'approved', 'rejected'] as const).map((filterOption) => (
               <button
@@ -316,8 +450,10 @@ export default function AdminPanel({
           <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             <button
               onClick={() => setShowUserManagement(!showUserManagement)}
-              className={`industrial-button flex items-center justify-center space-x-2 text-xs sm:text-sm px-3 sm:px-4 py-2 ${
-                showUserManagement ? 'bg-industrial-green-600 border-industrial-green-600 text-white' : ''
+              className={`flex items-center justify-center space-x-2 text-xs sm:text-sm px-3 sm:px-4 py-2 border-2 transition-all duration-200 font-condensed font-bold uppercase tracking-wide ${
+                showUserManagement 
+                  ? 'bg-industrial-green-600 border-industrial-green-600 text-white' 
+                  : 'bg-transparent border-asphalt-500 text-gray-300 hover:border-industrial-green-600 hover:text-white'
               }`}
             >
               <UserIcon className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -325,14 +461,14 @@ export default function AdminPanel({
             </button>
             <button
               onClick={() => setShowImportModal(true)}
-              className="industrial-button flex items-center justify-center space-x-2 text-xs sm:text-sm px-3 sm:px-4 py-2"
+              className="flex items-center justify-center space-x-2 text-xs sm:text-sm px-3 sm:px-4 py-2 bg-transparent border-2 border-asphalt-500 text-gray-300 hover:border-industrial-green-600 hover:text-white transition-all duration-200 font-condensed font-bold uppercase tracking-wide"
             >
               <Upload className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>IMPORT</span>
             </button>
             <button
               onClick={exportEvents}
-              className="industrial-button flex items-center justify-center space-x-2 text-xs sm:text-sm px-3 sm:px-4 py-2"
+              className="flex items-center justify-center space-x-2 text-xs sm:text-sm px-3 sm:px-4 py-2 bg-transparent border-2 border-asphalt-500 text-gray-300 hover:border-industrial-green-600 hover:text-white transition-all duration-200 font-condensed font-bold uppercase tracking-wide"
             >
               <Download className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>EXPORT</span>

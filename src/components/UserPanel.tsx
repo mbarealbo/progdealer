@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, User as UserIcon, Trash2, Eye, Clock, CheckCircle, XCircle, Plus, UserX } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Trash2, Eye, Clock, CheckCircle, XCircle, Plus, Settings, LogOut } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
@@ -31,6 +31,7 @@ export default function UserPanel({
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -141,9 +142,173 @@ export default function UserPanel({
     return null;
   }
 
+  // Settings Page
+  if (showSettings) {
+    return (
+      <div className="min-h-screen bg-coal-900 bg-noise">
+        {/* Header */}
+        <header className="bg-coal-800 border-b-2 border-asphalt-600">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16 sm:h-20">
+              <div className="flex items-center space-x-4 sm:space-x-6">
+                {/* Clickable Logo */}
+                <button
+                  onClick={() => window.location.href = '/'}
+                  className="flex items-center hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+                  title="BACK TO HOME"
+                >
+                  <div className="text-xl sm:text-2xl mr-2">🎸</div>
+                  <div className="text-sm sm:text-lg font-industrial text-gray-100 tracking-wide uppercase">
+                    PROGDEALER
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="text-gray-300 hover:text-white transition-colors duration-200 p-2"
+                  title="BACK TO USER AREA"
+                >
+                  <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
+              </div>
+
+              <div className="flex items-center space-x-2 sm:space-x-4">
+                <button
+                  onClick={onLogout}
+                  className="text-gray-300 hover:text-white transition-colors duration-200 p-2"
+                  title="LOGOUT"
+                >
+                  <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Settings Content */}
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          {/* Page Title */}
+          <div className="flex items-center space-x-4 mb-6 sm:mb-8">
+            <Settings className="h-6 w-6 sm:h-8 sm:w-8 text-industrial-green-600" />
+            <div>
+              <h1 className="text-xl sm:text-2xl font-industrial text-gray-100 tracking-wide uppercase">
+                SETTINGS
+              </h1>
+              <p className="text-gray-400 text-sm font-condensed uppercase tracking-wide">
+                Account Configuration
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {/* User Info */}
+            <div className="bg-coal-800 border-2 border-asphalt-600 p-4 sm:p-6">
+              <h2 className="text-lg font-industrial text-gray-100 tracking-wide uppercase mb-4">
+                ACCOUNT INFO
+              </h2>
+              
+              {/* Email (Read-only) */}
+              <div className="mb-4">
+                <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                  USERNAME (EMAIL)
+                </label>
+                <div className="bg-coal-900 border-2 border-asphalt-600 text-gray-300 px-3 py-2 font-condensed text-sm">
+                  {userProfile?.email || currentUser?.email || 'User'}
+                </div>
+              </div>
+
+              {/* Role Tag */}
+              <div className="mb-4">
+                <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                  ROLE
+                </label>
+                <span className={`inline-block px-3 py-1 text-xs font-bold uppercase tracking-wide ${
+                  userProfile?.user_role === 'admin' 
+                    ? 'bg-burgundy-600 text-white' 
+                    : 'bg-blue-600 text-white'
+                }`}>
+                  {userProfile?.user_role?.toUpperCase() || 'USER'}
+                </span>
+              </div>
+            </div>
+
+            {/* Coming Soon Features */}
+            <div className="bg-coal-800 border-2 border-asphalt-600 p-4 sm:p-6">
+              <h2 className="text-lg font-industrial text-gray-100 tracking-wide uppercase mb-4">
+                PREFERENCES
+              </h2>
+              
+              {/* Notifications Toggle (Disabled) */}
+              <div className="mb-4">
+                <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                  NOTIFICATIONS
+                </label>
+                <div className="flex items-center space-x-3">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      disabled
+                      className="sr-only"
+                    />
+                    <div className="w-10 h-6 bg-gray-600 rounded-full shadow-inner opacity-50"></div>
+                    <div className="absolute w-4 h-4 bg-gray-400 rounded-full shadow left-1 top-1 transition"></div>
+                  </div>
+                  <span className="text-sm text-gray-500 font-condensed">
+                    Enable notifications – Coming soon
+                  </span>
+                </div>
+              </div>
+
+              {/* Favorite Band Dropdown (Disabled) */}
+              <div className="mb-4">
+                <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
+                  FAVORITE BAND
+                </label>
+                <select
+                  disabled
+                  className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-500 px-3 py-2 font-condensed text-sm opacity-50 cursor-not-allowed"
+                >
+                  <option>Choose your favorite band – Coming soon</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Delete Account */}
+            <div className="bg-burgundy-900 border-2 border-burgundy-600 p-4 sm:p-6">
+              <h2 className="text-lg font-industrial text-burgundy-300 tracking-wide uppercase mb-4">
+                DANGER ZONE
+              </h2>
+              
+              <p className="text-burgundy-300 text-sm font-condensed mb-4 leading-relaxed">
+                Permanently delete your account and all associated data. This action cannot be undone.
+              </p>
+              
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="bg-burgundy-800 border-2 border-burgundy-600 text-white px-4 py-2 text-sm font-condensed font-bold uppercase tracking-wide hover:bg-burgundy-700 transition-all duration-200"
+              >
+                DELETE ACCOUNT
+              </button>
+            </div>
+          </div>
+        </main>
+
+        {/* Delete Account Modal */}
+        {showDeleteModal && (
+          <DeleteAccountModal
+            isOpen={showDeleteModal}
+            onClose={() => setShowDeleteModal(false)}
+            onAccountDeleted={handleAccountDeleted}
+            userEmail={userProfile?.email || currentUser?.email || ''}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-coal-900 bg-noise">
-      {/* Header */}
+      {/* Header - Simplified for Mobile */}
       <header className="bg-coal-800 border-b-2 border-asphalt-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
@@ -162,41 +327,28 @@ export default function UserPanel({
               
               <button
                 onClick={onBackToMain}
-                className="industrial-button flex items-center space-x-2 text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2"
+                className="text-gray-300 hover:text-white transition-colors duration-200 p-2"
+                title="BACK TO MAIN"
               >
                 <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden sm:inline">BACK</span>
-                <span className="sm:hidden">BACK</span>
               </button>
             </div>
 
+            {/* Simplified Mobile Header - Only Icons */}
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <div className="text-gray-400 font-condensed text-xs sm:text-sm flex items-center space-x-2">
-                <span className={`px-2 py-1 text-xs font-bold uppercase tracking-wide ${
-                  userProfile?.user_role === 'admin' 
-                    ? 'bg-burgundy-600 text-white' 
-                    : 'bg-blue-600 text-white'
-                }`}>
-                  {userProfile?.user_role?.toUpperCase() || 'USER'}
-                </span>
-                <span className="uppercase tracking-wide hidden sm:inline">
-                  {userProfile?.email || currentUser?.email || 'User'}
-                </span>
-              </div>
               <button
-                onClick={() => setShowDeleteModal(true)}
-                className="bg-burgundy-800 border-2 border-burgundy-600 text-white px-2 sm:px-3 py-1 sm:py-2 text-xs font-condensed font-bold uppercase tracking-wide hover:bg-burgundy-700 transition-all duration-200 flex items-center space-x-1 sm:space-x-2"
-                title="DELETE ACCOUNT"
+                onClick={() => setShowSettings(true)}
+                className="text-gray-300 hover:text-white transition-colors duration-200 p-2"
+                title="SETTINGS"
               >
-                <UserX className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">DELETE ACCOUNT</span>
-                <span className="sm:hidden">DELETE</span>
+                <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
               <button
                 onClick={onLogout}
-                className="industrial-button text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2"
+                className="text-gray-300 hover:text-white transition-colors duration-200 p-2"
+                title="LOGOUT"
               >
-                LOGOUT
+                <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
             </div>
           </div>
@@ -205,20 +357,25 @@ export default function UserPanel({
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Page Title - Now visible on all screens */}
-        <div className="flex items-center space-x-4 mb-6 sm:mb-8">
-          <UserIcon className="h-6 w-6 sm:h-8 sm:w-8 text-industrial-green-600" />
-          <div>
+        {/* Page Title - Now Visible on All Screens */}
+        <div className="flex flex-col items-center text-center mb-6 sm:mb-8">
+          <div className="flex items-center space-x-4 mb-2">
+            <UserIcon className="h-6 w-6 sm:h-8 sm:w-8 text-industrial-green-600" />
             <h1 className="text-xl sm:text-2xl font-industrial text-gray-100 tracking-wide uppercase">
               USER AREA
             </h1>
-            <p className="text-gray-400 text-sm font-condensed uppercase tracking-wide">
-              Manage Your Events
-            </p>
           </div>
+          {/* Role Tag Under Title */}
+          <span className={`inline-block px-3 py-1 text-xs font-bold uppercase tracking-wide ${
+            userProfile?.user_role === 'admin' 
+              ? 'bg-burgundy-600 text-white' 
+              : 'bg-blue-600 text-white'
+          }`}>
+            {userProfile?.user_role?.toUpperCase() || 'USER'}
+          </span>
         </div>
 
-        {/* Stats - Better mobile spacing */}
+        {/* Stats - Better Mobile Spacing */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-coal-800 border-2 border-asphalt-600 p-4 sm:p-6">
             <div className="flex items-center space-x-3">
@@ -263,9 +420,9 @@ export default function UserPanel({
           </div>
         </div>
 
-        {/* Controls - Better mobile layout */}
+        {/* Controls - Better Mobile Layout */}
         <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between mb-6">
-          {/* Filter Buttons - Better mobile spacing */}
+          {/* Filter Buttons - Better Mobile Spacing */}
           <div className="flex flex-wrap gap-2">
             {(['all', 'pending', 'approved', 'rejected'] as const).map((filterOption) => (
               <button
@@ -442,16 +599,6 @@ export default function UserPanel({
             fetchUserEvents();
             setShowAddForm(false);
           }} 
-        />
-      )}
-
-      {/* Delete Account Modal */}
-      {showDeleteModal && (
-        <DeleteAccountModal
-          isOpen={showDeleteModal}
-          onClose={() => setShowDeleteModal(false)}
-          onAccountDeleted={handleAccountDeleted}
-          userEmail={userProfile?.email || currentUser?.email || ''}
         />
       )}
     </div>
