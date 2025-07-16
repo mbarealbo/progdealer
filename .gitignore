@@ -36,7 +36,6 @@ dist-ssr
 # Security sensitive files
 **/secrets/**
 **/*secret*
-**/*password*
 **/*credential*
 .DS_Store
 ._*
