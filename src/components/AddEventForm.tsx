@@ -6,16 +6,33 @@ import CityAutocomplete from './CityAutocomplete';
 import EventImage from './EventImage';
 
 interface AddEventFormProps {
+  isOpen?: boolean;
+  onClose?: () => void;
   onEventAdded: () => void;
+  onAuthRequired?: () => void;
+  isAuthenticated?: boolean;
 }
 
-export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function AddEventForm({ 
+  isOpen: externalIsOpen, 
+  onClose: externalOnClose, 
+  onEventAdded,
+  onAuthRequired,
+  isAuthenticated = false
+}: AddEventFormProps) {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [artists, setArtists] = useState<string[]>(['']);
   const [cityData, setCityData] = useState<{city: string, region: string, country: string} | null>(null);
+  
+  // Use external control if provided, otherwise use internal state
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const setIsOpen = externalOnClose ? (value: boolean) => {
+    if (!value) externalOnClose();
+  } : setInternalIsOpen;
+
   const [formData, setFormData] = useState({
     nome_evento: '',
     data_ora: '',
@@ -164,7 +181,13 @@ export default function AddEventForm({ onEventAdded }: AddEventFormProps) {
   if (!isOpen) {
     return (
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          if (!isAuthenticated && onAuthRequired) {
+            onAuthRequired();
+          } else {
+            setIsOpen(true);
+          }
+        }}
         className="fixed bottom-4 sm:bottom-8 right-4 sm:right-8 bg-coal-800 hover:bg-coal-700 border-2 border-asphalt-600 hover:border-industrial-green-600 text-white p-3 sm:p-4 transition-all duration-200 z-50"
         title="SUBMIT AN EVENT"
       >

@@ -11,6 +11,7 @@ import AddEventForm from './components/AddEventForm';
 import SearchInput from './components/SearchInput';
 import AdminPanel from './components/AdminPanel';
 import UserPanel from './components/UserPanel';
+import AuthRequiredModal from './components/AuthRequiredModal';
 import LoginPage from './components/LoginPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -26,6 +27,7 @@ function MainPage() {
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showAuthRequired, setShowAuthRequired] = useState(false);
   const [filters, setFilters] = useState<EventFilters>({
     città: '',
     sottogenere: '',
@@ -389,7 +391,17 @@ function MainPage() {
       </main>
 
       {/* Add Event Form */}
-      <AddEventForm onEventAdded={fetchEvents} />
+      <AddEventForm 
+        onEventAdded={fetchEvents}
+        onAuthRequired={() => setShowAuthRequired(true)}
+        isAuthenticated={isAuthenticated}
+      />
+
+      {/* Auth Required Modal */}
+      <AuthRequiredModal
+        isOpen={showAuthRequired}
+        onClose={() => setShowAuthRequired(false)}
+      />
 
       {/* Footer */}
       <Footer 

@@ -448,7 +448,9 @@ export default function UserPanel({
 
           {/* Add Event Button */}
           <button
-            onClick={() => setShowAddForm(true)}
+            onClick={() => {
+              setShowAddForm(true);
+            }}
             className="w-full sm:w-auto bg-industrial-green-600 border-2 border-industrial-green-600 text-white px-4 sm:px-6 py-3 uppercase tracking-wide font-condensed font-bold hover:bg-industrial-green-700 hover:border-industrial-green-700 transition-all duration-200 flex items-center justify-center space-x-2 text-sm"
           >
             <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -593,14 +595,14 @@ export default function UserPanel({
       </main>
 
       {/* Add Event Form */}
-      {showAddForm && (
-        <AddEventForm 
-          onEventAdded={() => {
-            fetchUserEvents();
-            setShowAddForm(false);
-          }} 
-        />
-      )}
+      <AddEventForm 
+        isOpen={showAddForm}
+        onClose={() => setShowAddForm(false)}
+        onEventAdded={() => {
+          fetchUserEvents();
+          setShowAddForm(false);
+        }} 
+      />
     </div>
   );
 }
