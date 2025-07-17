@@ -1,4 +1,3 @@
-import { corsHeaders } from '../_shared/cors.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
