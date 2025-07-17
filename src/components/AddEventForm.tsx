@@ -104,6 +104,22 @@ export default function AddEventForm({
 
       console.log('Event inserted successfully');
 
+      // Silent notification to admin - don't wait for response or show errors
+      try {
+        await fetch('https://mlnmpfohtsiyjxnjwtkk.supabase.co/functions/v1/notify-albo', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_email: user.email
+          })
+        });
+      } catch (error) {
+        // Silent failure - don't show anything to the user
+        console.log('Admin notification failed (silent):', error);
+      }
+
       // Reset form
       setFormData({
         nome_evento: '',
