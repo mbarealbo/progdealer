@@ -6,27 +6,66 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
-
-  if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method Not Allowed' }),
-      {
-        status: 405,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
-  }
-
+  console.log("🚀 Function started");
+  
   try {
-    // Parse the request body
-    const { user_email } = await req.json()
+    // Handle CORS preflight requests
+    if (req.method === 'OPTIONS') {
+      console.log("✅ CORS preflight handled");
+      return new Response('ok', { headers: corsHeaders })
+    }
+
+    if (req.method !== 'POST') {
+      console.log("❌ Method not allowed:", req.method);
+      return new Response(
+        JSON.stringify({ error: 'Method Not Allowed' }),
+        {
+          status: 405,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    console.log("📦 Starting request body parsing...");
+    
+    // Get raw body first
+    let rawBody;
+    try {
+      rawBody = await req.text();
+      console.log("📦 Raw body received:", rawBody);
+    } catch (bodyError) {
+      console.error("❌ Failed to read request body:", bodyError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to read request body' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    // Parse JSON safely
+    let body;
+    try {
+      body = JSON.parse(rawBody);
+      console.log("✅ Parsed body:", body);
+    } catch (e) {
+      console.error("❌ JSON parse error:", e);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    // Extract user_email with multiple fallbacks
+    const user_email = body.user_email || body?.data?.user_email;
+    console.log("📧 Extracted user_email:", user_email);
     
     if (!user_email) {
-      console.error('Missing user_email in request body')
+      console.error('❌ Missing user_email in request body. Full body:', JSON.stringify(body, null, 2));
       return new Response(
         JSON.stringify({ error: 'user_email is required' }),
         {
@@ -36,13 +75,14 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log(`Processing notification for user: ${user_email}`)
+    console.log(`📧 Processing notification for user: ${user_email}`);
 
     // Get Resend API key from environment
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
+    console.log("🔑 Resend API key exists:", !!resendApiKey);
     
     if (!resendApiKey) {
-      console.error('RESEND_API_KEY not found in environment variables')
+      console.error('❌ RESEND_API_KEY not found in environment variables');
       return new Response(
         JSON.stringify({ error: 'Email service not configured' }),
         {
@@ -111,32 +151,41 @@ Deno.serve(async (req) => {
 </html>
     `.trim()
 
-    console.log('Sending notification email to albo@progdealer.com')
+    console.log('📤 Sending notification email to albo@progdealer.com');
 
-    // Send email via Resend
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'ProgDealer <notifications@progdealer.online>',
-        to: ['albo@progdealer.com'],
-        subject: 'New Event on ProgDealer',
-        html: emailHtml,
-      }),
-    })
+    try {
+      // Send email via Resend
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'ProgDealer <notifications@progdealer.online>',
+          to: ['albo@progdealer.com'],
+          subject: 'New Event on ProgDealer',
+          html: emailHtml,
+        }),
+      })
 
-    if (!response.ok) {
-      const errorData = await response.text()
-      console.error('Failed to send email via Resend:', errorData)
-      throw new Error(`Resend API error: ${response.status}`)
+      console.log('📤 Resend API response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error('❌ Failed to send email via Resend. Response not OK:', response.status, errorData)
+        throw new Error(`Resend API error: ${response.status} - ${errorData}`)
+      }
+
+      const result = await response.json()
+      console.log('✅ Email sent successfully. Resend ID:', result.id)
+
+    } catch (emailSendError) {
+      console.error('❌ Error during email sending process:', emailSendError)
+      throw emailSendError
     }
 
-    const result = await response.json()
-    console.log('Email sent successfully:', result.id)
-
+    console.log('✅ Function completed successfully');
     return new Response(
       JSON.stringify({ success: true }),
       {
@@ -146,7 +195,7 @@ Deno.serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error in notify-albo function:', error)
+    console.error('💥 Error in notify-albo function:', error)
     return new Response(
       JSON.stringify({ error: 'Internal Server Error' }),
       {

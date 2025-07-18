@@ -106,18 +106,33 @@ export default function AddEventForm({
 
       // Silent notification to admin - don't wait for response or show errors
       try {
+        console.log('Attempting to send admin notification...');
+        
+        // Get current session to obtain access token
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          console.error('Admin notification failed: No active session found.');
+          return; // Don't proceed if no session
+        }
+        
         await fetch('https://mlnmpfohtsiyjxnjwtkk.supabase.co/functions/v1/notify-albo', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
-            user_email: user.email
+            user_email: user.email,
+            nome_evento: formData.nome_evento,
+            città: formData.città,
+            data_ora: formData.data_ora,
           })
         });
+        console.log('Admin notification fetch request completed');
       } catch (error) {
         // Silent failure - don't show anything to the user
-        console.log('Admin notification failed (silent):', error);
+        console.error('Admin notification failed (silent):', error);
       }
 
       // Reset form
@@ -129,8 +144,11 @@ export default function AddEventForm({
         sottogenere: '',
         descrizione: '',
         orario: '',
-        link: '',
-        immagine: ''
+          user_email: user.email,
+          nome_evento: formData.nome_evento,
+          città: formData.città,
+          data_ora: formData.data_ora,
+        immagine: '',
       });
       setArtists(['']);
       
