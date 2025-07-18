@@ -111,12 +111,18 @@ export default function AddEventForm({
         // Get current session to obtain access token
         const { data: { session } } = await supabase.auth.getSession();
         
+        // DEBUG LOGS
+        console.log('DEBUG: Session object:', session);
+        console.log('DEBUG: Access token:', session?.access_token);
+        console.log('DEBUG: User email:', user.email);
+        // END DEBUG LOGS
+        
         if (!session) {
           console.error('Admin notification failed: No active session found.');
           return; // Don't proceed if no session
         }
         
-        await fetch('https://mlnmpfohtsiyjxnjwtkk.supabase.co/functions/v1/notify-albo', {
+        const response = await fetch('https://mlnmpfohtsiyjxnjwtkk.supabase.co/functions/v1/notify-albo', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -129,7 +135,12 @@ export default function AddEventForm({
             data_ora: formData.data_ora,
           })
         });
-        console.log('Admin notification fetch request completed');
+        console.log('Admin notification fetch request completed. Response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Admin notification failed with status:', response.status, 'Error:', errorText);
+        }
       } catch (error) {
         // Silent failure - don't show anything to the user
         console.error('Admin notification failed (silent):', error);
