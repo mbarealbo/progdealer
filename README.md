@@ -39,3 +39,7 @@ ProgDealer is a music ritual for lovers of King Crimson, Opeth, Leprous, and eve
 
 ## 📬 Contact
 Feel free to reach out via hello@progdealer.online
+
+---
+
+*Last updated: January 2025 - Project in active development*
