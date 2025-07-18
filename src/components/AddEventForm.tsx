@@ -126,7 +126,7 @@ export default function AddEventForm({
             user_email: user.email,
             nome_evento: formData.nome_evento,
             città: formData.città,
-            data_ora: formData.data_ora
+            data_ora: formData.data_ora,
           })
         });
         console.log('Admin notification fetch request completed');
