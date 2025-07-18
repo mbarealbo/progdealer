@@ -107,10 +107,20 @@ export default function AddEventForm({
       // Silent notification to admin - don't wait for response or show errors
       try {
         console.log('Attempting to send admin notification...');
+        
+        // Get current session to obtain access token
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          console.error('Admin notification failed: No active session found.');
+          return; // Don't proceed if no session
+        }
+        
         await fetch('https://mlnmpfohtsiyjxnjwtkk.supabase.co/functions/v1/notify-albo', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
             user_email: user.email
