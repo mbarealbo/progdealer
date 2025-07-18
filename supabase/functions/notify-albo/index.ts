@@ -113,29 +113,36 @@ Deno.serve(async (req) => {
 
     console.log('Sending notification email to albo@progdealer.com')
 
-    // Send email via Resend
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'ProgDealer <notifications@progdealer.online>',
-        to: ['albo@progdealer.com'],
-        subject: 'New Event on ProgDealer',
-        html: emailHtml,
-      }),
-    })
+    try {
+      // Send email via Resend
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'ProgDealer <notifications@progdealer.online>',
+          to: ['albo@progdealer.com'],
+          subject: 'New Event on ProgDealer',
+          html: emailHtml,
+        }),
+      })
 
-    if (!response.ok) {
-      const errorData = await response.text()
-      console.error('Failed to send email via Resend:', errorData)
-      throw new Error(`Resend API error: ${response.status}`)
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error('Failed to send email via Resend. Response not OK:', response.status, errorData)
+        throw new Error(`Resend API error: ${response.status} - ${errorData}`)
+      }
+
+      const result = await response.json()
+      console.log('Email sent successfully:', result.id)
+
+    } catch (emailSendError) {
+      console.error('Error during email sending process:', emailSendError)
+      // Re-throw the error to be caught by the outer try-catch block
+      throw emailSendError
     }
-
-    const result = await response.json()
-    console.log('Email sent successfully:', result.id)
 
     return new Response(
       JSON.stringify({ success: true }),
