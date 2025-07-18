@@ -8,29 +8,41 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   console.log("🚀 Function started");
   
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    console.log("✅ CORS preflight handled");
-    return new Response('ok', { headers: corsHeaders })
-  }
-
-  if (req.method !== 'POST') {
-    console.log("❌ Method not allowed:", req.method);
-    return new Response(
-      JSON.stringify({ error: 'Method Not Allowed' }),
-      {
-        status: 405,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
-  }
-
   try {
+    // Handle CORS preflight requests
+    if (req.method === 'OPTIONS') {
+      console.log("✅ CORS preflight handled");
+      return new Response('ok', { headers: corsHeaders })
+    }
+
+    if (req.method !== 'POST') {
+      console.log("❌ Method not allowed:", req.method);
+      return new Response(
+        JSON.stringify({ error: 'Method Not Allowed' }),
+        {
+          status: 405,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
     console.log("📦 Starting request body parsing...");
     
     // Get raw body first
-    const rawBody = await req.text();
-    console.log("📦 Raw body received:", rawBody);
+    let rawBody;
+    try {
+      rawBody = await req.text();
+      console.log("📦 Raw body received:", rawBody);
+    } catch (bodyError) {
+      console.error("❌ Failed to read request body:", bodyError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to read request body' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
 
     // Parse JSON safely
     let body;
