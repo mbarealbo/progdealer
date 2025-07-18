@@ -106,6 +106,7 @@ export default function AddEventForm({
 
       // Silent notification to admin - don't wait for response or show errors
       try {
+        console.log('Attempting to send admin notification...');
         await fetch('https://mlnmpfohtsiyjxnjwtkk.supabase.co/functions/v1/notify-albo', {
           method: 'POST',
           headers: {
@@ -115,9 +116,10 @@ export default function AddEventForm({
             user_email: user.email
           })
         });
+        console.log('Admin notification fetch request completed');
       } catch (error) {
         // Silent failure - don't show anything to the user
-        console.log('Admin notification failed (silent):', error);
+        console.error('Admin notification failed (silent):', error);
       }
 
       // Reset form
