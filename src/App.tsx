@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Music, RefreshCw, User as UserIcon, LogOut } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from './lib/supabase';
@@ -419,6 +420,15 @@ function App() {
   const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { profile, isAdmin, loading: roleLoading } = useUserRole(currentUser);
+  const location = useLocation();
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    const lang = location.pathname.startsWith('/it') ? 'it' : 'en';
+    if (i18n.language !== lang) {
+      void i18n.changeLanguage(lang);
+    }
+  }, [location.pathname, i18n]);
 
   useEffect(() => {
     checkAuthStatus();
@@ -456,8 +466,12 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<MainPage />} />
+        <Route path="/it" element={<Navigate to="/it/" replace />} />
+        <Route path="/it/" element={<MainPage />} />
         <Route path="/goodbye" element={<GoodbyePage />} />
+        <Route path="/it/goodbye" element={<GoodbyePage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/it/privacy" element={<PrivacyPolicyPage />} />
         <Route
           path="/login"
           element={
@@ -467,18 +481,28 @@ function App() {
             />
           }
         />
+        <Route
+          path="/it/login"
+          element={
+            <LoginPage
+              isAuthenticated={isAuthenticated}
+              onAuthenticated={handleAuthenticated}
+            />
+          }
+        />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/it/reset-password" element={<ResetPasswordPage />} />
 
         {/* Protected User Routes */}
-        <Route 
-          path="/userarea" 
+        <Route
+          path="/userarea"
           element={
             <ProtectedRoute
               isAuthenticated={isAuthenticated}
               isAdmin={isAdmin}
               loading={roleLoading}
             >
-              <UserPanel 
+              <UserPanel
                 isAuthenticated={isAuthenticated}
                 currentUser={currentUser}
                 userProfile={profile}
@@ -487,12 +511,31 @@ function App() {
                 onBackToMain={() => window.location.href = '/'}
               />
             </ProtectedRoute>
-          } 
+          }
+        />
+        <Route
+          path="/it/userarea"
+          element={
+            <ProtectedRoute
+              isAuthenticated={isAuthenticated}
+              isAdmin={isAdmin}
+              loading={roleLoading}
+            >
+              <UserPanel
+                isAuthenticated={isAuthenticated}
+                currentUser={currentUser}
+                userProfile={profile}
+                onAuthRequired={() => {}}
+                onLogout={handleLogout}
+                onBackToMain={() => window.location.href = '/it'}
+              />
+            </ProtectedRoute>
+          }
         />
 
         {/* Protected Admin Routes */}
-        <Route 
-          path="/adminarea" 
+        <Route
+          path="/adminarea"
           element={
             <ProtectedRoute
               isAuthenticated={isAuthenticated}
@@ -500,7 +543,7 @@ function App() {
               loading={roleLoading}
               requireAdmin={true}
             >
-              <AdminPanel 
+              <AdminPanel
                 isAuthenticated={isAuthenticated}
                 currentUser={currentUser}
                 userProfile={profile}
@@ -509,10 +552,31 @@ function App() {
                 onBackToMain={() => window.location.href = '/'}
               />
             </ProtectedRoute>
-          } 
+          }
+        />
+        <Route
+          path="/it/adminarea"
+          element={
+            <ProtectedRoute
+              isAuthenticated={isAuthenticated}
+              isAdmin={isAdmin}
+              loading={roleLoading}
+              requireAdmin={true}
+            >
+              <AdminPanel
+                isAuthenticated={isAuthenticated}
+                currentUser={currentUser}
+                userProfile={profile}
+                onAuthRequired={() => {}}
+                onLogout={handleLogout}
+                onBackToMain={() => window.location.href = '/it'}
+              />
+            </ProtectedRoute>
+          }
         />
 
         {/* Catch all route - redirect to home */}
+        <Route path="/it/*" element={<Navigate to="/it/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

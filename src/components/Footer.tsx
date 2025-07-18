@@ -1,5 +1,7 @@
 import React from 'react';
 import { Music, Heart, Globe, Shield } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface FooterProps {
   isAuthenticated?: boolean;
@@ -8,12 +10,15 @@ interface FooterProps {
   pendingCount?: number;
 }
 
-export default function Footer({ 
-  isAuthenticated = false, 
-  isAdmin = false, 
-  onAdminAccess, 
-  pendingCount = 0 
+export default function Footer({
+  isAuthenticated = false,
+  isAdmin = false,
+  onAdminAccess,
+  pendingCount = 0
 }: FooterProps) {
+  const location = useLocation();
+  const { t, i18n } = useTranslation();
+  const langPrefix = location.pathname.startsWith('/it') ? '/it' : '';
   return (
     <footer className="bg-coal-800 border-t-2 border-asphalt-600 mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -55,6 +60,22 @@ export default function Footer({
                 )}
               </button>
             )}
+            <div className="flex items-center space-x-2 ml-2">
+              <a
+                href="/"
+                className={langPrefix === '' ? 'opacity-100' : 'opacity-50 hover:opacity-100'}
+                title="English"
+              >
+                🇬🇧
+              </a>
+              <a
+                href="/it/"
+                className={langPrefix === '/it' ? 'opacity-100' : 'opacity-50 hover:opacity-100'}
+                title="Italiano"
+              >
+                🇮🇹
+              </a>
+            </div>
           </div>
 
           {/* Copyright */}
@@ -68,7 +89,7 @@ export default function Footer({
         {/* Bottom line */}
         <div className="mt-6 pt-4 border-t border-asphalt-600">
           <p className="text-center text-gray-500 text-xs font-condensed uppercase tracking-wide">
-            © 2025 ProgDealer - <a href="/privacy" className="underline hover:text-gray-300">Privacy Policy</a>
+            © 2025 ProgDealer - <a href={`${langPrefix}/privacy`} className="underline hover:text-gray-300">{t('PRIVACY_POLICY')}</a>
           </p>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ExternalLink, Loader2, ChevronDown, Calendar } from 'lucide-react';
 import { Event } from '../types/event';
 import EventImage from './EventImage';
@@ -15,6 +16,7 @@ export default function EventList({ events, loading }: EventListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const { t } = useTranslation();
 
   // Reset pagination when events change
   useEffect(() => {
@@ -96,7 +98,7 @@ export default function EventList({ events, loading }: EventListProps) {
       <div className="text-center py-16 sm:py-20">
         <div className="text-6xl sm:text-8xl mb-6 sm:mb-8">🎸</div>
         <p className="text-gray-400 text-2xl sm:text-3xl font-industrial uppercase tracking-wide">
-          NO EVENTS FOUND
+          {t('NO_EVENTS_FOUND')}
         </p>
         <div className="w-16 sm:w-24 h-1 bg-burgundy-600 mx-auto mt-4 sm:mt-6"></div>
       </div>
@@ -290,7 +292,7 @@ export default function EventList({ events, loading }: EventListProps) {
                           className="w-full inline-flex items-center justify-center space-x-2 bg-industrial-green-600 hover:bg-industrial-green-700 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-200"
                         >
                           <span>🎫</span>
-                          <span>VIEW EVENT</span>
+                          <span>{t('VIEW')}</span>
                           <ExternalLink className="h-4 w-4" />
                         </a>
                       </div>
@@ -401,7 +403,7 @@ export default function EventList({ events, loading }: EventListProps) {
                               className="inline-flex items-center space-x-2 bg-industrial-green-600 hover:bg-industrial-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
                             >
                               <span>🎫</span>
-                              <span>VIEW EVENT</span>
+                              <span>{t('VIEW')}</span>
                               <ExternalLink className="h-4 w-4" />
                             </a>
                           )}
@@ -424,13 +426,13 @@ export default function EventList({ events, loading }: EventListProps) {
             className="w-full sm:w-auto inline-flex items-center justify-center space-x-3 bg-coal-800 hover:bg-coal-700 border-2 border-asphalt-600 hover:border-industrial-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 transition-all duration-200 font-condensed font-bold uppercase tracking-wide text-base sm:text-lg"
           >
             <ChevronDown className="h-5 w-5 sm:h-6 sm:w-6" />
-            <span>LOAD MORE EVENTS</span>
+            <span>{t('LOAD_MORE_EVENTS')}</span>
             <span className="bg-industrial-green-600 text-white px-2 sm:px-3 py-1 text-sm font-bold rounded">
               {Math.min(EVENTS_PER_PAGE, events.length - displayedEvents.length)}
             </span>
           </button>
           <p className="text-gray-500 font-condensed text-sm uppercase tracking-wide mt-4">
-            SHOWING {displayedEvents.length} OF {events.length} EVENTS
+            {t('SHOWING_OF_EVENTS', { current: displayedEvents.length, total: events.length })}
           </p>
         </div>
       )}
@@ -441,7 +443,7 @@ export default function EventList({ events, loading }: EventListProps) {
           <div className="flex items-center justify-center space-x-3 text-gray-400 mb-4">
             <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
             <span className="font-condensed font-bold uppercase tracking-wide text-base sm:text-lg">
-              LOADING MORE EVENTS...
+              {t('LOADING_MORE_EVENTS')}
             </span>
           </div>
           <div className="w-24 sm:w-32 h-1 bg-industrial-green-600 mx-auto animate-pulse"></div>
@@ -454,12 +456,12 @@ export default function EventList({ events, loading }: EventListProps) {
           <div className="flex items-center justify-center space-x-4 mb-4">
             <div className="w-12 sm:w-16 h-1 bg-burgundy-600"></div>
             <div className="text-gray-500 font-condensed font-bold uppercase tracking-wide text-base sm:text-lg">
-              🎸 ALL EVENTS LOADED 🎸
+              🎸 {t('ALL_EVENTS_LOADED')} 🎸
             </div>
             <div className="w-12 sm:w-16 h-1 bg-burgundy-600"></div>
           </div>
           <p className="text-gray-500 font-condensed text-sm uppercase tracking-wide">
-            TOTAL: {events.length} EVENTS
+            {t('TOTAL_EVENTS', { total: events.length })}
           </p>
         </div>
       )}

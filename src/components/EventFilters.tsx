@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 import { EventFilters, PROG_SUBGENRES } from '../types/event';
 
@@ -18,6 +19,7 @@ export default function EventFiltersComponent({
   uniqueCountries
 }: EventFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation();
 
   const handleFilterChange = (key: keyof EventFilters, value: string | string[]) => {
     onFiltersChange({
@@ -70,11 +72,11 @@ export default function EventFiltersComponent({
       >
         <span className="text-base sm:text-lg">🎚️</span>
         <span className="text-base sm:text-lg font-industrial tracking-wide uppercase">
-          FILTERS
+          {t('FILTERS')}
         </span>
         {hasActiveFilters && (
           <span className="bg-industrial-green-600 text-white px-2 py-1 text-xs font-bold rounded">
-            {activeFilterCount}{searchQuery.trim() ? ' + SEARCH' : ''}
+            {activeFilterCount}{searchQuery.trim() ? ` + ${t('SEARCH_LABEL')}` : ''}
           </span>
         )}
         {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -85,7 +87,7 @@ export default function EventFiltersComponent({
         <div className="bg-coal-800 border-2 border-asphalt-600 p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-2 sm:space-y-0">
             <h2 className="text-lg sm:text-xl font-industrial text-gray-100 tracking-wide uppercase">
-              FILTER EVENTS
+              {t('FILTER_EVENTS')}
             </h2>
             <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               {hasActiveFilters && (
@@ -95,12 +97,12 @@ export default function EventFiltersComponent({
                   title={searchQuery.trim() ? 'Clear filters (search will remain active)' : 'Clear all filters'}
                 >
                   <X className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                  CLEAR FILTERS
+                  {t('CLEAR_FILTERS')}
                 </button>
               )}
               {searchQuery.trim() && (
                 <div className="text-xs sm:text-sm text-gray-400 font-condensed uppercase tracking-wide text-center sm:text-left">
-                  🔍 SEARCH: "{searchQuery}"
+                  🔍 {t('SEARCH_LABEL')}: "{searchQuery}"
                 </div>
               )}
             </div>
@@ -110,7 +112,7 @@ export default function EventFiltersComponent({
             {/* Progressive Subgenres - Chip Interface */}
             <div>
               <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-400 mb-3 sm:mb-4 uppercase tracking-wide">
-                🎵 PROGRESSIVE SUBGENRES
+                🎵 {t('PROGRESSIVE_SUBGENRES')}
               </label>
               <div className="flex flex-wrap gap-2">
                 {PROG_SUBGENRES.map((subgenre) => {
@@ -135,7 +137,7 @@ export default function EventFiltersComponent({
                 })}
               </div>
               <p className="text-xs text-gray-500 mt-2 font-condensed uppercase tracking-wide">
-                Click to exclude subgenres • Active subgenres will be included in results
+                {t('CLICK_EXCLUDE_SUBGENRES')}
               </p>
             </div>
 
@@ -143,14 +145,14 @@ export default function EventFiltersComponent({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-400 mb-2 sm:mb-3 uppercase tracking-wide">
-                  🏙️ CITY
+                🏙️ {t('CITY')}
                 </label>
                 <select
                   value={filters.città}
                   onChange={(e) => handleFilterChange('città', e.target.value)}
                   className="brutal-input w-full text-xs sm:text-sm"
                 >
-                  <option value="">ALL CITIES</option>
+                  <option value="">{t('ALL_CITIES')}</option>
                   {uniqueLocations.map((location) => (
                     <option key={location} value={location}>
                       {location.toUpperCase()}
@@ -161,7 +163,7 @@ export default function EventFiltersComponent({
               
               <div>
                 <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-400 mb-2 sm:mb-3 uppercase tracking-wide">
-                  📅 FROM DATE
+                  📅 {t('FROM_DATE')}
                 </label>
                 <input
                   type="date"
@@ -173,7 +175,7 @@ export default function EventFiltersComponent({
               
               <div>
                 <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-400 mb-2 sm:mb-3 uppercase tracking-wide">
-                  📅 TO DATE
+                  📅 {t('TO_DATE')}
                 </label>
                 <input
                   type="date"
@@ -187,7 +189,7 @@ export default function EventFiltersComponent({
             {/* Countries Filter - Multi-select with chips */}
             <div>
               <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-400 mb-3 sm:mb-4 uppercase tracking-wide">
-                🌍 COUNTRIES
+                🌍 {t('COUNTRIES')}
               </label>
               <div className="flex flex-wrap gap-2">
                 {uniqueCountries.map((country) => {
@@ -212,7 +214,7 @@ export default function EventFiltersComponent({
                 })}
               </div>
               <p className="text-xs text-gray-500 mt-2 font-condensed uppercase tracking-wide">
-                Click to select/deselect countries • Multiple selections allowed
+                {t('CLICK_SELECT_COUNTRIES')}
               </p>
             </div>
 
