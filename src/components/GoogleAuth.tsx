@@ -147,13 +147,17 @@ export default function GoogleAuth({
 
       // Render the button if element exists and user is not authenticated
       if (googleButtonRef.current && !isAuthenticated) {
+        const buttonWidth = Math.min(
+          googleButtonRef.current.offsetWidth || 320,
+          400,
+        );
         window.google.accounts.id.renderButton(googleButtonRef.current, {
           theme: 'outline',
           size: 'large',
           text: 'continue_with',
           shape: 'rectangular',
           logo_alignment: 'left',
-          width: '100%',
+          width: buttonWidth,
         });
       }
     } catch (error) {
@@ -216,7 +220,7 @@ export default function GoogleAuth({
   return (
     <div className={`space-y-3 ${className}`}>
       {/* Custom styled container for Google button */}
-      <div className="relative">
+      <div className="relative flex justify-center">
         <div
           ref={googleButtonRef}
           className="w-full"
