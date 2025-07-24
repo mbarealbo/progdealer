@@ -1,45 +1,65 @@
 # 🎸 ProgDealer
 
-**ProgDealer** is a web app dedicated to discovering and tracking progressive rock, metal, and alternative music events across Europe.  
-Users can report concerts, save their favorite bands and cities, and receive updates on cult live shows.
+**ProgDealer** is a web platform for discovering, tracking, and contributing progressive rock, metal, and alternative music events across Europe.
+
+The platform empowers fans to report rare concerts, save their favorite bands and cities, and stay updated on cult live shows — from King Crimson-style revivals to underground Opeth-inspired gigs.
 
 ---
 
-## 🚀 Features
+## 🚀 What It Does
 
-- 🧠 **AI-assisted scraping** of events from multiple sources (starting with [Concertful](https://concertful.com))
-- 📅 **Event database** powered by Supabase
-- 🧾 **User authentication** with email/password and email confirmation
-- 🛠️ **Forgot password module** to reset passwords via email
-- 💌 **Transactional emails** via Resend (signup confirmation, password reset, account deletion)
-- 🛠️ **Admin interface** to moderate events
-- 🌈 **Custom frontend** built with Vite + React + Tailwind
+- 🧠 **AI-powered scraping**: automated aggregation of events from multiple sources (starting with Concertful, more coming soon)
+- 📅 **Event database**: fully structured and filtered event storage using Supabase
+- 🔐 **User authentication**: secure sign-up/login with email or Google, backed by Supabase Auth
+- 💌 **Transactional emails**: welcome, password reset, and account deletion flows via Resend
+- 🛡️ **Role-based moderation**: admin tools for validating and editing event reports
+- 📲 **Mobile-optimized frontend**: sleek and responsive UI built with Bolt.new + Tailwind
+- 🎛️ **RLS security**: Supabase policies to ensure users only access their own data
+- 🧪 **End-to-end testing pipeline**: from registration to event publishing and moderation
 
 ---
 
-## 📦 Tech Stack
+## 🛠️ Tech Stack
 
-| Layer              | Tech                      |
-|-------------------|---------------------------|
-| Frontend          | React, Vite, TailwindCSS  |
-| Backend Functions | Supabase Edge Functions   |
-| Auth              | Supabase Auth             |
-| DB                | Supabase Postgres         |
-| Email             | Resend API                |
-| Hosting           | Netlify                   |
-| Automation        | Bolt.new                  |
+| Layer              | Technology                  |
+|--------------------|-----------------------------|
+| Frontend           | React, Vite, TailwindCSS    |
+| Backend Functions  | Supabase Edge Functions     |
+| Authentication     | Supabase Auth (OAuth + Email) |
+| Database           | Supabase Postgres (RLS-secured) |
+| Email              | Resend API                  |
+| Hosting            | Netlify                     |
+| Admin Automation   | Bolt.new                    |
+
+---
+
+## 💡 Vision
+
+ProgDealer was born from a simple need: stop missing niche concerts.
+
+In a world of overpromoted mainstream events, progressive music fans are often left without reliable platforms to track obscure gigs. ProgDealer aims to fix that — **not by replacing event websites**, but by **connecting them intelligently**, combining community reports and scraping to create a rich, curated ecosystem of live shows.
+
+It’s for fans who still believe that a 15-minute track with a flute solo deserves to be heard live.
 
 ---
 
 ## 🤝 Contributing
-We welcome contributions via GitHub Pull Requests or directly via Bolt.new's AI integration.
 
-## 🧙‍♂️ Project Philosophy
-ProgDealer is a music ritual for lovers of King Crimson, Opeth, Leprous, and every odd time signature out there.
+We welcome contributions through GitHub Pull Requests or directly via [Bolt.new](https://bolt.new)'s AI-integrated editor.
 
-## 📬 Contact
-Feel free to reach out via hello@progdealer.online
+Before contributing, please open an issue or reach out so we can align on priorities. We're currently focusing on:
+
+- Adding new scraping sources
+- Improving mobile UX
+- Extending user profiles and preferences
 
 ---
 
-*Last updated: January 2025 - Project in active development*
+## 📬 Contact
+
+Questions, suggestions, bug reports?  
+Drop us a line at [hello@progdealer.com](mailto:hello@progdealer.com)
+
+---
+
+_Last updated: July 24, 2025 – Project in active development_
