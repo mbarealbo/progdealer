@@ -200,7 +200,7 @@ export default function GoogleAuth({
     return (
       <div className={`space-y-3 ${className}`}>
         <div className="bg-green-900 border-2 border-green-600 text-green-300 p-3 font-condensed text-sm uppercase tracking-wide text-center">
-          ✅ Signed in as {userEmail}
+          ✅ SIGNED IN AS {userEmail}
         </div>
         <button
           onClick={handleLogout}

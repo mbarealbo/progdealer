@@ -382,7 +382,7 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
         <div className="mt-6 pt-4 border-t border-asphalt-600">
           <div className="text-center mb-4">
             <p className="text-gray-500 text-xs font-condensed uppercase tracking-wide">
-              OR CONTINUE WITH
+              OR
             </p>
           </div>
           
