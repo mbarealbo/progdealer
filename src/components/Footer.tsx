@@ -66,10 +66,23 @@ export default function Footer({
         </div>
 
         {/* Bottom line */}
-        <div className="mt-6 pt-4 border-t border-asphalt-600">
+        <div className="mt-6 pt-4 border-t border-asphalt-600 flex flex-col items-center space-y-2">
           <p className="text-center text-gray-500 text-xs font-condensed uppercase tracking-wide">
             © 2025 ProgDealer - <a href="/privacy" className="underline hover:text-gray-300">Privacy Policy</a>
           </p>
+          <script
+            type="text/javascript"
+            src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js"
+            data-name="bmc-button"
+            data-slug="albertoabaw"
+            data-color="#FFDD00"
+            data-emoji=""
+            data-font="Cookie"
+            data-text="Buy me a coffee"
+            data-outline-color="#000000"
+            data-font-color="#000000"
+            data-coffee-color="#ffffff"
+          ></script>
         </div>
       </div>
     </footer>
