@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Shield, X, Eye, EyeOff, UserPlus, LogIn, ArrowLeft, Chrome } from 'lucide-react';
+import { Shield, X, Eye, EyeOff, UserPlus, LogIn, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ForgotPasswordModal from './ForgotPasswordModal';
+import GoogleAuth from './GoogleAuth';
 
 
 interface LoginPageProps {
@@ -135,25 +136,6 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    setError('');
-
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin + from
-        }
-      });
-
-      if (error) throw error;
-    } catch (error: any) {
-      setError(error.message || 'Google login failed');
-      setLoading(false);
-    }
-  };
-
   const resetForm = () => {
     setEmail('');
     setPassword('');
@@ -162,13 +144,6 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
     setSuccess('');
     setShowPassword(false);
     setShowConfirmPassword(false);
-  };
-
-  const handleGoogleAuth = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin }
-    });
   };
 
   const switchMode = (newMode: 'login' | 'register') => {
@@ -363,7 +338,8 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
             <div className="pt-4">
               <button
                 type="button"
-                onClick={handleGoogleAuth}
+                onClick={() => {}} // Placeholder - GoogleAuth component handles this
+                disabled={true}
                 className="w-full bg-white border-2 border-asphalt-600 text-gray-700 px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:bg-gray-100 transition-all duration-200 flex items-center justify-center space-x-2 text-sm"
               >
                 <img src="/google-logo.svg" alt="Google" className="h-4 w-4" />
@@ -372,7 +348,7 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
             </div>
           </form>
 
-          {/* Google OAuth Section */}
+          {/* Google OAuth Section - Using Custom GoogleAuth Component */}
           <div className="mt-6 pt-4 border-t border-asphalt-600">
             <div className="text-center mb-4">
               <p className="text-gray-500 text-xs font-condensed uppercase tracking-wide">
@@ -380,14 +356,14 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
               </p>
             </div>
             
-            <button
-              onClick={handleGoogleLogin}
-              disabled={loading}
-              className="w-full bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 text-gray-700 px-4 py-3 transition-all duration-200 disabled:opacity-50 flex items-center justify-center space-x-3 text-sm font-medium"
-            >
-              <Chrome className="h-5 w-5 text-blue-500" />
-              <span>CONTINUE WITH GOOGLE</span>
-            </button>
+            <GoogleAuth 
+              onSuccess={() => {
+                onAuthenticated();
+                navigate(from, { replace: true });
+              }}
+              onError={(error) => setError(error)}
+              showLogout={false}
+            />
           </div>
 
           <div className="mt-6 pt-4 border-t border-asphalt-600">
