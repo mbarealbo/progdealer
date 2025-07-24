@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Shield, X, Eye, EyeOff, UserPlus, LogIn, ArrowLeft } from 'lucide-react';
+import { Shield, X, Eye, EyeOff, UserPlus, LogIn, ArrowLeft, Chrome } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ForgotPasswordModal from './ForgotPasswordModal';
 
@@ -131,6 +131,25 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
         setError(error.message || 'Registration failed. Please try again.');
       }
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + from
+        }
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      setError(error.message || 'Google login failed');
       setLoading(false);
     }
   };
@@ -335,6 +354,24 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
               </button>
             </div>
           </form>
+
+          {/* Google OAuth Section */}
+          <div className="mt-6 pt-4 border-t border-asphalt-600">
+            <div className="text-center mb-4">
+              <p className="text-gray-500 text-xs font-condensed uppercase tracking-wide">
+                OR CONTINUE WITH
+              </p>
+            </div>
+            
+            <button
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="w-full bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 text-gray-700 px-4 py-3 transition-all duration-200 disabled:opacity-50 flex items-center justify-center space-x-3 text-sm font-medium"
+            >
+              <Chrome className="h-5 w-5 text-blue-500" />
+              <span>CONTINUE WITH GOOGLE</span>
+            </button>
+          </div>
 
           <div className="mt-6 pt-4 border-t border-asphalt-600">
             <p className="text-gray-500 text-xs font-condensed uppercase tracking-wide text-center">
