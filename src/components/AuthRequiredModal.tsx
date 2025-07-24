@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, UserPlus, LogIn } from 'lucide-react';
+import GoogleAuth from './GoogleAuth';
 
 interface AuthRequiredModalProps {
   isOpen: boolean;
@@ -9,7 +10,7 @@ interface AuthRequiredModalProps {
 export default function AuthRequiredModal({ isOpen, onClose }: AuthRequiredModalProps) {
   if (!isOpen) return null;
 
-  const handleGoToRegistration = () => {
+  const handleGoToLogin = () => {
     window.location.href = '/login';
   };
 
@@ -43,19 +44,22 @@ export default function AuthRequiredModal({ isOpen, onClose }: AuthRequiredModal
 
         <div className="space-y-4">
           <button
-            onClick={handleGoToRegistration}
+            onClick={handleGoToLogin}
             className="w-full bg-industrial-green-800 border-2 border-industrial-green-600 text-white px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:bg-industrial-green-700 transition-all duration-200 flex items-center justify-center space-x-2"
           >
             <LogIn className="h-4 w-4" />
-            <span>GO TO REGISTRATION</span>
+            <span>GO TO LOGIN</span>
           </button>
-          
-          <button
-            onClick={onClose}
-            className="w-full bg-transparent border-2 border-asphalt-500 text-gray-300 px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:border-burgundy-500 hover:text-white transition-all duration-200"
-          >
-            CANCEL
-          </button>
+        </div>
+
+        <div className="mt-6 pt-4 border-t border-asphalt-600">
+          <div className="text-center mb-4">
+            <p className="text-gray-500 text-xs font-condensed uppercase tracking-wide">
+              OR
+            </p>
+          </div>
+
+          <GoogleAuth showLogout={false} />
         </div>
 
         <div className="mt-6 pt-4 border-t border-asphalt-600">
