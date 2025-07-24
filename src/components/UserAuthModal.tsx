@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { User as UserIcon, X, Eye, EyeOff, UserPlus, LogIn } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ForgotPasswordModal from './ForgotPasswordModal';
+import GoogleAuth from './GoogleAuth';
 
 interface UserAuthModalProps {
   isOpen: boolean;
@@ -376,6 +377,25 @@ export default function UserAuthModal({ isOpen, onClose, onAuthenticated }: User
             </button>
           </div>
         </form>
+
+        {/* Google OAuth Section - Using Custom GoogleAuth Component */}
+        <div className="mt-6 pt-4 border-t border-asphalt-600">
+          <div className="text-center mb-4">
+            <p className="text-gray-500 text-xs font-condensed uppercase tracking-wide">
+              OR
+            </p>
+          </div>
+          
+          <GoogleAuth 
+            onSuccess={() => {
+              onAuthenticated();
+              onClose();
+              resetForm();
+            }}
+            onError={(error) => setError(error)}
+            showLogout={false}
+          />
+        </div>
 
         <div className="mt-6 pt-4 border-t border-asphalt-600">
           <p className="text-gray-500 text-xs font-condensed uppercase tracking-wide text-center">
