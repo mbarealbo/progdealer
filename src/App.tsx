@@ -74,11 +74,15 @@ function MainPage() {
 
       if (error) throw error;
       
-      // Filter for approved events on the client side as a fallback
-      const approvedEvents = (data || []).filter(event => 
-        (event.status || 'approved') === 'approved'
-      );
-      setEvents(approvedEvents);
+      // Filter for approved events and exclude past events
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+
+      const upcomingApprovedEvents = (data || []).filter(event => (
+        (event.status || 'approved') === 'approved' &&
+        new Date(event.data_ora) >= startOfToday
+      ));
+      setEvents(upcomingApprovedEvents);
     } catch (error) {
       console.error('Error fetching events:', error);
     } finally {

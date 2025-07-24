@@ -155,10 +155,7 @@ export default function AddEventForm({
         sottogenere: '',
         descrizione: '',
         orario: '',
-          user_email: user.email,
-          nome_evento: formData.nome_evento,
-          città: formData.città,
-          data_ora: formData.data_ora,
+        link: '',
         immagine: '',
       });
       setArtists(['']);

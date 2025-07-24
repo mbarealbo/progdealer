@@ -164,6 +164,13 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
     setShowConfirmPassword(false);
   };
 
+  const handleGoogleAuth = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin }
+    });
+  };
+
   const switchMode = (newMode: 'login' | 'register') => {
     setMode(newMode);
     setError('');
@@ -351,6 +358,16 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
                     <span>{mode === 'login' ? 'LOGIN' : 'REGISTER'}</span>
                   </>
                 )}
+              </button>
+            </div>
+            <div className="pt-4">
+              <button
+                type="button"
+                onClick={handleGoogleAuth}
+                className="w-full bg-white border-2 border-asphalt-600 text-gray-700 px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:bg-gray-100 transition-all duration-200 flex items-center justify-center space-x-2 text-sm"
+              >
+                <img src="/google-logo.svg" alt="Google" className="h-4 w-4" />
+                <span>{mode === 'login' ? 'SIGN IN WITH GOOGLE' : 'SIGN UP WITH GOOGLE'}</span>
               </button>
             </div>
           </form>
