@@ -358,7 +358,7 @@ export default function UserPanel({
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Page Title - Now Visible on All Screens */}
-        <div className="flex flex-col items-center text-center mb-6 sm:mb-8">
+        <div className="flex flex-col items-start text-left mb-6 sm:mb-8">
           <div className="flex items-center space-x-4 mb-2">
             <UserIcon className="h-6 w-6 sm:h-8 sm:w-8 text-industrial-green-600" />
             <h1 className="text-xl sm:text-2xl font-industrial text-gray-100 tracking-wide uppercase">
@@ -367,12 +367,16 @@ export default function UserPanel({
           </div>
           {/* Role Tag Under Title */}
           <span className={`inline-block px-3 py-1 text-xs font-bold uppercase tracking-wide ${
-            userProfile?.user_role === 'admin' 
-              ? 'bg-burgundy-600 text-white' 
+            userProfile?.user_role === 'admin'
+              ? 'bg-burgundy-600 text-white'
               : 'bg-blue-600 text-white'
           }`}>
             {userProfile?.user_role?.toUpperCase() || 'USER'}
           </span>
+          {/* Greeting */}
+          <p className="text-gray-300 text-sm font-condensed mt-2">
+            Hello, {userProfile?.email || currentUser?.email}
+          </p>
         </div>
 
         {/* Stats - Better Mobile Spacing */}
