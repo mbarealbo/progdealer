@@ -49,7 +49,7 @@ We welcome contributions through GitHub Pull Requests or directly via [Bolt.new]
 
 Before contributing, please open an issue or reach out so we can align on priorities. We're currently focusing on:
 
-- Adding new scraping sources
+- Adding new sources
 - Improving mobile UX
 - Extending user profiles and preferences
 
