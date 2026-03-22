@@ -1,0 +1,240 @@
+[
+  {
+    "name": "Festival Moo-Ah!",
+    "startDate": "2026-03-20T12:00:00",
+    "location": {
+      "name": "The Shire Horse",
+      "address": { "addressLocality": "Corby, UK" }
+    },
+    "url": "https://www.festivalmoo-ah.com/",
+    "description": "John Etheridge's Zappatistas, Treacherous Cretins, The Muffin Men, Gabba Zappa Hey!, Fred Händl & Turbulator",
+    "artists": ["John Etheridge's Zappatistas", "Treacherous Cretins", "The Muffin Men", "Gabba Zappa Hey!", "Fred Händl & Turbulator"],
+    "subgenre": "Progressive Rock",
+    "fonte": "theprogressiveaspect.net",
+    "tipo_inserimento": "scraped"
+  },
+  {
+    "name": "JJ's Prog 61",
+    "startDate": "2026-03-29T12:30:00",
+    "location": {
+      "name": "The International",
+      "address": { "addressLocality": "Leicester, UK" }
+    },
+    "url": "https://the-international.gigantic.com/jj-s-prog-61-tickets/leicester-the-international/2026-03-29-12-30",
+    "description": "Solstice, Ebony Buckle, Tribe3, Haze, Splink",
+    "artists": ["Solstice", "Ebony Buckle", "Tribe3", "Haze", "Splink"],
+    "subgenre": "Progressive Rock",
+    "fonte": "theprogressiveaspect.net",
+    "tipo_inserimento": "scraped"
+  },
+  {
+    "name": "Winter's End Festival 2026",
+    "startDate": "2026-04-09T18:00:00",
+    "location": {
+      "name": "Chepstow Drill Hall",
+      "address": { "addressLocality": "Chepstow, UK" }
+    },
+    "url": "https://www.winters-end.co.uk/",
+    "description": "Multi-day prog festival. Thu: The Wall Of Floyd, Darkfish. Fri: Karnataka, Ashwing. Sat: Franck Carducci & The Fantastic Squad, Alan Reed, Credo, Ihlo. Sun: Oak, Chimpan A, Doris Brendel, Sammary, Living In Shadows",
+    "artists": ["Karnataka", "Franck Carducci & The Fantastic Squad", "Alan Reed", "Credo", "Ihlo", "Oak", "The Wall Of Floyd", "Darkfish", "Ashwing", "Doris Brendel", "Sammary", "Living In Shadows"],
+    "subgenre": "Neo-Prog",
+    "fonte": "theprogressiveaspect.net",
+    "tipo_inserimento": "scraped"
+  },
+  {
+    "name": "Prog East",
+    "startDate": "2026-04-11T19:00:00",
+    "location": {
+      "name": "Pub on the Shrubs",
+      "address": { "addressLocality": "Great Yarmouth, UK" }
+    },
+    "url": "https://www.tickettailor.com/events/progeast/1759674",
+    "description": "Mother Black Cap, Spriggan Mist, Viper Soup Complex",
+    "artists": ["Mother Black Cap", "Spriggan Mist", "Viper Soup Complex"],
+    "subgenre": "Progressive Rock",
+    "fonte": "theprogressiveaspect.net",
+    "tipo_inserimento": "scraped"
+  },
+  {
+    "name": "Close Encounters Of The Prog Kind",
+    "startDate": "2026-05-08T18:00:00",
+    "location": {
+      "name": "The Mead Hall",
+      "address": { "addressLocality": "Hereford, UK" }
+    },
+    "url": "https://www.clivenolan.net/",
+    "description": "Arena with Clive Nolan, John Mitchell & Kylan Amos, Paul Wrightson & Martin Orford (Jadis), Alan Reed, Andy Sears, Doris Brendel & Lee Dunham, Stuart Clark & Carolyn Eden (Storm Deva)",
+    "artists": ["Arena", "John Mitchell", "Kylan Amos", "Paul Wrightson", "Martin Orford", "Alan Reed", "Doris Brendel", "Lee Dunham"],
+    "subgenre": "Neo-Prog",
+    "fonte": "theprogressiveaspect.net",
+    "tipo_inserimento": "scraped"
+  },
+  {
+    "name": "Desertfest London 2026",
+    "startDate": "2026-05-15T14:00:00",
+    "location": {
+      "name": "The Roundhouse / Electric Ballroom / The Underworld",
+      "address": { "addressLocality": "London, UK" }
+    },
+    "url": "https://www.desertfest.co.uk/",
+    "description": "Clutch, Green Lung, Hermano, The Sword, Pigs Pigs Pigs Pigs Pigs Pigs Pigs, Earthless, Truckfighters, Capricorns, Causa Sui, Solace and more",
+    "artists": ["Clutch", "Green Lung", "Hermano", "The Sword", "Earthless", "Truckfighters", "Causa Sui"],
+    "subgenre": "Space Rock",
+    "fonte": "theprogressiveaspect.net",
+    "tipo_inserimento": "scraped"
+  },
+  {
+    "name": "A Prog Day In May (Progzilla Radio)",
+    "startDate": "2026-05-23T12:00:00",
+    "location": {
+      "name": "The Key Theatre",
+      "address": { "addressLocality": "Peterborough, UK" }
+    },
+    "url": "https://keytheatre-peterborough.com/events/progzilla-presents-a-prog-day-in-may-all-day-event-ticket/",
+    "description": "Jump, Leoni Jane Kennedy, Living In Shadows, Emily Francis Trio, Spriggan Mist",
+    "artists": ["Jump", "Leoni Jane Kennedy", "Living In Shadows", "Emily Francis Trio", "Spriggan Mist"],
+    "subgenre": "Progressive Rock",
+    "fonte": "theprogressiveaspect.net",
+    "tipo_inserimento": "scraped"
+  },
+  {
+    "name": "Soundle '26",
+    "startDate": "2026-06-05T18:00:00",
+    "location": {
+      "name": "Queen Victoria Hall",
+      "address": { "addressLocality": "Oundle, UK" }
+    },
+    "url": "https://www.facebook.com/events/queen-victoria-hall-oundle/soundle-2026/699928792996010/",
+    "description": "Fri: Stuckfish, Haze, That Joe Payne, Pearl Handled Revolver. Sat: The Blackheart Orchestra, Spriggan Mist, Under The Surface. Sun: Franck Carducci & The Fantastic Squad, Beatrix Players, Viper Soup Complex",
+    "artists": ["That Joe Payne", "The Blackheart Orchestra", "Franck Carducci & The Fantastic Squad", "Beatrix Players", "Haze", "Spriggan Mist", "Pearl Handled Revolver", "Viper Soup Complex"],
+    "subgenre": "Progressive Rock",
+    "fonte": "theprogressiveaspect.net",
+    "tipo_inserimento": "scraped"
+  },
+  {
+    "name": "Midsummer Prog Festival 2026",
+    "startDate": "2026-06-20T14:00:00",
+    "location": {
+      "name": "Muziekgieterij Courtyard",
+      "address": { "addressLocality": "Maastricht, Netherlands" }
+    },
+    "url": "https://midsummerprog.com/",
+    "description": "Sat: Geoff Tate (Operation Mindcrime), Einar Solberg, Quidam, Blowbeat, Ok Goodnight, Benthos. Sun: Tesseract, Amarok, Cyan, Overhead The Albatross, Ursa",
+    "artists": ["Geoff Tate", "Einar Solberg", "Quidam", "Tesseract", "Amarok", "Cyan", "Overhead The Albatross", "Ok Goodnight", "Benthos", "Ursa", "Blowbeat"],
+    "subgenre": "Prog Metal",
+    "fonte": "midsummerprog.com",
+    "tipo_inserimento": "scraped"
+  },
+  {
+    "name": "Crescendo Festival 2026",
+    "startDate": "2026-07-01T18:00:00",
+    "location": {
+      "name": "Esplanade du Concié",
+      "address": { "addressLocality": "Saint-Palais-sur-Mer, France" }
+    },
+    "url": "http://www.festival-crescendo.com/",
+    "description": "Annual progressive rock festival held outdoors at the oceanfront in western France. One of Europe's longest-running prog festivals.",
+    "artists": [],
+    "subgenre": "Progressive Rock",
+    "fonte": "progressiverockcentral.com",
+    "tipo_inserimento": "scraped"
+  },
+  {
+    "name": "Prog For Peart 2026",
+    "startDate": "2026-07-17T12:00:00",
+    "location": {
+      "name": "The Northcourt, Abingdon United FC",
+      "address": { "addressLocality": "Abingdon, UK" }
+    },
+    "url": "https://www.progforpeart.com/",
+    "description": "Magenta, Mostly Autumn, Red Bazar, Under The Surface, King Of Sweden, Long Earth, The Gift, Mother Black Cap, Jump, Kindred Spirit, Forgotten Gods and more",
+    "artists": ["Magenta", "Mostly Autumn", "Red Bazar", "Under The Surface", "King Of Sweden", "Long Earth", "The Gift", "Mother Black Cap", "Jump", "Kindred Spirit", "Forgotten Gods"],
+    "subgenre": "Progressive Rock",
+    "fonte": "theprogressiveaspect.net",
+    "tipo_inserimento": "scraped"
+  },
+  {
+    "name": "Solent Area Prog Weekend",
+    "startDate": "2026-08-01T14:00:00",
+    "location": {
+      "name": "The 1865",
+      "address": { "addressLocality": "Southampton, UK" }
+    },
+    "url": "https://geoffreytucker42.wixsite.com/solentareaprog",
+    "description": "Colin Masson Music, Cephid, The Hayley Griffiths Band (Unplugged), EBB, Tiger Moth Tales (solo), Kepler Ten, Lee Abraham Music Band and more",
+    "artists": ["Colin Masson", "Cephid", "The Hayley Griffiths Band", "EBB", "Tiger Moth Tales", "Kepler Ten", "Lee Abraham"],
+    "subgenre": "Progressive Rock",
+    "fonte": "theprogressiveaspect.net",
+    "tipo_inserimento": "scraped"
+  },
+  {
+    "name": "Peacock Freakshow 2",
+    "startDate": "2026-08-08T14:00:00",
+    "location": {
+      "name": "Harbour Tavern",
+      "address": { "addressLocality": "Bridlington, UK" }
+    },
+    "url": "https://www.facebook.com/events/868204079346451/",
+    "description": "Spriggan Mist, Argham, Cowfish, Ice 9ine, Living In Shadows, Auburn",
+    "artists": ["Spriggan Mist", "Argham", "Cowfish", "Ice 9ine", "Living In Shadows", "Auburn"],
+    "subgenre": "Progressive Rock",
+    "fonte": "theprogressiveaspect.net",
+    "tipo_inserimento": "scraped"
+  },
+  {
+    "name": "Cropredy Convention 2026",
+    "startDate": "2026-08-13T12:00:00",
+    "location": {
+      "name": "Cropredy Festival Site",
+      "address": { "addressLocality": "Cropredy, UK" }
+    },
+    "url": "https://www.fairportconvention.com/",
+    "description": "Thu: Fairport Acoustic, Soft Machine, Turin Brakes. Fri: Danny & The Champions, The Celtic Social Club, Breabach, Richard Thompson with Zara Phillips. Sat: Hayseed Dixie, Fairport Convention & Friends",
+    "artists": ["Fairport Convention", "Soft Machine", "Turin Brakes", "Richard Thompson", "Hayseed Dixie", "Breabach"],
+    "subgenre": "Progressive Folk",
+    "fonte": "theprogressiveaspect.net",
+    "tipo_inserimento": "scraped"
+  },
+  {
+    "name": "ArcTanGent 2026",
+    "startDate": "2026-08-19T12:00:00",
+    "location": {
+      "name": "Fernhill Farm",
+      "address": { "addressLocality": "Bristol, UK" }
+    },
+    "url": "https://arctangent.co.uk/",
+    "description": "Primus, Chelsea Wolfe, Cult Of Luna & Julie Christmas, SikTh, Igorrr, Cardiacs, Napalm Death, Alcest, High On Fire, Oathbreaker, Agent Fresco, Conjurer, Amplifier, TTNG, Jo Quail, Psychonaut and more",
+    "artists": ["Primus", "Chelsea Wolfe", "Cult Of Luna", "SikTh", "Igorrr", "Cardiacs", "Alcest", "Amplifier", "TTNG", "Jo Quail", "Psychonaut"],
+    "subgenre": "Math Rock",
+    "fonte": "theprogressiveaspect.net",
+    "tipo_inserimento": "scraped"
+  },
+  {
+    "name": "A New Day Festival 2026",
+    "startDate": "2026-08-21T12:00:00",
+    "location": {
+      "name": "Mt Ephraim Gardens",
+      "address": { "addressLocality": "Faversham, UK" }
+    },
+    "url": "http://www.anewdayfestival.com/",
+    "description": "Hawkwind, Gong, Sweet, Martin Turner (ex-Wishbone Ash), Curved Air, Lindisfarne, Karnataka, Henge, Jump, Haze, Stray, Solstice, Flor De Loto, Neon Fields, The Bevis Frond and more",
+    "artists": ["Hawkwind", "Gong", "Martin Turner", "Curved Air", "Karnataka", "Solstice", "Flor De Loto", "Haze", "Jump", "Lindisfarne", "The Bevis Frond"],
+    "subgenre": "Space Rock",
+    "fonte": "theprogressiveaspect.net",
+    "tipo_inserimento": "scraped"
+  },
+  {
+    "name": "Wha's Like Us 2",
+    "startDate": "2026-08-29T14:00:00",
+    "location": {
+      "name": "The Drygate Brewery",
+      "address": { "addressLocality": "Glasgow, UK" }
+    },
+    "url": "https://www.facebook.com/groups/548019638116794/",
+    "description": "Comedy Of Errors, Long Earth, The Snake Temple Kings, Machinary, Marley Davidson, Scarlet INside",
+    "artists": ["Comedy Of Errors", "Long Earth", "The Snake Temple Kings", "Machinary", "Marley Davidson", "Scarlet INside"],
+    "subgenre": "Progressive Rock",
+    "fonte": "theprogressiveaspect.net",
+    "tipo_inserimento": "scraped"
+  }
+]
