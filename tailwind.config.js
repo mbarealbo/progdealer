@@ -4,27 +4,38 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Industrial color palette
+        // Dark base palette
         'coal': {
-          900: '#0a0a0a',
-          800: '#1a1a1a',
-          700: '#2a2a2a',
-          600: '#3a3a3a',
-          500: '#4a4a4a',
+          950: '#050507',
+          900: '#0a0a0f',
+          800: '#12121a',
+          700: '#1e1e28',
+          600: '#2a2a36',
+          500: '#3a3a48',
         },
         'asphalt': {
-          900: '#1c1c1e',
-          800: '#2c2c2e',
-          700: '#3c3c3e',
-          600: '#4c4c4e',
-          500: '#5c5c5e',
+          900: '#1c1c24',
+          800: '#2c2c36',
+          700: '#3c3c48',
+          600: '#4c4c5a',
+          500: '#5c5c6e',
+        },
+        // Vibrant accent colors
+        'neon': {
+          green: '#39ff14',
+          'green-dim': '#2bcc10',
+          violet: '#8b5cf6',
+          'violet-dim': '#7c3aed',
+          cyan: '#06b6d4',
+          pink: '#ec4899',
         },
         'industrial-green': {
-          900: '#1a2e1a',
-          800: '#2a3e2a',
-          700: '#3a4e3a',
-          600: '#4a5e4a',
-          500: '#5a6e5a',
+          900: '#0a1f0a',
+          800: '#153015',
+          700: '#1f421f',
+          600: '#39ff14',
+          500: '#5fff3d',
+          400: '#80ff66',
         },
         'burgundy': {
           900: '#2e1a1a',

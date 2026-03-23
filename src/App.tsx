@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Music, RefreshCw, User as UserIcon, LogOut } from 'lucide-react';
+import { RefreshCw, User as UserIcon, LogOut } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from './lib/supabase';
 import { Event, EventFilters } from './types/event';
@@ -9,6 +9,8 @@ import EventList from './components/EventList';
 import EventFiltersComponent from './components/EventFilters';
 import AddEventForm from './components/AddEventForm';
 import SearchInput from './components/SearchInput';
+import MobileBottomNav from './components/MobileBottomNav';
+import EventDetailPage from './components/EventDetailPage';
 import AdminPanel from './components/AdminPanel';
 import UserPanel from './components/UserPanel';
 import AuthRequiredModal from './components/AuthRequiredModal';
@@ -29,6 +31,8 @@ function MainPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [showAuthRequired, setShowAuthRequired] = useState(false);
+  const [showAddEvent, setShowAddEvent] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'compact'>('compact');
   const [filters, setFilters] = useState<EventFilters>({
     città: '',
     sottogenere: '',
@@ -239,19 +243,7 @@ function MainPage() {
   };
 
   const handleSelectEvent = (event: Event) => {
-    // Scroll to the event in the list
-    const eventElement = document.getElementById(`event-${event.id}`);
-    if (eventElement) {
-      eventElement.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center' 
-      });
-      // Briefly highlight the event
-      eventElement.classList.add('ring-2', 'ring-industrial-green-600');
-      setTimeout(() => {
-        eventElement.classList.remove('ring-2', 'ring-industrial-green-600');
-      }, 2000);
-    }
+    window.location.href = `/event/${event.id}`;
   };
 
   const handleAuthenticated = () => {
@@ -272,58 +264,58 @@ function MainPage() {
   const pendingCount = isAdmin ? events.filter(event => (event.status || 'approved') === 'pending').length : 0;
 
   return (
-    <div className="min-h-screen bg-coal-900 bg-noise">
-      {/* Header */}
-      <header className="bg-coal-800 border-b-2 border-asphalt-600">
+    <div className="min-h-screen bg-coal-900 pb-16 md:pb-0">
+      {/* Sticky Header */}
+      <header className="sticky-header">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+          <div className="flex items-center justify-between h-14">
             <button
               onClick={() => window.location.href = '/'}
-              className="flex items-center hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+              className="flex items-center hover:opacity-80 transition-opacity duration-200 cursor-pointer flex-shrink-0"
               title="BACK TO HOME"
             >
-              <div className="text-4xl mr-4">🎸</div>
-              <h1 className="text-xl md:text-2xl font-industrial text-gray-100 tracking-mega-wide">
+              <div className="text-2xl mr-2">🎸</div>
+              <h1 className="text-lg font-industrial text-gray-100 tracking-mega-wide hidden sm:block">
                 PROGDEALER
               </h1>
             </button>
-            
-            {/* Search Input - Desktop */}
-            <div className="hidden lg:block flex-1 max-w-md mx-8">
+
+            {/* Search Input - Centered & Prominent */}
+            <div className="flex-1 max-w-xl mx-4">
               <SearchInput
                 events={events}
                 onSearch={handleSearch}
                 onSelectEvent={handleSelectEvent}
               />
             </div>
-            
-            <div className="flex items-center space-x-4 md:space-x-6">
+
+            <div className="flex items-center space-x-3 flex-shrink-0">
               <button
                 onClick={handleRefresh}
-                className="text-gray-300 hover:text-white transition-colors duration-200 p-2"
+                className="text-gray-400 hover:text-neon-green transition-colors duration-200 p-1.5"
                 title="REFRESH EVENTS"
               >
-                <RefreshCw className="h-5 w-5" />
+                <RefreshCw className="h-4 w-4" />
               </button>
               <div className="relative">
                 <a
                   href="/userarea"
-                  className="text-gray-300 hover:text-white transition-colors duration-200 p-2 flex items-center"
+                  className="text-gray-400 hover:text-neon-green transition-colors duration-200 p-1.5 flex items-center"
                   title="USER AREA"
                 >
-                  <UserIcon className="h-5 w-5" />
+                  <UserIcon className="h-4 w-4" />
                 </a>
                 {isAuthenticated && (
-                  <div className="absolute -right-0 top-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" title={isAdmin ? 'ADMIN ONLINE' : 'USER ONLINE'}></div>
+                  <div className="absolute -right-0 top-0 w-2 h-2 bg-neon-green rounded-full animate-pulse" title={isAdmin ? 'ADMIN ONLINE' : 'USER ONLINE'}></div>
                 )}
               </div>
               {isAuthenticated && (
                 <button
                   onClick={handleLogout}
-                  className="text-gray-300 hover:text-white transition-colors duration-200 p-2"
+                  className="text-gray-400 hover:text-neon-green transition-colors duration-200 p-1.5 hidden sm:block"
                   title="LOGOUT"
                 >
-                  <LogOut className="h-5 w-5" />
+                  <LogOut className="h-4 w-4" />
                 </button>
               )}
             </div>
@@ -331,76 +323,75 @@ function MainPage() {
         </div>
       </header>
 
-      {/* Mobile Search */}
-      <div className="lg:hidden bg-coal-800 border-b border-asphalt-600 px-4 py-3">
-        <SearchInput
-          events={events}
-          onSearch={handleSearch}
-          onSelectEvent={handleSelectEvent}
-        />
-      </div>
-
-      {/* Hero Section */}
-      <section className="hero-video-container py-20 px-4 sm:px-6 lg:px-8">
-        {/* Video Background */}
-        <video
-          className="hero-video-background"
-          autoPlay
-          muted
-          loop
-          playsInline
-        >
+      {/* Hero Section - Compact */}
+      <section className="hero-video-container py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
+        <video className="hero-video-background" autoPlay muted loop playsInline>
           <source src="/progv.mp4" type="video/mp4" />
         </video>
-        
-        {/* Video Overlay */}
         <div className="hero-video-overlay"></div>
-        
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-rock-salt text-gray-100 mb-6 tracking-wide relative z-30 leading-normal sm:leading-normal lg:leading-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-rock-salt text-gray-100 mb-4 tracking-wide relative z-30 leading-normal">
             PROG EVENTS
           </h2>
-          <div className="w-32 h-1 bg-industrial-green-600 mx-auto mb-6 relative z-30"></div>
-          <p className="text-gray-400 text-xl font-condensed uppercase tracking-wide mb-4 relative z-30">
-            PROGRESSIVE MUSIC CULTURE DATABASE
-          </p>
-          <p className="text-gray-300 text-lg font-condensed max-w-2xl mx-auto leading-relaxed relative z-30">
-            Europe's best progressive music events, all in one place.
+          <div className="w-20 h-0.5 bg-neon-green mx-auto mb-4 relative z-30"></div>
+          <p className="text-gray-400 text-base sm:text-lg font-condensed uppercase tracking-wide relative z-30">
+            Progressive Music Culture Database
           </p>
         </div>
       </section>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        {/* Event Count */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center text-gray-400 font-condensed uppercase tracking-wide">
-            <Music className="h-5 w-5 mr-2" />
-            <span className="text-lg font-bold">
-              {filteredEvents.length} EVENTS
-            </span>
-          </div>
-        </div>
-
-        {/* Filters */}
+        {/* Filters - Horizontal bar */}
         <EventFiltersComponent
           filters={filters}
           searchQuery={searchQuery}
           onFiltersChange={handleFiltersChange}
           uniqueLocations={uniqueLocations}
           uniqueCountries={uniqueCountries}
+          eventCount={filteredEvents.length}
         />
 
-        {/* Events List */}
-        <EventList events={filteredEvents} loading={loading} />
+        {/* Events */}
+        <EventList
+          events={filteredEvents}
+          loading={loading}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+        />
       </main>
 
-      {/* Add Event Form */}
-      <AddEventForm 
-        onEventAdded={fetchEvents}
-        onAuthRequired={() => setShowAuthRequired(true)}
-        isAuthenticated={isAuthenticated}
+      {/* Add Event Form - Hidden on mobile (use bottom nav) */}
+      <div className="hidden md:block">
+        <AddEventForm
+          onEventAdded={fetchEvents}
+          onAuthRequired={() => setShowAuthRequired(true)}
+          isAuthenticated={isAuthenticated}
+        />
+      </div>
+
+      {/* Mobile Bottom Nav */}
+      <MobileBottomNav
+        onAddEvent={() => {
+          if (!isAuthenticated) {
+            setShowAuthRequired(true);
+          } else {
+            setShowAddEvent(true);
+          }
+        }}
+        eventCount={filteredEvents.length}
       />
+
+      {/* Mobile Add Event Modal */}
+      {showAddEvent && (
+        <AddEventForm
+          isOpen={true}
+          onClose={() => setShowAddEvent(false)}
+          onEventAdded={() => { fetchEvents(); setShowAddEvent(false); }}
+          onAuthRequired={() => setShowAuthRequired(true)}
+          isAuthenticated={isAuthenticated}
+        />
+      )}
 
       {/* Auth Required Modal */}
       <AuthRequiredModal
@@ -409,7 +400,7 @@ function MainPage() {
       />
 
       {/* Footer */}
-      <Footer 
+      <Footer
         isAuthenticated={isAuthenticated}
         isAdmin={isAdmin}
         onAdminAccess={() => window.location.href = '/adminarea'}
@@ -460,6 +451,7 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<MainPage />} />
+        <Route path="/event/:id" element={<EventDetailPage />} />
         <Route path="/goodbye" element={<GoodbyePage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route

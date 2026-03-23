@@ -298,7 +298,7 @@ export default function SearchInput({
         <div className={`relative transition-all duration-200 ${
           isActive ? 'transform scale-105' : ''
         }`}>
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
           <input
             ref={inputRef}
             type="text"
@@ -307,12 +307,12 @@ export default function SearchInput({
             onKeyDown={handleKeyDown}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            className={`w-full bg-coal-800 border-2 text-gray-100 pl-10 pr-10 py-2 font-condensed focus:outline-none transition-all duration-200 text-sm ${
-              isActive 
-                ? 'border-industrial-green-600 bg-coal-700' 
-                : 'border-asphalt-600 hover:border-asphalt-500'
+            className={`w-full bg-coal-700/50 border text-gray-100 pl-10 pr-10 py-2 rounded-lg focus:outline-none transition-all duration-200 text-sm ${
+              isActive
+                ? 'border-neon-green/40 bg-coal-700'
+                : 'border-asphalt-600/50 hover:border-asphalt-500/50'
             }`}
-            placeholder="SEARCH EVENTS, VENUES, CITIES, ARTISTS..."
+            placeholder="Search events, artists, venues..."
             autoComplete="off"
           />
           {query && (
@@ -331,7 +331,7 @@ export default function SearchInput({
       {showSuggestions && suggestions.length > 0 && (
         <div
           ref={suggestionsRef}
-          className="absolute z-50 w-full mt-1 bg-coal-800 border-2 border-asphalt-600 max-h-80 overflow-y-auto shadow-xl"
+          className="absolute z-50 w-full mt-1 bg-coal-800 border border-asphalt-600/50 rounded-xl max-h-80 overflow-y-auto shadow-2xl"
         >
           {suggestions.map((suggestion, index) => {
             const typeBadge = getTypeBadge(suggestion.type);
@@ -340,10 +340,10 @@ export default function SearchInput({
                 key={`${suggestion.type}-${suggestion.value}-${index}`}
                 type="button"
                 onClick={() => handleSuggestionClick(suggestion)}
-                className={`w-full text-left px-4 py-3 font-condensed text-sm transition-all duration-150 border-b border-asphalt-600 last:border-b-0 ${
+                className={`w-full text-left px-4 py-3 text-sm transition-all duration-150 border-b border-asphalt-700/50 last:border-b-0 ${
                   index === selectedIndex
-                    ? 'bg-industrial-green-900 text-white border-l-4 border-industrial-green-600'
-                    : 'text-gray-300 hover:bg-asphalt-700 hover:text-white'
+                    ? 'bg-neon-green/10 text-white border-l-2 border-l-neon-green'
+                    : 'text-gray-300 hover:bg-coal-700/50 hover:text-white'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -374,7 +374,7 @@ export default function SearchInput({
           })}
           
           {/* Search all results footer */}
-          <div className="px-4 py-2 bg-asphalt-700 border-t border-asphalt-600">
+          <div className="px-4 py-2 bg-coal-700/30 border-t border-asphalt-700/50 rounded-b-xl">
             <button
               type="button"
               onClick={() => {
@@ -382,19 +382,18 @@ export default function SearchInput({
                 setShowSuggestions(false);
                 inputRef.current?.blur();
               }}
-              className="text-xs text-gray-400 hover:text-white font-condensed uppercase tracking-wide transition-colors duration-200"
+              className="text-xs text-gray-500 hover:text-neon-green uppercase tracking-wide transition-colors duration-200"
             >
-              🔍 SEARCH ALL RESULTS FOR "{query}"
+              Search all for "{query}"
             </button>
           </div>
         </div>
       )}
 
-      {/* No results message */}
       {showSuggestions && suggestions.length === 0 && query.length >= 2 && (
-        <div className="absolute z-40 w-full mt-1 bg-coal-800 border-2 border-asphalt-600 px-4 py-3">
-          <div className="text-gray-400 font-condensed text-sm uppercase tracking-wide text-center">
-            NO SUGGESTIONS FOUND
+        <div className="absolute z-40 w-full mt-1 bg-coal-800 border border-asphalt-600/50 rounded-xl px-4 py-3">
+          <div className="text-gray-500 text-sm text-center">
+            No suggestions found
           </div>
         </div>
       )}

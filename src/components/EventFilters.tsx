@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, SlidersHorizontal, ChevronDown, Tag } from 'lucide-react';
 import { EventFilters, PROG_SUBGENRES } from '../types/event';
 
 interface EventFiltersProps {
@@ -8,6 +8,7 @@ interface EventFiltersProps {
   onFiltersChange: (filters: EventFilters) => void;
   uniqueLocations: string[];
   uniqueCountries: string[];
+  eventCount?: number;
 }
 
 export default function EventFiltersComponent({
@@ -15,23 +16,28 @@ export default function EventFiltersComponent({
   searchQuery = '',
   onFiltersChange,
   uniqueLocations,
-  uniqueCountries
+  uniqueCountries,
+  eventCount = 0
 }: EventFiltersProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [showPanel, setShowPanel] = useState(false);
+  const [showGenres, setShowGenres] = useState(false);
 
   const handleFilterChange = (key: keyof EventFilters, value: string | string[]) => {
-    onFiltersChange({
-      ...filters,
-      [key]: value
-    });
+    onFiltersChange({ ...filters, [key]: value });
   };
 
   const toggleSubgenreExclusion = (subgenre: string) => {
-    const newExcludedSubgenres = filters.excludedSubgenres.includes(subgenre) 
+    const newExcluded = filters.excludedSubgenres.includes(subgenre)
       ? filters.excludedSubgenres.filter(s => s !== subgenre)
       : [...filters.excludedSubgenres, subgenre];
-    
-    handleFilterChange('excludedSubgenres', newExcludedSubgenres);
+    handleFilterChange('excludedSubgenres', newExcluded);
+  };
+
+  const toggleCountrySelection = (country: string) => {
+    const newCountries = filters.countries.includes(country)
+      ? filters.countries.filter(c => c !== country)
+      : [...filters.countries, country];
+    handleFilterChange('countries', newCountries);
   };
 
   const clearFilters = () => {
@@ -45,178 +51,153 @@ export default function EventFiltersComponent({
     });
   };
 
-  const hasActiveFilters = Object.entries(filters).some(([key, value]) => 
+  const hasActiveFilters = Object.entries(filters).some(([_, value]) =>
     Array.isArray(value) ? value.length > 0 : value !== ''
   );
 
-  const activeFilterCount = Object.entries(filters).filter(([key, value]) => 
+  const activeFilterCount = Object.entries(filters).filter(([_, value]) =>
     Array.isArray(value) ? value.length > 0 : value !== ''
-  ).length + (searchQuery.trim() ? 1 : 0);
+  ).length;
 
-  const toggleCountrySelection = (country: string) => {
-    const newCountries = filters.countries.includes(country)
-      ? filters.countries.filter(c => c !== country)
-      : [...filters.countries, country];
-    
-    handleFilterChange('countries', newCountries);
-  };
-  
   return (
-    <div className="mb-6 sm:mb-8">
-      {/* Filter Toggle Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-3 industrial-button mb-4 sm:mb-6 w-full sm:w-auto justify-center sm:justify-start"
-      >
-        <span className="text-base sm:text-lg">🎚️</span>
-        <span className="text-base sm:text-lg font-industrial tracking-wide uppercase">
-          FILTERS
-        </span>
-        {hasActiveFilters && (
-          <span className="bg-industrial-green-600 text-white px-2 py-1 text-xs font-bold rounded">
-            {activeFilterCount}{searchQuery.trim() ? ' + SEARCH' : ''}
+    <div className="mb-6">
+      {/* Minimal top bar */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500 font-medium">
+            {eventCount} events
           </span>
-        )}
-        {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-      </button>
+          {searchQuery.trim() && (
+            <span className="text-[11px] text-gray-600 px-2 py-0.5 bg-coal-700/30 rounded-full truncate max-w-[160px]">
+              "{searchQuery}"
+            </span>
+          )}
+          {/* Active filter pills */}
+          {filters.excludedSubgenres.length > 0 && (
+            <span className="text-[10px] text-amber-500/70 px-1.5 py-0.5 bg-amber-500/5 rounded-full">
+              -{filters.excludedSubgenres.length} genres
+            </span>
+          )}
+          {filters.countries.length > 0 && (
+            <span className="text-[10px] text-neon-green/70 px-1.5 py-0.5 bg-neon-green/5 rounded-full hidden sm:inline">
+              {filters.countries.length} countries
+            </span>
+          )}
+        </div>
 
-      {/* Collapsible Filter Panel */}
-      {isOpen && (
-        <div className="bg-coal-800 border-2 border-asphalt-600 p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-2 sm:space-y-0">
-            <h2 className="text-lg sm:text-xl font-industrial text-gray-100 tracking-wide uppercase">
-              FILTER EVENTS
-            </h2>
-            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="industrial-button flex items-center text-xs sm:text-sm px-3 py-2 w-full sm:w-auto justify-center"
-                  title={searchQuery.trim() ? 'Clear filters (search will remain active)' : 'Clear all filters'}
-                >
-                  <X className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                  CLEAR FILTERS
-                </button>
-              )}
-              {searchQuery.trim() && (
-                <div className="text-xs sm:text-sm text-gray-400 font-condensed uppercase tracking-wide text-center sm:text-left">
-                  🔍 SEARCH: "{searchQuery}"
-                </div>
-              )}
-            </div>
+        <div className="flex items-center gap-1.5">
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="text-[10px] text-gray-600 hover:text-red-400 transition-colors px-1.5 py-1"
+            >
+              Clear
+            </button>
+          )}
+          <button
+            onClick={() => setShowPanel(!showPanel)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+              showPanel || hasActiveFilters
+                ? 'border-neon-green/20 text-neon-green bg-neon-green/5'
+                : 'border-asphalt-600/30 text-gray-500 hover:text-gray-400'
+            }`}
+          >
+            <SlidersHorizontal className="h-3 w-3" />
+            {activeFilterCount > 0 && (
+              <span className="bg-neon-green/15 text-neon-green text-[10px] px-1 rounded font-bold">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Expandable filter panel */}
+      {showPanel && (
+        <div className="mt-3 p-3 bg-coal-700/20 border border-asphalt-600/20 rounded-xl space-y-3">
+          {/* Row 1: City + Date range */}
+          <div className="grid grid-cols-3 gap-2">
+            <select
+              value={filters.città}
+              onChange={(e) => handleFilterChange('città', e.target.value)}
+              className="bg-coal-800/80 border border-asphalt-600/30 text-gray-300 text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-neon-green/30"
+            >
+              <option value="">All cities</option>
+              {uniqueLocations.map((loc) => (
+                <option key={loc} value={loc}>{loc}</option>
+              ))}
+            </select>
+            <input
+              type="date"
+              value={filters.dataInizio}
+              onChange={(e) => handleFilterChange('dataInizio', e.target.value)}
+              className="bg-coal-800/80 border border-asphalt-600/30 text-gray-300 text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-neon-green/30"
+              placeholder="From"
+            />
+            <input
+              type="date"
+              value={filters.dataFine}
+              onChange={(e) => handleFilterChange('dataFine', e.target.value)}
+              className="bg-coal-800/80 border border-asphalt-600/30 text-gray-300 text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-neon-green/30"
+              placeholder="To"
+            />
           </div>
-          
-          <div className="space-y-6">
-            {/* Progressive Subgenres - Chip Interface */}
-            <div>
-              <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-400 mb-3 sm:mb-4 uppercase tracking-wide">
-                🎵 PROGRESSIVE SUBGENRES
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {PROG_SUBGENRES.map((subgenre) => {
-                  const isExcluded = filters.excludedSubgenres.includes(subgenre);
-                  return (
-                    <button
-                      key={subgenre}
-                      onClick={() => toggleSubgenreExclusion(subgenre)}
-                      className={`
-                        px-2 sm:px-3 py-1 text-xs font-condensed font-bold uppercase tracking-wide
-                        border transition-all duration-200 flex items-center space-x-1
-                        ${isExcluded 
-                          ? 'bg-asphalt-700 border-asphalt-500 text-gray-500 line-through' 
-                          : 'bg-industrial-green-600 border-industrial-green-600 text-white hover:bg-industrial-green-700'
-                        }
-                      `}
-                    >
-                      <span>{subgenre}</span>
-                      {isExcluded && <X className="h-3 w-3" />}
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="text-xs text-gray-500 mt-2 font-condensed uppercase tracking-wide">
-                Click to exclude subgenres • Active subgenres will be included in results
-              </p>
-            </div>
 
-            {/* Location, Date, and Source Filters */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-400 mb-2 sm:mb-3 uppercase tracking-wide">
-                  🏙️ CITY
-                </label>
-                <select
-                  value={filters.città}
-                  onChange={(e) => handleFilterChange('città', e.target.value)}
-                  className="brutal-input w-full text-xs sm:text-sm"
-                >
-                  <option value="">ALL CITIES</option>
-                  {uniqueLocations.map((location) => (
-                    <option key={location} value={location}>
-                      {location.toUpperCase()}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-400 mb-2 sm:mb-3 uppercase tracking-wide">
-                  📅 FROM DATE
-                </label>
-                <input
-                  type="date"
-                  value={filters.dataInizio}
-                  onChange={(e) => handleFilterChange('dataInizio', e.target.value)}
-                  className="brutal-input w-full text-xs sm:text-sm"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-400 mb-2 sm:mb-3 uppercase tracking-wide">
-                  📅 TO DATE
-                </label>
-                <input
-                  type="date"
-                  value={filters.dataFine}
-                  onChange={(e) => handleFilterChange('dataFine', e.target.value)}
-                  className="brutal-input w-full text-xs sm:text-sm"
-                />
-              </div>
+          {/* Country pills */}
+          {uniqueCountries.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {uniqueCountries.map((country) => {
+                const isSelected = filters.countries.includes(country);
+                return (
+                  <button
+                    key={country}
+                    onClick={() => toggleCountrySelection(country)}
+                    className={`px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide rounded-full border transition-all ${
+                      isSelected
+                        ? 'bg-neon-green/10 border-neon-green/30 text-neon-green'
+                        : 'bg-transparent border-asphalt-600/20 text-gray-600 hover:text-gray-400 hover:border-asphalt-500/30'
+                    }`}
+                  >
+                    {country}
+                  </button>
+                );
+              })}
             </div>
+          )}
 
-            {/* Countries Filter - Multi-select with chips */}
-            <div>
-              <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-400 mb-3 sm:mb-4 uppercase tracking-wide">
-                🌍 COUNTRIES
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {uniqueCountries.map((country) => {
-                  const isSelected = filters.countries.includes(country);
-                  return (
-                    <button
-                      key={country}
-                      onClick={() => toggleCountrySelection(country)}
-                      className={`
-                        px-2 sm:px-3 py-1 text-xs font-condensed font-bold uppercase tracking-wide
-                        border transition-all duration-200 flex items-center space-x-1
-                        ${isSelected 
-                          ? 'bg-industrial-green-600 border-industrial-green-600 text-white hover:bg-industrial-green-700' 
-                          : 'bg-transparent border-asphalt-500 text-gray-400 hover:border-industrial-green-600 hover:text-white'
-                        }
-                      `}
-                    >
-                      <span>{country}</span>
-                      {isSelected && <X className="h-3 w-3" />}
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="text-xs text-gray-500 mt-2 font-condensed uppercase tracking-wide">
-                Click to select/deselect countries • Multiple selections allowed
-              </p>
+          {/* Genre toggle */}
+          <button
+            onClick={() => setShowGenres(!showGenres)}
+            className="flex items-center gap-1.5 text-[11px] text-gray-500 hover:text-gray-400 transition-colors"
+          >
+            <Tag className="h-3 w-3" />
+            <span>Subgenres</span>
+            {filters.excludedSubgenres.length > 0 && (
+              <span className="text-amber-500/70">(-{filters.excludedSubgenres.length})</span>
+            )}
+            <ChevronDown className={`h-2.5 w-2.5 transition-transform ${showGenres ? 'rotate-180' : ''}`} />
+          </button>
+
+          {showGenres && (
+            <div className="flex flex-wrap gap-1">
+              {PROG_SUBGENRES.map((subgenre) => {
+                const isExcluded = filters.excludedSubgenres.includes(subgenre);
+                return (
+                  <button
+                    key={subgenre}
+                    onClick={() => toggleSubgenreExclusion(subgenre)}
+                    className={`px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide rounded-full border transition-all ${
+                      isExcluded
+                        ? 'bg-transparent border-asphalt-600/20 text-gray-700 line-through'
+                        : 'bg-coal-700/30 border-asphalt-600/20 text-gray-400 hover:text-gray-300'
+                    }`}
+                  >
+                    {subgenre}
+                  </button>
+                );
+              })}
             </div>
-
-          </div>
+          )}
         </div>
       )}
     </div>

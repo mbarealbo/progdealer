@@ -1,107 +1,68 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ExternalLink, Loader2, ChevronDown, Calendar } from 'lucide-react';
+import { ExternalLink, Loader2, ChevronDown, Calendar, MapPin, Clock, Grid3X3, List, LayoutList } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Event } from '../types/event';
 import EventImage from './EventImage';
+
+export type ViewMode = 'grid' | 'list' | 'compact';
 
 interface EventListProps {
   events: Event[];
   loading: boolean;
+  viewMode?: ViewMode;
+  onViewModeChange?: (mode: ViewMode) => void;
 }
 
-const EVENTS_PER_PAGE = 15;
+const EVENTS_PER_PAGE = 18;
 
-export default function EventList({ events, loading }: EventListProps) {
+export default function EventList({ events, loading, viewMode = 'grid', onViewModeChange }: EventListProps) {
   const [displayedEvents, setDisplayedEvents] = useState<Event[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const navigate = useNavigate();
 
-  // Reset pagination when events change
   useEffect(() => {
     setCurrentPage(1);
-    setDisplayedEvents(events.slice(0, EVENTS_PER_PAGE));
-    setHasMore(events.length > EVENTS_PER_PAGE);
-  }, [events]);
+    const perPage = viewMode === 'compact' ? 30 : EVENTS_PER_PAGE;
+    setDisplayedEvents(events.slice(0, perPage));
+    setHasMore(events.length > perPage);
+  }, [events, viewMode]);
 
-  // Load more events function
   const loadMoreEvents = useCallback(() => {
     if (isLoadingMore || !hasMore) return;
-
     setIsLoadingMore(true);
-    
-    // Simulate loading delay for better UX
+    const perPage = viewMode === 'compact' ? 30 : EVENTS_PER_PAGE;
+
     setTimeout(() => {
       const nextPage = currentPage + 1;
-      const startIndex = (nextPage - 1) * EVENTS_PER_PAGE;
-      const endIndex = startIndex + EVENTS_PER_PAGE;
-      const newEvents = events.slice(0, endIndex);
-      
-      setDisplayedEvents(newEvents);
+      const endIndex = nextPage * perPage;
+      setDisplayedEvents(events.slice(0, endIndex));
       setCurrentPage(nextPage);
       setHasMore(endIndex < events.length);
       setIsLoadingMore(false);
-    }, 500);
-  }, [currentPage, events, isLoadingMore, hasMore]);
+    }, 300);
+  }, [currentPage, events, isLoadingMore, hasMore, viewMode]);
 
-  // Group events by month and year for separators
   const groupEventsByMonth = (eventsList: Event[]) => {
     const grouped: { [key: string]: Event[] } = {};
-    
     eventsList.forEach(event => {
       const date = new Date(event.data_ora);
       const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      
-      if (!grouped[monthYear]) {
-        grouped[monthYear] = [];
-      }
+      if (!grouped[monthYear]) grouped[monthYear] = [];
       grouped[monthYear].push(event);
     });
-    
     return grouped;
   };
 
-  // Format month/year for display
   const formatMonthYear = (monthYearKey: string) => {
     const [year, month] = monthYearKey.split('-');
     const date = new Date(parseInt(year), parseInt(month) - 1);
     return {
       month: date.toLocaleDateString('en-US', { month: 'long' }).toUpperCase(),
-      year: year
+      year
     };
   };
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="bg-coal-800 border border-asphalt-600 p-4 sm:p-6 animate-pulse">
-            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6">
-              <div className="w-full sm:w-40 h-32 bg-asphalt-700 rounded"></div>
-              <div className="flex-1">
-                <div className="h-6 sm:h-8 bg-asphalt-700 mb-4 rounded"></div>
-                <div className="space-y-3">
-                  <div className="h-4 bg-asphalt-700 w-3/4 rounded"></div>
-                  <div className="h-4 bg-asphalt-700 w-1/2 rounded"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (events.length === 0) {
-    return (
-      <div className="text-center py-16 sm:py-20">
-        <div className="text-6xl sm:text-8xl mb-6 sm:mb-8">🎸</div>
-        <p className="text-gray-400 text-2xl sm:text-3xl font-industrial uppercase tracking-wide">
-          NO EVENTS FOUND
-        </p>
-        <div className="w-16 sm:w-24 h-1 bg-burgundy-600 mx-auto mt-4 sm:mt-6"></div>
-      </div>
-    );
-  }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -109,360 +70,361 @@ export default function EventList({ events, loading }: EventListProps) {
       day: date.getDate().toString().padStart(2, '0'),
       month: date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(),
       year: date.getFullYear(),
-      time: date.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false 
-      })
+      time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+      weekday: date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()
     };
   };
 
-  const getSourceBadge = (fonte: string, tipo_inserimento: string) => {
-    if (tipo_inserimento === 'manual') {
-      return {
-        label: 'USER',
-        emoji: '🧑‍🤝‍🧑',
-        bgColor: 'bg-blue-100',
-        textColor: 'text-blue-800',
-        borderColor: 'border-blue-300'
-      };
-    } else {
-      return {
-        label: 'AUTO',
-        emoji: '🤖',
-        bgColor: 'bg-green-100',
-        textColor: 'text-green-800',
-        borderColor: 'border-green-300'
-      };
-    }
+  const getSubgenreChipClass = (sottogenere: string) => {
+    const s = (sottogenere || 'Progressive').toLowerCase();
+    if (s.includes('metal')) return 'chip-metal';
+    if (s.includes('kraut')) return 'chip-kraut';
+    if (s.includes('space')) return 'chip-space';
+    if (s.includes('symphonic')) return 'chip-symphonic';
+    if (s.includes('electronic')) return 'chip-electronic';
+    if (s.includes('fusion')) return 'chip-fusion';
+    if (s.includes('psychedelic')) return 'chip-psychedelic';
+    if (s.includes('post')) return 'chip-post';
+    if (s.includes('math')) return 'chip-math';
+    if (s.includes('neo')) return 'chip-neo';
+    if (s.includes('folk')) return 'chip-folk';
+    if (s.includes('avant') || s.includes('rio')) return 'chip-avant';
+    return 'chip-default';
   };
 
-  const getSubgenreColor = (sottogenere: string) => {
-    const subgenre = (sottogenere || 'Progressive').toLowerCase();
-    
-    if (subgenre.includes('metal')) return 'bg-red-600 text-white';
-    if (subgenre.includes('kraut')) return 'bg-orange-600 text-white';
-    if (subgenre.includes('space')) return 'bg-purple-600 text-white';
-    if (subgenre.includes('symphonic')) return 'bg-blue-600 text-white';
-    if (subgenre.includes('electronic')) return 'bg-cyan-600 text-white';
-    if (subgenre.includes('fusion')) return 'bg-yellow-600 text-black';
-    if (subgenre.includes('psychedelic')) return 'bg-pink-600 text-white';
-    if (subgenre.includes('post')) return 'bg-gray-600 text-white';
-    if (subgenre.includes('math')) return 'bg-indigo-600 text-white';
-    
-    return 'bg-industrial-green-600 text-white';
+  const isHappeningSoon = (dateString: string) => {
+    const eventDate = new Date(dateString);
+    const now = new Date();
+    const diffDays = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays >= 0 && diffDays <= 7;
   };
 
-  // Group displayed events by month/year
+  // --- View mode toggle ---
+  const ViewToggle = () => (
+    <div className="flex items-center gap-1 bg-coal-700/30 border border-asphalt-600/30 rounded-lg p-0.5">
+      {[
+        { mode: 'grid' as ViewMode, icon: Grid3X3, label: 'Grid' },
+        { mode: 'list' as ViewMode, icon: LayoutList, label: 'List' },
+        { mode: 'compact' as ViewMode, icon: List, label: 'Compact' },
+      ].map(({ mode, icon: Icon, label }) => (
+        <button
+          key={mode}
+          onClick={() => onViewModeChange?.(mode)}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
+            viewMode === mode
+              ? 'bg-neon-green/10 text-neon-green border border-neon-green/20'
+              : 'text-gray-500 hover:text-gray-300 border border-transparent'
+          }`}
+          title={label}
+        >
+          <Icon className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{label}</span>
+        </button>
+      ))}
+    </div>
+  );
+
+  // --- Skeletons ---
+  if (loading) {
+    return (
+      <div>
+        <div className="flex justify-end mb-4"><ViewToggle /></div>
+        <div className={viewMode === 'grid'
+          ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'
+          : 'space-y-2'
+        }>
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-coal-700/30 border border-asphalt-600/30 rounded-xl animate-pulse overflow-hidden">
+              {viewMode === 'grid' ? (
+                <>
+                  <div className="h-44 bg-asphalt-700/30"></div>
+                  <div className="p-4 space-y-3">
+                    <div className="h-5 bg-asphalt-700/30 rounded w-3/4"></div>
+                    <div className="h-4 bg-asphalt-700/30 rounded w-1/2"></div>
+                  </div>
+                </>
+              ) : (
+                <div className="p-3 flex items-center gap-3">
+                  <div className="w-12 h-12 bg-asphalt-700/30 rounded-lg flex-shrink-0"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-asphalt-700/30 rounded w-2/3"></div>
+                    <div className="h-3 bg-asphalt-700/30 rounded w-1/3"></div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (events.length === 0) {
+    return (
+      <div className="text-center py-20">
+        <div className="text-7xl mb-6">🎸</div>
+        <p className="text-gray-400 text-2xl font-industrial uppercase tracking-wide">NO EVENTS FOUND</p>
+        <div className="w-20 h-0.5 bg-neon-green mx-auto mt-4 opacity-50"></div>
+      </div>
+    );
+  }
+
   const groupedEvents = groupEventsByMonth(displayedEvents);
   const sortedMonthYears = Object.keys(groupedEvents).sort();
 
-  return (
-    <div className="space-y-6">
-      {sortedMonthYears.map((monthYearKey) => {
-        const { month, year } = formatMonthYear(monthYearKey);
-        const monthEvents = groupedEvents[monthYearKey];
+  // --- Month separator ---
+  const MonthSeparator = ({ monthYearKey }: { monthYearKey: string }) => {
+    const { month, year } = formatMonthYear(monthYearKey);
+    return (
+      <div className="flex items-center gap-3 mb-4 mt-2">
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-asphalt-600/50 to-transparent"></div>
+        <div className="flex items-center gap-1.5 px-3 py-1 bg-coal-700/30 border border-asphalt-600/30 rounded-full">
+          <Calendar className="h-3.5 w-3.5 text-neon-green" />
+          <span className="text-xs font-industrial text-gray-300 tracking-wide">{month} {year}</span>
+        </div>
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-asphalt-600/50 to-transparent"></div>
+      </div>
+    );
+  };
 
-        return (
-          <div key={monthYearKey} className="space-y-6">
-            {/* Month/Year Separator */}
-            <div className="flex items-center justify-center py-6 sm:py-8">
-              <div className="flex items-center space-x-3 sm:space-x-4 bg-coal-800 border-2 border-asphalt-600 px-6 sm:px-8 py-3 sm:py-4">
-                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-industrial-green-600" />
-                <div className="text-center">
-                  <div className="text-xl sm:text-2xl font-industrial text-gray-100 tracking-wide uppercase">
-                    {month}
-                  </div>
-                  <div className="text-base sm:text-lg font-condensed text-gray-400 uppercase tracking-wide">
-                    {year}
-                  </div>
-                </div>
-                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-industrial-green-600" />
+  // --- GRID CARD ---
+  const GridCard = ({ event }: { event: Event }) => {
+    const dateInfo = formatDate(event.data_ora);
+    const chipClass = getSubgenreChipClass(event.sottogenere);
+    const soon = isHappeningSoon(event.data_ora);
+
+    return (
+      <div
+        id={`event-${event.id}`}
+        onClick={() => navigate(`/event/${event.id}`)}
+        className={`event-card cursor-pointer bg-coal-700/30 border border-asphalt-600/40 rounded-xl overflow-hidden group ${soon ? 'happening-soon' : ''}`}
+      >
+        <div className="relative h-44 overflow-hidden">
+          <EventImage
+            src={event.immagine}
+            alt={event.nome_evento}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            placeholderClassName="w-full h-full"
+          />
+          <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/10">
+            <div className="text-lg font-bold text-white leading-none">{dateInfo.day}</div>
+            <div className="text-[10px] font-medium text-gray-300 uppercase tracking-wider">{dateInfo.month}</div>
+          </div>
+          <div className="absolute top-3 right-3">
+            <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${chipClass}`}>
+              {event.sottogenere}
+            </span>
+          </div>
+          {soon && (
+            <div className="absolute bottom-3 left-3 bg-neon-green/90 text-black px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">SOON</div>
+          )}
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-coal-700/90 to-transparent"></div>
+        </div>
+        <div className="p-4">
+          <h3 className="text-base font-bold text-gray-100 leading-snug mb-2 line-clamp-2 group-hover:text-neon-green transition-colors duration-200">
+            {event.nome_evento}
+          </h3>
+          <div className="space-y-1.5 mb-3">
+            <div className="flex items-center gap-1.5 text-sm text-gray-400">
+              <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="truncate">{event.città}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-sm text-gray-500">
+              <Clock className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="truncate">{dateInfo.time} - {event.venue}</span>
+            </div>
+          </div>
+          {event.artisti && event.artisti.length > 0 && (
+            <div className="text-xs text-gray-500 truncate">
+              {event.artisti.slice(0, 3).join(' / ')}
+              {event.artisti.length > 3 && ` +${event.artisti.length - 3}`}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // --- LIST CARD ---
+  const ListCard = ({ event }: { event: Event }) => {
+    const dateInfo = formatDate(event.data_ora);
+    const chipClass = getSubgenreChipClass(event.sottogenere);
+    const soon = isHappeningSoon(event.data_ora);
+
+    return (
+      <div
+        id={`event-${event.id}`}
+        onClick={() => navigate(`/event/${event.id}`)}
+        className={`event-card cursor-pointer bg-coal-700/20 border border-asphalt-600/30 rounded-xl overflow-hidden group ${soon ? 'happening-soon' : ''}`}
+      >
+        <div className="flex items-center p-3 gap-4">
+          {/* Image thumbnail */}
+          <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border border-asphalt-600/20">
+            <EventImage
+              src={event.immagine}
+              alt={event.nome_evento}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              placeholderClassName="w-full h-full"
+            />
+          </div>
+
+          {/* Date block */}
+          <div className="text-center flex-shrink-0 w-12">
+            <div className="text-lg font-bold text-gray-200 leading-none">{dateInfo.day}</div>
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider">{dateInfo.month}</div>
+            <div className="text-[10px] text-gray-600">{dateInfo.time}</div>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="text-sm font-bold text-gray-100 leading-snug line-clamp-1 group-hover:text-neon-green transition-colors">
+                {event.nome_evento}
+              </h3>
+              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex-shrink-0 ${chipClass}`}>
+                {event.sottogenere}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
+              <span className="flex items-center gap-1 truncate">
+                <MapPin className="h-3 w-3" />
+                {event.città}
+              </span>
+              <span className="truncate hidden sm:inline">{event.venue}</span>
+            </div>
+            {event.artisti && event.artisti.length > 0 && (
+              <div className="text-[11px] text-gray-600 mt-1 truncate">
+                {event.artisti.slice(0, 4).join(', ')}
+                {event.artisti.length > 4 && ` +${event.artisti.length - 4}`}
               </div>
-            </div>
-
-            {/* Events for this month */}
-            {monthEvents.map((event) => {
-              const sourceBadge = getSourceBadge(event.fonte, event.tipo_inserimento);
-              const dateInfo = formatDate(event.data_ora);
-              const subgenreColor = getSubgenreColor(event.sottogenere);
-              
-              return (
-                <div
-                  key={event.id}
-                  id={`event-${event.id}`}
-                  className="bg-white bg-opacity-10 backdrop-blur-sm border border-white border-opacity-20 rounded-lg shadow-lg hover:bg-opacity-15 hover:border-opacity-30 transition-all duration-300 overflow-hidden"
-                >
-                  {/* Mobile Layout - Completely Rebuilt */}
-                  <div className="block md:hidden">
-                    {/* Row 1: Event Image - Centered */}
-                    <div className="flex justify-center p-4 pb-0">
-                      <div className="w-32 h-20 bg-black bg-opacity-20 rounded-lg flex items-center justify-center overflow-hidden border border-white border-opacity-10">
-                        <EventImage
-                          src={event.immagine}
-                          alt={event.nome_evento}
-                          className="w-full h-full object-cover rounded-lg"
-                          placeholderClassName="w-full h-full rounded-lg"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Row 2: Event Title - Centered */}
-                    <div className="px-4 py-3 text-center">
-                      <h3 className="text-lg font-bold text-gray-100 leading-tight">
-                        {event.nome_evento}
-                      </h3>
-                    </div>
-
-                    {/* Row 3: Date & Time - Centered */}
-                    <div className="px-4 py-2 text-center">
-                      <div className="inline-flex items-center space-x-2 bg-white bg-opacity-15 backdrop-blur-sm border border-white border-opacity-20 rounded-lg px-3 py-2">
-                        <span className="text-lg font-bold text-gray-100">
-                          {dateInfo.day}
-                        </span>
-                        <span className="text-sm font-medium text-gray-300 uppercase">
-                          {dateInfo.month}
-                        </span>
-                        <span className="text-sm text-gray-400">
-                          {dateInfo.year}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {dateInfo.time}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Row 4: Location Info - Centered, Stacked */}
-                    <div className="px-4 py-2 text-center space-y-1">
-                      <div className="text-sm text-gray-200">
-                        📍 {event.città}
-                      </div>
-                      <div className="text-sm text-gray-300">
-                        🏢 {event.venue}
-                      </div>
-                    </div>
-
-                    {/* Row 5: Subgenre & Source - Centered, Smaller Tags */}
-                    <div className="px-4 py-2 flex justify-center space-x-2">
-                      <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide ${subgenreColor}`}>
-                        {event.sottogenere}
-                      </span>
-                      <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${sourceBadge.bgColor} ${sourceBadge.textColor} border ${sourceBadge.borderColor}`}>
-                        <span className="mr-1">{sourceBadge.emoji}</span>
-                        {sourceBadge.label}
-                      </span>
-                    </div>
-
-                    {/* Row 6: Description (if exists) - Centered */}
-                    {event.descrizione && (
-                      <div className="px-4 py-2 text-center">
-                        <p className="text-sm text-gray-300 leading-relaxed">
-                          {event.descrizione}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Row 7: Artists (if exists) - Centered */}
-                    {event.artisti && event.artisti.length > 0 && (
-                      <div className="px-4 py-2 text-center">
-                        <div className="text-sm text-gray-200">
-                          👥 {event.artisti.join(', ')}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Row 8: Time Info (if exists) - Centered */}
-                    {event.orario && (
-                      <div className="px-4 py-2 text-center">
-                        <div className="text-sm text-gray-200">
-                          ⏰ {event.orario}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Row 9: View Event Button - Full Width */}
-                    {event.link && (
-                      <div className="p-4 pt-2">
-                        <a
-                          href={event.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full inline-flex items-center justify-center space-x-2 bg-industrial-green-600 hover:bg-industrial-green-700 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-200"
-                        >
-                          <span>🎫</span>
-                          <span>VIEW EVENT</span>
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Desktop Layout - Unchanged */}
-                  <div className="hidden md:block p-6">
-                    <div className="flex space-x-6">
-                      {/* Event Image */}
-                      <div className="w-40 h-32 bg-black bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden border border-white border-opacity-10">
-                        <EventImage
-                          src={event.immagine}
-                          alt={event.nome_evento}
-                          className="w-full h-full object-cover rounded-lg"
-                          placeholderClassName="w-full h-full rounded-lg"
-                        />
-                      </div>
-
-                      {/* Date Card */}
-                      <div className="bg-white bg-opacity-15 backdrop-blur-sm border border-white border-opacity-20 rounded-lg p-4 text-center min-w-[100px] h-fit">
-                        <div className="text-3xl font-bold text-gray-100 leading-none mb-1">
-                          {dateInfo.day}
-                        </div>
-                        <div className="text-sm font-medium text-gray-300 uppercase tracking-wide mb-1">
-                          {dateInfo.month}
-                        </div>
-                        <div className="text-xs text-gray-400 mb-2">
-                          {dateInfo.year}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          {dateInfo.time}
-                        </div>
-                      </div>
-                      
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        {/* Header with Source Badge */}
-                        <div className="flex items-start justify-between mb-4">
-                          <h3 className="text-2xl font-bold text-gray-100 leading-tight pr-4">
-                            {event.nome_evento}
-                          </h3>
-                          <span className={`inline-flex items-center px-3 py-1 rounded text-sm font-medium ${sourceBadge.bgColor} ${sourceBadge.textColor} border ${sourceBadge.borderColor} flex-shrink-0`}>
-                            <span className="mr-1">{sourceBadge.emoji}</span>
-                            {sourceBadge.label}
-                          </span>
-                        </div>
-
-                        {/* Description */}
-                        {event.descrizione && (
-                          <p className="text-gray-300 mb-4 leading-relaxed">
-                            {event.descrizione}
-                          </p>
-                        )}
-                        
-                        {/* City & Venue - Side by Side */}
-                        <div className="flex items-center space-x-8 mb-4">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-gray-400">📍</span>
-                            <div>
-                              <span className="text-xs text-gray-500 uppercase tracking-wide block">CITY</span>
-                              <span className="font-medium text-gray-100">{event.città}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-gray-400">🏢</span>
-                            <div>
-                              <span className="text-xs text-gray-500 uppercase tracking-wide block">VENUE</span>
-                              <span className="text-gray-200">{event.venue}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Bottom Row: Subgenre, Artists, Time, Link */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-6">
-                            {/* Subgenre Tag */}
-                            <span className={`px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wide ${subgenreColor}`}>
-                              {event.sottogenere}
-                            </span>
-
-                            {/* Artists */}
-                            {event.artisti && event.artisti.length > 0 && (
-                              <div className="flex items-center space-x-2 text-sm">
-                                <span className="text-gray-400">👥</span>
-                                <span className="text-gray-200">
-                                  {event.artisti.slice(0, 3).join(', ')}
-                                  {event.artisti.length > 3 ? '...' : ''}
-                                </span>
-                              </div>
-                            )}
-
-                            {/* Time Info */}
-                            {event.orario && (
-                              <div className="flex items-center space-x-2 text-sm">
-                                <span className="text-gray-400">⏰</span>
-                                <span className="text-gray-200">{event.orario}</span>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Event Link */}
-                          {event.link && (
-                            <a
-                              href={event.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center space-x-2 bg-industrial-green-600 hover:bg-industrial-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-                            >
-                              <span>🎫</span>
-                              <span>VIEW EVENT</span>
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            )}
           </div>
-        );
-      })}
 
-      {/* Load More Button - Full width on mobile */}
-      {hasMore && !isLoadingMore && (
-        <div className="text-center py-6 sm:py-8">
-          <button
-            onClick={loadMoreEvents}
-            className="w-full sm:w-auto inline-flex items-center justify-center space-x-3 bg-coal-800 hover:bg-coal-700 border-2 border-asphalt-600 hover:border-industrial-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 transition-all duration-200 font-condensed font-bold uppercase tracking-wide text-base sm:text-lg"
+          {/* Link */}
+          {event.link && (
+            <a
+              href={event.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex-shrink-0 p-2 text-gray-600 hover:text-neon-green transition-colors"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // --- COMPACT ROW ---
+  const CompactRow = ({ event }: { event: Event }) => {
+    const dateInfo = formatDate(event.data_ora);
+    const soon = isHappeningSoon(event.data_ora);
+
+    return (
+      <div
+        id={`event-${event.id}`}
+        onClick={() => navigate(`/event/${event.id}`)}
+        className={`cursor-pointer flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-coal-700/30 transition-all group ${
+          soon ? 'bg-neon-green/5 border-l-2 border-neon-green/40' : 'border-l-2 border-transparent'
+        }`}
+      >
+        <span className="text-xs text-gray-600 font-mono w-10 flex-shrink-0 text-right">
+          {dateInfo.day}/{dateInfo.month}
+        </span>
+        <span className="text-xs text-gray-600 w-10 flex-shrink-0">{dateInfo.time}</span>
+        <span className="text-sm text-gray-200 font-medium truncate flex-1 group-hover:text-neon-green transition-colors">
+          {event.nome_evento}
+        </span>
+        <span className="text-xs text-gray-500 truncate hidden sm:block max-w-[150px]">
+          {event.città}
+        </span>
+        <span className="text-[9px] text-gray-600 uppercase tracking-wider hidden md:block w-24 text-right truncate">
+          {event.sottogenere}
+        </span>
+        {event.link && (
+          <a
+            href={event.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="text-gray-700 hover:text-neon-green transition-colors flex-shrink-0"
           >
-            <ChevronDown className="h-5 w-5 sm:h-6 sm:w-6" />
-            <span>LOAD MORE EVENTS</span>
-            <span className="bg-industrial-green-600 text-white px-2 sm:px-3 py-1 text-sm font-bold rounded">
-              {Math.min(EVENTS_PER_PAGE, events.length - displayedEvents.length)}
-            </span>
-          </button>
-          <p className="text-gray-500 font-condensed text-sm uppercase tracking-wide mt-4">
-            SHOWING {displayedEvents.length} OF {events.length} EVENTS
-          </p>
-        </div>
-      )}
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        )}
+      </div>
+    );
+  };
 
-      {/* Loading More Indicator */}
-      {isLoadingMore && (
-        <div className="text-center py-6 sm:py-8">
-          <div className="flex items-center justify-center space-x-3 text-gray-400 mb-4">
-            <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
-            <span className="font-condensed font-bold uppercase tracking-wide text-base sm:text-lg">
-              LOADING MORE EVENTS...
-            </span>
-          </div>
-          <div className="w-24 sm:w-32 h-1 bg-industrial-green-600 mx-auto animate-pulse"></div>
-        </div>
-      )}
+  // --- Render ---
+  return (
+    <div>
+      {/* View toggle */}
+      <div className="flex justify-end mb-4">
+        <ViewToggle />
+      </div>
 
-      {/* End of Results */}
-      {!hasMore && displayedEvents.length > 0 && (
-        <div className="text-center py-6 sm:py-8">
-          <div className="flex items-center justify-center space-x-4 mb-4">
-            <div className="w-12 sm:w-16 h-1 bg-burgundy-600"></div>
-            <div className="text-gray-500 font-condensed font-bold uppercase tracking-wide text-base sm:text-lg">
-              🎸 ALL EVENTS LOADED 🎸
+      <div className="space-y-6">
+        {sortedMonthYears.map((monthYearKey) => {
+          const monthEvents = groupedEvents[monthYearKey];
+
+          return (
+            <div key={monthYearKey}>
+              <MonthSeparator monthYearKey={monthYearKey} />
+
+              {viewMode === 'grid' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                  {monthEvents.map((event) => <GridCard key={event.id} event={event} />)}
+                </div>
+              )}
+
+              {viewMode === 'list' && (
+                <div className="space-y-2">
+                  {monthEvents.map((event) => <ListCard key={event.id} event={event} />)}
+                </div>
+              )}
+
+              {viewMode === 'compact' && (
+                <div className="bg-coal-700/10 border border-asphalt-600/20 rounded-xl divide-y divide-asphalt-600/10 overflow-hidden">
+                  {monthEvents.map((event) => <CompactRow key={event.id} event={event} />)}
+                </div>
+              )}
             </div>
-            <div className="w-12 sm:w-16 h-1 bg-burgundy-600"></div>
+          );
+        })}
+
+        {/* Load More */}
+        {hasMore && !isLoadingMore && (
+          <div className="text-center py-6">
+            <button
+              onClick={loadMoreEvents}
+              className="inline-flex items-center gap-2 bg-coal-700/30 hover:bg-coal-600/30 border border-asphalt-600/30 hover:border-neon-green/20 text-gray-400 hover:text-white px-6 py-2.5 rounded-xl transition-all text-sm font-medium"
+            >
+              <ChevronDown className="h-4 w-4" />
+              Load more
+              <span className="text-xs text-gray-600">
+                ({displayedEvents.length}/{events.length})
+              </span>
+            </button>
           </div>
-          <p className="text-gray-500 font-condensed text-sm uppercase tracking-wide">
-            TOTAL: {events.length} EVENTS
-          </p>
-        </div>
-      )}
+        )}
+
+        {isLoadingMore && (
+          <div className="text-center py-6">
+            <Loader2 className="h-5 w-5 animate-spin text-neon-green mx-auto" />
+          </div>
+        )}
+
+        {!hasMore && displayedEvents.length > 0 && (
+          <div className="text-center py-6">
+            <span className="text-xs text-gray-600 uppercase tracking-wide">
+              All {events.length} events loaded
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
