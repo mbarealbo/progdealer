@@ -30,6 +30,9 @@ dist-ssr
 .env.test.local
 .env.production.local
 
+# Firecrawl scraper runtime artifact
+.firecrawl/last-run.json
+
 # Supabase
 .supabase
 
