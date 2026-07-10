@@ -194,7 +194,6 @@ function normalize(raw, source) {
       descrizione,
       artisti: artisti.length ? artisti : null,
       link,
-      url: link,
       immagine: null,
       fonte: hostOf(source.url),
       tipo_inserimento: 'scraped',
