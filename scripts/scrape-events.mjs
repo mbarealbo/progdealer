@@ -225,8 +225,14 @@ function classifySubgenre(eventName, description, artists) {
     'Avant-Prog': ['avant', 'experimental', 'henry cow', 'art rock'],
     'RIO (Rock in Opposition)': ['rio', 'henry cow', 'art bears', 'opposition'],
   };
+  // Match keywords as whole words/phrases (word boundaries) to avoid false
+  // substring hits — e.g. "german" inside "Germany" or "can" inside "American".
+  const matchesWord = (k) => {
+    const esc = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp('(^|[^a-z0-9])' + esc + '([^a-z0-9]|$)').test(text);
+  };
   for (const [subgenre, list] of Object.entries(keywords)) {
-    if (list.some(k => text.includes(k))) return subgenre;
+    if (list.some(matchesWord)) return subgenre;
   }
   return 'Progressive';
 }
