@@ -23,6 +23,7 @@
 import { writeFile, mkdir } from 'node:fs/promises';
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { geocode } from './lib/geocode.mjs';
 
 // Load .env for local runs (plain `node` doesn't read it like Vite does).
 // Real environment variables / CI secrets always take precedence.
@@ -251,10 +252,12 @@ async function upsertAll(events) {
       if (selErr) throw selErr;
 
       if (existing) {
-        // Refresh details but never override the moderation status of an existing row.
+        // Refresh details, but keep the existing status and coords (which may be
+        // venue-level from the Places picker) rather than downgrading them.
+        const { lat, lng, ...rest } = ev;
         const { error } = await sb
           .from('eventi_prog')
-          .update({ ...ev, updated_at: new Date().toISOString() })
+          .update({ ...rest, updated_at: new Date().toISOString() })
           .eq('id', existing.id);
         if (error) throw error;
         updated++;
@@ -312,6 +315,19 @@ async function main() {
   if (Object.keys(skipStats).length) {
     console.log('Skipped:', Object.entries(skipStats).map(([k, v]) => `${k}×${v}`).join(', '));
   }
+
+  // Attach city-level coordinates (venue-level precision comes from the Places
+  // picker on manual submissions). Cached per città to avoid duplicate lookups.
+  const geoCache = new Map();
+  let geoOk = 0;
+  for (const ev of events) {
+    if (!geoCache.has(ev.città)) geoCache.set(ev.città, await geocode(ev.città).catch(() => null));
+    const c = geoCache.get(ev.città);
+    ev.lat = c ? c.lat : null;
+    ev.lng = c ? c.lng : null;
+    if (c) geoOk++;
+  }
+  console.log(`Geocoded ${geoOk}/${events.length} events (city-level).`);
 
   if (DRY_RUN) {
     const out = '.firecrawl/last-run.json';
