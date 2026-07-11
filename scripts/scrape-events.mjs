@@ -62,10 +62,57 @@ const SOURCES = [
   { name: 'RoSfest (US)',                 url: 'https://rosfest.com/' },
   { name: 'ProgStock (US)',               url: 'https://www.progstock.com/' },
   { name: 'Cruise to the Edge',           url: 'https://cruisetotheedge.com/' },
-  // Artist tours (worldwide)
-  { name: 'Steve Hackett — official',     url: 'https://www.hackettsongs.com/' },
-  { name: 'Marillion — tour',             url: 'https://www.marillion.com/tour/' },
-  { name: 'Dream Theater — tour',         url: 'https://dreamtheater.net/' },
+  // Artist tour pages — major worldwide prog acts (official sites, agent-verified)
+  { name: 'Yes', url: 'https://yesworld.com/live/' },
+  { name: 'Genesis', url: 'https://genesis-music.com/' },
+  { name: 'Jethro Tull', url: 'https://jethrotull.com/tour-dates/' },
+  { name: 'Steve Hackett', url: 'https://www.hackettsongs.com/tour.html' },
+  { name: 'Gentle Giant', url: 'https://gentlegiantband.com/' },
+  { name: 'Camel', url: 'https://camelproductions.com/tourhtml/tourdates.html' },
+  { name: 'Gong', url: 'https://www.gongband.com/shows/' },
+  { name: 'Caravan', url: 'https://officialcaravan.co.uk/gigs/' },
+  { name: 'PFM', url: 'https://www.pfmworld.com/pfm/?page_id=61' },
+  { name: 'Banco del Mutuo Soccorso', url: 'https://www.bancodelmutuosoccorso.it/date/' },
+  { name: 'Le Orme', url: 'https://www.leormeofficial.com/concerti' },
+  { name: 'Magma', url: 'https://www.magmamusic.org/en/tour/' },
+  { name: 'Focus', url: 'https://focustheband.co.uk/live-dates' },
+  { name: 'Kansas', url: 'https://www.kansasband.com/tour-dates/' },
+  { name: 'Marillion', url: 'https://www.marillion.com/tour/' },
+  { name: 'IQ', url: 'https://www.iq-hq.co.uk/index.php/iq-live' },
+  { name: 'Pendragon', url: 'https://www.pendragon.mu/tour-dates-2026/' },
+  { name: 'Arena', url: 'https://www.arenaband.co.uk/' },
+  { name: 'Pallas', url: 'https://www.pallasofficial.com/' },
+  { name: 'Steven Wilson', url: 'https://stevenwilsonhq.com/tour-dates/' },
+  { name: 'Porcupine Tree', url: 'https://porcupinetree.com/tour-dates/' },
+  { name: 'The Pineapple Thief', url: 'https://www.pineapplethief.com/tour/' },
+  { name: 'Big Big Train', url: 'https://www.bigbigtrain.com/live/' },
+  { name: 'Anathema', url: 'https://www.anathemamusic.com/tour-dates/' },
+  { name: 'Riverside', url: 'https://riversideband.pl/en/gigs' },
+  { name: 'Leprous', url: 'https://leprous.net/tours/' },
+  { name: 'Opeth', url: 'https://www.opeth.com/tour-dates' },
+  { name: 'Haken', url: 'https://hakenmusic.com/tour/' },
+  { name: 'TesseracT', url: 'https://www.tesseractband.co.uk/tour-dates' },
+  { name: 'Dream Theater', url: 'https://dreamtheater.net/tour/' },
+  { name: 'Devin Townsend', url: 'https://hevydevy.com/tour-dates/' },
+  { name: 'Between the Buried and Me', url: 'https://www.betweentheburiedandme.com/tour-dates/' },
+  { name: "Caligula's Horse", url: 'https://www.caligulashorse.com/' },
+  { name: 'Plini', url: 'https://www.plini.co/pages/tour-dates' },
+  { name: 'Animals as Leaders', url: 'https://animalsasleaders.org/pages/tour' },
+  { name: 'Polyphia', url: 'https://polyphia.com/pages/tour' },
+  { name: 'The Dear Hunter', url: 'https://thedearhunter.com/tour/' },
+  { name: "Spock's Beard", url: 'https://www.spocksbeard.com/tour/' },
+  { name: 'Transatlantic', url: 'https://www.transatlanticweb.com/' },
+  { name: 'Neal Morse', url: 'https://nealmorse.com/tour-dates/' },
+  { name: 'The Flower Kings', url: 'https://www.roinestolt.com/roinestolt-tour' },
+  { name: 'Pain of Salvation', url: 'https://painofsalvation.com/tour-dates/' },
+  { name: 'Ayreon', url: 'https://www.arjenlucassen.com/live/' },
+  { name: 'Gazpacho', url: 'https://gazpachoworld.com/tour-dates/' },
+  { name: 'Fish', url: 'https://fishmusic.scot/' },
+  { name: 'Mostly Autumn', url: 'https://www.mostly-autumn.com/tour-dates' },
+  { name: 'Frost*', url: 'https://frost.life/live' },
+  { name: 'Wobbler', url: 'https://www.wobblerofficial.com/' },
+  { name: 'Sons of Apollo', url: 'https://sonsofapollo.com/' },
+  { name: 'Nightwish', url: 'https://www.nightwish.com/tour/upcoming' },
 ];
 
 // --- CLI / env ---------------------------------------------------------------
@@ -155,16 +202,13 @@ async function firecrawlExtract(url) {
 // Firecrawl search — so coverage isn't limited to a hand-picked list.
 const SEARCH_QUERIES = [
   'progressive rock concert tour 2026 tickets',
-  'prog metal tour dates 2026',
-  'progressive rock festival 2026 lineup',
-  'progressive rock concerts 2026 USA',
-  'prog rock tour 2026 South America Brazil',
-  'progressive metal tour 2026 Australia Japan',
-  'neo-prog symphonic prog live 2026 Europe',
-  'progressive rock gigs 2026 UK Canada',
+  'prog metal festival 2026 lineup USA Europe',
+  'progressive rock gigs 2026 South America Australia Japan',
+  'neo-prog symphonic prog live 2026',
 ];
-const JUNK_HOST = /facebook|instagram|twitter|x\.com|youtube|youtu\.be|spotify|wikipedia|reddit|tiktok|pinterest|last\.fm|discogs|apple\.com|amazon|\.pdf($|\?)/i;
-const MAX_DISCOVERED = 30;
+// Skip social, aggregators-of-setlists and databases (the latter hallucinate dates).
+const JUNK_HOST = /facebook|instagram|twitter|x\.com|youtube|youtu\.be|spotify|wikipedia|reddit|tiktok|pinterest|last\.fm|discogs|apple\.com|amazon|progarchives|rateyourmusic|allmusic|genius\.com|setlist\.fm|bandcamp|\.pdf($|\?)/i;
+const MAX_DISCOVERED = 12;
 
 async function firecrawlSearch(query, limit = 6) {
   try {
