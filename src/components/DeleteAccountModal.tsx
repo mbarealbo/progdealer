@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Trash2, X, AlertTriangle, Shield } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -11,9 +11,8 @@ interface DeleteAccountModalProps {
 
 export default function DeleteAccountModal({ 
   isOpen, 
-  onClose, 
-  onAccountDeleted, 
-  userEmail 
+  onClose,
+  userEmail
 }: DeleteAccountModalProps) {
   const [loading, setLoading] = useState(false);
   const [confirmationText, setConfirmationText] = useState('');

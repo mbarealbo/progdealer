@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Upload, X, Check, AlertTriangle, FileText } from 'lucide-react';
-import { importEvents, classifySubgenre } from '../lib/supabase';
+import { importEvents } from '../lib/supabase';
 import { ImportEvent } from '../types/event';
 import { shouldUsePlaceholder } from '../utils/imageUtils';
 
@@ -58,10 +58,7 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
       reader.onload = async (e) => {
         try {
           const jsonContent = e.target?.result as string;
-          
-          // Create a temporary file-like object for the Python script
-          const tempFileName = `temp_${Date.now()}.json`;
-          
+
           // Since we can't actually write files in the browser, we'll pass the JSON content
           // directly to a simulated Python script execution
           

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Users, Shield, User as UserIcon, Edit3, Check, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { UserProfile } from '../hooks/useUserRole';

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
 interface GoogleAuthProps {
@@ -33,7 +33,6 @@ export default function GoogleAuth({
   onSuccess, 
   onError, 
   className = "",
-  buttonText = "Continue with Google",
   showLogout = true
 }: GoogleAuthProps) {
   const googleButtonRef = useRef<HTMLDivElement>(null);

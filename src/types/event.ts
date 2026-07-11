@@ -10,6 +10,8 @@ export interface Event {
   orario?: string;
   link: string;
   immagine?: string;
+  lat?: number | null;
+  lng?: number | null;
   fonte: string;
   tipo_inserimento: 'scraped' | 'manual';
   event_id?: string;
@@ -39,6 +41,8 @@ export interface ImportEvent {
   orario?: string;
   link: string;
   immagine?: string;
+  lat?: number | null;
+  lng?: number | null;
   fonte: string;
   tipo_inserimento: 'scraped' | 'manual';
   event_id?: string;
