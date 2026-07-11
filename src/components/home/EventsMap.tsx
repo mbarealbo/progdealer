@@ -22,29 +22,21 @@ const OSM_STYLE: any = {
   layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
 };
 
-export default function EventsMap({ events }: { events: Event[] }) {
+export default function EventsMap({ events, onCity }: { events: Event[]; onCity?: (città: string) => void }) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const markers = useRef<maplibregl.Marker[]>([]);
+  const onCityRef = useRef(onCity);
+  onCityRef.current = onCity;
 
+  // Create the map once.
   useEffect(() => {
     if (!container.current || mapRef.current) return;
-
-    // group events by city (that we have coordinates for)
-    const groups = new Map<string, { lat: number; lng: number; count: number }>();
-    for (const e of events) {
-      const c = coordsForEvent(e);
-      if (!c) continue;
-      const key = e.città;
-      const g = groups.get(key);
-      if (g) g.count++;
-      else groups.set(key, { lat: c.lat, lng: c.lng, count: 1 });
-    }
-
     const map = new maplibregl.Map({
       container: container.current,
       style: OSM_STYLE,
-      center: [10, 48],
-      zoom: 3,
+      center: [8, 30],
+      zoom: 1.3,
       attributionControl: { compact: true },
     });
     mapRef.current = map;
@@ -53,27 +45,47 @@ export default function EventsMap({ events }: { events: Event[] }) {
       new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, showUserLocation: true }),
       'top-right'
     );
+    return () => { map.remove(); mapRef.current = null; };
+  }, []);
+
+  // Rebuild markers + re-fit bounds whenever the (filtered) events change.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    markers.current.forEach((m) => m.remove());
+    markers.current = [];
+
+    const groups = new Map<string, { lat: number; lng: number; count: number }>();
+    for (const e of events) {
+      const c = coordsForEvent(e);
+      if (!c) continue;
+      const g = groups.get(e.città);
+      if (g) g.count++;
+      else groups.set(e.città, { lat: c.lat, lng: c.lng, count: 1 });
+    }
 
     const bounds = new maplibregl.LngLatBounds();
-    for (const [city, g] of groups) {
+    for (const [città, g] of groups) {
       const el = document.createElement('button');
       el.className = 'pd-pin';
       el.type = 'button';
-      el.setAttribute('aria-label', `${city}: ${g.count} shows`);
+      el.setAttribute('aria-label', `${città}: ${g.count} shows`);
       if (g.count > 1) el.textContent = String(g.count);
+      el.addEventListener('click', () => onCityRef.current?.(città));
       const popup = new maplibregl.Popup({ offset: 14, closeButton: false }).setHTML(
-        `<strong>${city}</strong><br>${g.count} ${g.count === 1 ? 'show' : 'shows'}`
+        `<strong>${città}</strong><br>${g.count} ${g.count === 1 ? 'show' : 'shows'}`
       );
-      new maplibregl.Marker({ element: el }).setLngLat([g.lng, g.lat]).setPopup(popup).addTo(map);
+      const marker = new maplibregl.Marker({ element: el }).setLngLat([g.lng, g.lat]).setPopup(popup).addTo(map);
+      markers.current.push(marker);
       bounds.extend([g.lng, g.lat]);
     }
 
-    if (!bounds.isEmpty()) {
-      map.fitBounds(bounds, { padding: 56, maxZoom: 6, duration: 0 });
-    }
-
-    return () => { map.remove(); mapRef.current = null; };
+    const fit = () => {
+      if (bounds.isEmpty()) return;
+      map.fitBounds(bounds, { padding: 64, maxZoom: 9, duration: 600 });
+    };
+    if (map.loaded()) fit(); else map.once('load', fit);
   }, [events]);
 
-  return <div className="pd-map" ref={container} />;
+  return <div className="pd-map pd-map-hero" ref={container} />;
 }

@@ -152,5 +152,5 @@ export function classifySubgenre(eventName: string, description?: string, artist
     }
   }
 
-  return 'Progressive';
+  return 'Progressive Rock';
 }
