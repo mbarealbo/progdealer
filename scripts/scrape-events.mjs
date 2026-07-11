@@ -288,7 +288,7 @@ function classifySubgenre(eventName, description, artists) {
   for (const [subgenre, list] of Object.entries(keywords)) {
     if (list.some(matchesWord)) return subgenre;
   }
-  return 'Progressive';
+  return 'Progressive Rock';
 }
 
 // --- Supabase upsert (service role; same dedup key as upsert_evento) ---------
