@@ -38,5 +38,5 @@ jobs:
           FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          SCRAPED_STATUS: pending
+          SCRAPED_STATUS: approved
         run: node scripts/scrape-events.mjs ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}

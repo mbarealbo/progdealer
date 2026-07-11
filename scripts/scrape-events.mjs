@@ -44,16 +44,28 @@ if (existsSync('.env')) {
 // festival & artist pages capture a single line-up. Dead/404 URLs are skipped
 // gracefully, so a stale entry never breaks the run.
 const SOURCES = [
+  // Aggregators (multi-region) — Concertful area pages cover the world
   { name: 'Concertful — Europe',          url: 'https://concertful.com/area/europe/' },
-  { name: 'Concertful — North America',   url: 'https://concertful.com/area/united-states/' },
+  { name: 'Concertful — United States',   url: 'https://concertful.com/area/united-states/' },
+  { name: 'Concertful — Canada',          url: 'https://concertful.com/area/canada/' },
+  { name: 'Concertful — Australia',       url: 'https://concertful.com/area/australia/' },
+  { name: 'Concertful — South America',   url: 'https://concertful.com/area/south-america/' },
   { name: 'The Progressive Aspect',       url: 'https://www.theprogressiveaspect.net/' },
   { name: 'Progressive Rock Central',     url: 'https://progressiverockcentral.com/' },
   { name: 'Music Festival Wizard',        url: 'https://www.musicfestivalwizard.com/festivals/' },
+  // Europe festivals
   { name: 'Festival Crescendo',           url: 'https://www.festival-crescendo.com/' },
   { name: 'ProgPower Europe',             url: 'https://www.progpowereurope.com/' },
   { name: 'Midsummer Prog',               url: 'https://midsummerprog.com/' },
+  // North America festivals
+  { name: 'ProgPower USA',                url: 'https://www.progpowerusa.com/' },
+  { name: 'RoSfest (US)',                 url: 'https://rosfest.com/' },
+  { name: 'ProgStock (US)',               url: 'https://www.progstock.com/' },
+  { name: 'Cruise to the Edge',           url: 'https://cruisetotheedge.com/' },
+  // Artist tours (worldwide)
   { name: 'Steve Hackett — official',     url: 'https://www.hackettsongs.com/' },
   { name: 'Marillion — tour',             url: 'https://www.marillion.com/tour/' },
+  { name: 'Dream Theater — tour',         url: 'https://dreamtheater.net/' },
 ];
 
 // --- CLI / env ---------------------------------------------------------------
@@ -63,7 +75,7 @@ const LIMIT = Number((args.find(a => a.startsWith('--limit=')) || '').split('=')
 const STATUS =
   (args.find(a => a.startsWith('--status=')) || '').split('=')[1] ||
   process.env.SCRAPED_STATUS ||
-  'pending';
+  'approved'; // scraped events come from curated sources → auto-approve (dedup guards dupes)
 
 const FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY;
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -136,6 +148,47 @@ async function firecrawlExtract(url) {
   const status = body?.data?.metadata?.statusCode;
   if (status && status >= 400) throw new Error(`source returned HTTP ${status}`);
   return body?.data?.json?.events || [];
+}
+
+// --- Web discovery -----------------------------------------------------------
+// Beyond the fixed SOURCES, find prog event pages across the whole web via
+// Firecrawl search — so coverage isn't limited to a hand-picked list.
+const SEARCH_QUERIES = [
+  'progressive rock concert tour 2026 tickets',
+  'prog metal tour dates 2026',
+  'progressive rock festival 2026 lineup',
+  'progressive rock concerts 2026 USA',
+  'prog rock tour 2026 South America Brazil',
+  'progressive metal tour 2026 Australia Japan',
+  'neo-prog symphonic prog live 2026 Europe',
+  'progressive rock gigs 2026 UK Canada',
+];
+const JUNK_HOST = /facebook|instagram|twitter|x\.com|youtube|youtu\.be|spotify|wikipedia|reddit|tiktok|pinterest|last\.fm|discogs|apple\.com|amazon|\.pdf($|\?)/i;
+const MAX_DISCOVERED = 30;
+
+async function firecrawlSearch(query, limit = 6) {
+  try {
+    const res = await fetch('https://api.firecrawl.dev/v1/search', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, limit }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || !body?.success) return [];
+    return (body.data || []).map((r) => r.url).filter(Boolean);
+  } catch { return []; }
+}
+
+async function discoverSources(knownUrls) {
+  const found = new Set();
+  for (const q of SEARCH_QUERIES) {
+    for (const url of await firecrawlSearch(q)) {
+      const clean = url.split('#')[0];
+      if (JUNK_HOST.test(clean) || knownUrls.has(clean)) continue;
+      found.add(clean);
+    }
+  }
+  return [...found].slice(0, MAX_DISCOVERED).map((url) => ({ name: `web:${hostOf(url)}`, url }));
 }
 
 // --- Normalization -----------------------------------------------------------
@@ -239,50 +292,60 @@ function classifySubgenre(eventName, description, artists) {
 }
 
 // --- Supabase upsert (service role; same dedup key as upsert_evento) ---------
+// Fuzzy dedup key: same headliner + same day + same city = the same concert,
+// regardless of venue spelling or source — catches cross-source duplicates that
+// an exact (nome+data+venue) match misses.
+function dedupKey(nome, data_ora, città) {
+  const artist = String(nome || '').split(/\s[-–—]\s/)[0].trim().toLowerCase().replace(/\s+/g, ' ');
+  const day = String(data_ora || '').slice(0, 10);
+  const city = String(città || '').split(',')[0].trim().toLowerCase().replace(/\s+/g, ' ');
+  return `${artist}|${day}|${city}`;
+}
+
 async function upsertAll(events) {
   const { createClient } = await import('@supabase/supabase-js');
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  let inserted = 0, updated = 0, errors = 0;
-  for (const ev of events) {
-    try {
-      const { data: existing, error: selErr } = await sb
-        .from('eventi_prog')
-        .select('id')
-        .eq('nome_evento', ev.nome_evento)
-        .eq('data_ora', ev.data_ora)
-        .eq('venue', ev.venue)
-        .maybeSingle();
-      if (selErr) throw selErr;
+  // Load every existing event's dedup key so we never insert a duplicate concert
+  // (any source, any status). Auto-approved events must not create visible dupes.
+  const { data: existing, error: exErr } = await sb
+    .from('eventi_prog')
+    .select('nome_evento, data_ora, città')
+    .limit(10000);
+  if (exErr) { console.error('  ✖ could not load existing events:', exErr.message); return { inserted: 0, skipped: 0, errors: 1 }; }
+  const seen = new Set((existing || []).map((e) => dedupKey(e.nome_evento, e.data_ora, e['città'])));
 
-      if (existing) {
-        // Refresh details, but keep the existing status and coords (which may be
-        // venue-level from the Places picker) rather than downgrading them.
-        const { lat, lng, ...rest } = ev;
-        const { error } = await sb
-          .from('eventi_prog')
-          .update({ ...rest, updated_at: new Date().toISOString() })
-          .eq('id', existing.id);
-        if (error) throw error;
-        updated++;
-      } else {
-        const { error } = await sb.from('eventi_prog').insert({ ...ev, status: STATUS });
-        if (error) throw error;
-        inserted++;
-      }
+  let inserted = 0, skipped = 0, errors = 0;
+  for (const ev of events) {
+    const key = dedupKey(ev.nome_evento, ev.data_ora, ev.città);
+    if (seen.has(key)) { skipped++; continue; } // already have this concert
+    try {
+      const { error } = await sb.from('eventi_prog').insert({ ...ev, status: STATUS });
+      if (error) throw error;
+      seen.add(key);
+      inserted++;
     } catch (err) {
       errors++;
-      console.error(`  ✖ upsert "${ev.nome_evento}": ${err.message || err}`);
+      console.error(`  ✖ insert "${ev.nome_evento}": ${err.message || err}`);
     }
   }
-  return { inserted, updated, errors };
+  return { inserted, skipped, errors };
 }
 
 // --- Main --------------------------------------------------------------------
 async function main() {
-  const sources = LIMIT > 0 ? SOURCES.slice(0, LIMIT) : SOURCES;
+  let sources = [...SOURCES];
+  // Discover more prog event pages across the web (skip with --no-search or --limit).
+  if (!args.includes('--no-search') && !LIMIT) {
+    process.stdout.write('🔎 web discovery (Firecrawl search)… ');
+    const discovered = await discoverSources(new Set(SOURCES.map((s) => s.url)));
+    console.log(`+${discovered.length} sources`);
+    sources = [...SOURCES, ...discovered];
+  }
+  if (LIMIT > 0) sources = sources.slice(0, LIMIT);
+
   console.log(
     `▶ ProgDealer event refresh — ${sources.length} sources · ` +
     `${DRY_RUN ? 'DRY RUN' : `writing (status=${STATUS})`}\n`,
@@ -344,8 +407,8 @@ async function main() {
   }
 
   if (!events.length) { console.log('\nNothing to write.'); return; }
-  const { inserted, updated, errors } = await upsertAll(events);
-  console.log(`\n✓ Done — inserted ${inserted}, updated ${updated}, errors ${errors} (new rows status=${STATUS}).`);
+  const { inserted, skipped, errors } = await upsertAll(events);
+  console.log(`\n✓ Done — inserted ${inserted}, skipped ${skipped} (duplicates), errors ${errors} (new rows status=${STATUS}).`);
   if (errors) process.exitCode = 1;
 }
 

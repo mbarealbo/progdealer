@@ -71,6 +71,23 @@ export default function AdminPanel({ isAuthenticated, currentUser, userProfile, 
     }
   };
 
+  const approveAllPending = async () => {
+    const pending = events.filter((e) => (e.status || 'approved') === 'pending');
+    if (!pending.length) return;
+    if (!confirm(`Approve all ${pending.length} pending show${pending.length === 1 ? '' : 's'}? They'll go live immediately.`)) return;
+    try {
+      const { error } = await supabase
+        .from('eventi_prog')
+        .update({ status: 'approved', updated_at: new Date().toISOString() })
+        .eq('status', 'pending');
+      if (error) throw error;
+      setEvents((prev) => prev.map((e) => ((e.status || 'approved') === 'pending' ? { ...e, status: 'approved' } : e)));
+      window.dispatchEvent(new CustomEvent('eventApproved'));
+    } catch (err) {
+      console.error('Error approving all pending events:', err);
+    }
+  };
+
   const deleteEvent = async (eventId: string) => {
     if (!confirm('Delete this show? This cannot be undone.')) return;
     try {
@@ -157,6 +174,9 @@ export default function AdminPanel({ isAuthenticated, currentUser, userProfile, 
             ))}
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {count('pending') > 0 && (
+              <button className="btn-ok" onClick={approveAllPending}><Check size={15} /> Approve all · {count('pending')}</button>
+            )}
             <button className={`btn-mini ${showUserManagement ? 'active' : ''}`} onClick={() => setShowUserManagement((v) => !v)}><Users size={15} /> Users</button>
             <button className="btn-mini" onClick={() => setShowImportModal(true)}><Upload size={15} /> Import</button>
             <button className="btn-mini" onClick={exportEvents}><Download size={15} /> Export</button>
