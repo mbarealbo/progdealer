@@ -8,11 +8,13 @@
     "build": "tsc && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "scrape:events": "node scripts/scrape-events.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
     "lucide-react": "^0.344.0",
+    "maplibre-gl": "^5.24.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.6.3"
