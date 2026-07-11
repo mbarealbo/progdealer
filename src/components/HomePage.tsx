@@ -1,22 +1,21 @@
 import { useEffect, useMemo, useState, lazy, Suspense } from 'react';
-import { RefreshCw, User as UserIcon, LogOut, Plus, Home as HomeIcon, Search as SearchIcon, Shield } from 'lucide-react';
+import {
+  RefreshCw, User as UserIcon, LogOut, Plus, Home as HomeIcon, Search as SearchIcon,
+  Shield, LayoutGrid, List, AlignJustify, X, MapPin,
+} from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
 import { useUserRole } from '../hooks/useUserRole';
-import { getEventCountry, countryFlag } from '../utils/geo';
+import { getEventCountry, getContinent, CONTINENT_LIST, countryFlag } from '../utils/geo';
 import Logo from './brand/Logo';
-import Waveform from './home/Waveform';
 import SmartSearch from './SmartSearch';
 import NearYou from './home/NearYou';
-import EventCard, { isSoon } from './home/EventCard';
+import EventCard, { CardView } from './home/EventCard';
 
-// Lazy-loaded so MapLibre (~320 kB gzip) stays out of the initial bundle.
 const EventsMap = lazy(() => import('./home/EventsMap'));
 import AddEventForm from './AddEventForm';
 import AuthRequiredModal from './AuthRequiredModal';
-
-type Filter = 'all' | 'week' | string;
 
 export default function HomePage() {
   const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
@@ -24,25 +23,27 @@ export default function HomePage() {
   const { isAdmin } = useUserRole(currentUser);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Filters
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<Filter>('all');
+  const [continent, setContinent] = useState<string | null>(null);
+  const [country, setCountry] = useState<string | null>(null);
+  const [city, setCity] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [genre, setGenre] = useState('');
+  const [view, setView] = useState<CardView>('grid');
+
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [showAuthRequired, setShowAuthRequired] = useState(false);
 
   const fetchEvents = async () => {
     try {
-      const { data, error } = await supabase
-        .from('eventi_prog')
-        .select('*')
-        .order('data_ora', { ascending: true });
+      const { data, error } = await supabase.from('eventi_prog').select('*').order('data_ora', { ascending: true });
       if (error) throw error;
-
       const startOfToday = new Date();
       startOfToday.setHours(0, 0, 0, 0);
-      const upcoming = (data || []).filter(
-        (e: Event) => (e.status || 'approved') === 'approved' && new Date(e.data_ora) >= startOfToday
-      );
-      setEvents(upcoming);
+      setEvents((data || []).filter((e: Event) => (e.status || 'approved') === 'approved' && new Date(e.data_ora) >= startOfToday));
     } catch (err) {
       console.error('Error fetching events:', err);
     } finally {
@@ -56,8 +57,6 @@ export default function HomePage() {
     setCurrentUser(session?.user ?? null);
   };
 
-  // The shared <body> is dark (legacy theme). Paint it paper while the light
-  // home is mounted so overscroll doesn't flash dark; restore on unmount.
   useEffect(() => {
     const prev = document.body.style.backgroundColor;
     document.body.style.backgroundColor = '#F5F4F2';
@@ -73,64 +72,54 @@ export default function HomePage() {
       setIsAuthenticated(!!session);
       setCurrentUser(session?.user ?? null);
     });
-    return () => {
-      window.removeEventListener('eventApproved', onApproved);
-      subscription.unsubscribe();
-    };
+    return () => { window.removeEventListener('eventApproved', onApproved); subscription.unsubscribe(); };
   }, []);
 
-  const topSubgenres = useMemo(() => {
-    const counts = new Map<string, number>();
+  // Countries present (optionally scoped to the selected continent), with counts.
+  const countries = useMemo(() => {
+    const m = new Map<string, number>();
     for (const e of events) {
-      const s = e.sottogenere?.trim();
-      if (s) counts.set(s, (counts.get(s) || 0) + 1);
+      const co = getEventCountry(e.città);
+      if (co === 'Other') continue;
+      if (continent && getContinent(co) !== continent) continue;
+      m.set(co, (m.get(co) || 0) + 1);
     }
-    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([s]) => s);
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  }, [events, continent]);
+
+  const genres = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const e of events) { const g = e.sottogenere?.trim(); if (g) m.set(g, (m.get(g) || 0) + 1); }
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
   }, [events]);
 
-  const filteredEvents = useMemo(() => {
+  const filtered = useMemo(() => {
     let out = events;
+    if (continent) out = out.filter((e) => getContinent(getEventCountry(e.città)) === continent);
+    if (country) out = out.filter((e) => getEventCountry(e.città) === country);
+    if (city.trim()) { const v = city.toLowerCase().trim(); out = out.filter((e) => e.città.toLowerCase().includes(v)); }
+    if (dateFrom) out = out.filter((e) => e.data_ora.slice(0, 10) >= dateFrom);
+    if (dateTo) out = out.filter((e) => e.data_ora.slice(0, 10) <= dateTo);
+    if (genre) out = out.filter((e) => e.sottogenere === genre);
     const q = searchQuery.toLowerCase().trim();
-    if (q) {
-      if (q.startsWith('venue:')) {
-        const v = q.slice(6).trim();
-        out = out.filter((e) => e.venue.toLowerCase().includes(v));
-      } else if (q.startsWith('city:')) {
-        const v = q.slice(5).trim();
-        out = out.filter((e) => e.città.toLowerCase().includes(v));
-      } else if (q.startsWith('artist:')) {
-        const v = q.slice(7).trim();
-        out = out.filter((e) => e.artisti?.some((a) => a.toLowerCase().includes(v)));
-      } else {
-        out = out.filter((e) =>
-          [e.nome_evento, e.venue, e.città, e.descrizione || '', e.sottogenere, ...(e.artisti || [])]
-            .some((f) => f.toLowerCase().includes(q))
-        );
-      }
-    }
-    if (activeFilter === 'week') out = out.filter((e) => isSoon(e.data_ora));
-    else if (activeFilter !== 'all') out = out.filter((e) => e.sottogenere === activeFilter);
+    if (q) out = out.filter((e) =>
+      [e.nome_evento, e.venue, e.città, e.sottogenere, ...(e.artisti || [])].some((f) => (f || '').toLowerCase().includes(q)));
     return out;
-  }, [events, searchQuery, activeFilter]);
+  }, [events, continent, country, city, dateFrom, dateTo, genre, searchQuery]);
 
-  const countryStats = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const e of events) {
-      const c = getEventCountry(e.città);
-      if (c !== 'Other') counts.set(c, (counts.get(c) || 0) + 1);
-    }
-    const arr = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
-    const max = arr.length ? arr[0][1] : 1;
-    return { arr, max };
-  }, [events]);
+  const scope = country || continent || 'Worldwide';
+  const hasFilters = !!(continent || country || city || dateFrom || dateTo || genre || searchQuery);
+  const clearAll = () => {
+    setContinent(null); setCountry(null); setCity(''); setDateFrom(''); setDateTo(''); setGenre(''); setSearchQuery('');
+  };
 
   const handleSelectEvent = (e: Event) => { window.location.href = `/event/${e.id}`; };
   const handleRefresh = () => { setLoading(true); fetchEvents(); };
   const handleLogout = async () => { await supabase.auth.signOut(); setIsAuthenticated(false); setCurrentUser(null); };
-  const requestAddEvent = () => {
-    if (!isAuthenticated) setShowAuthRequired(true);
-    else setShowAddEvent(true);
-  };
+  const requestAddEvent = () => { if (!isAuthenticated) setShowAuthRequired(true); else setShowAddEvent(true); };
+  const gotoShows = () => document.getElementById('shows')?.scrollIntoView({ behavior: 'smooth' });
+
+  const gridClass = view === 'grid' ? 'grid' : view === 'list' ? 'list' : 'compact';
 
   return (
     <div className="pd">
@@ -140,20 +129,13 @@ export default function HomePage() {
           <button className="brand" onClick={() => (window.location.href = '/')} aria-label="ProgDealer home">
             <Logo height={28} />
           </button>
-
           <SmartSearch variant="bar" value={searchQuery} onChange={setSearchQuery} events={events} placeholder="Search a band, venue or city…" />
-
           <nav className="topnav">
-            <button className="loc-pill" type="button" title="Location detection arrives with the geo update">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#E1341E" strokeWidth="2.2">
-                <path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z" />
-                <circle cx="12" cy="10" r="2.4" />
-              </svg>
-              <span><b>Worldwide</b></span>
+            <button className="loc-pill" type="button" onClick={() => document.getElementById('map')?.scrollIntoView({ behavior: 'smooth' })} title="Filter by location on the map">
+              <MapPin size={15} stroke="#E1341E" />
+              <span><b>{scope}</b></span>
             </button>
-            <button className="icon-btn hide-mob" onClick={handleRefresh} title="Refresh events" aria-label="Refresh">
-              <RefreshCw size={16} />
-            </button>
+            <button className="icon-btn hide-mob" onClick={handleRefresh} title="Refresh events" aria-label="Refresh"><RefreshCw size={16} /></button>
             {isAuthenticated ? (
               <>
                 <a className="icon-btn hide-mob" href="/userarea" title="Your area" aria-label="Your area"><UserIcon size={16} /></a>
@@ -162,138 +144,104 @@ export default function HomePage() {
             ) : (
               <a className="btn btn-ghost hide-mob" href="/login">Sign in</a>
             )}
-            <button className="btn btn-accent" onClick={requestAddEvent}>
-              <Plus size={16} /> Add a show
-            </button>
+            <button className="btn btn-accent" onClick={requestAddEvent}><Plus size={16} /> Add a show</button>
           </nav>
         </div>
       </header>
 
-      {/* ---------- Hero ---------- */}
-      <section className="hero">
+      {/* ---------- HERO: the map ---------- */}
+      <section className="hero-map" id="map">
         <div className="wrap">
-          <div className="eyebrow">Live progressive music · worldwide</div>
-          <h1>For the songs too long <em>for the radio.</em></h1>
-          <p className="hero-sub">
-            ProgDealer tracks progressive rock, metal and post-rock shows across the globe —
-            then surfaces the ones happening near you, before they sell out.
-          </p>
-
-          <div className="hero-search">
-            <SmartSearch variant="hero" value={searchQuery} onChange={setSearchQuery} events={events} placeholder="Try &ldquo;Steven Wilson&rdquo;, &ldquo;Alcatraz&rdquo;, or a city…" />
-            <button className="btn btn-solid" onClick={() => document.getElementById('shows')?.scrollIntoView({ behavior: 'smooth' })}>
-              Find shows
-            </button>
-          </div>
-
-          <div className="hero-meta">
-            <span className="live">● {events.length} upcoming</span>
-            <span className="dot" />
-            <span>across <b className="num">{countryStats.arr.length}</b> countries</span>
-            <span className="dot" />
-            <span>Catalog refreshed every <b>15 days</b></span>
-          </div>
-        </div>
-        <Waveform className="hero-wave" />
-      </section>
-
-      {/* ---------- Near you ---------- */}
-      {!loading && events.length > 0 && (
-        <NearYou events={events} onSelect={handleSelectEvent} />
-      )}
-
-      {/* ---------- Map ---------- */}
-      {!loading && events.length > 0 && (
-        <section className="block" id="map">
-          <div className="wrap">
-            <div className="head">
-              <div>
-                <div className="eyebrow">Every show on the map</div>
-                <h2>Shows worldwide</h2>
-                <p>Hit the locate button to center on you. Numbered markers show how many shows are in each city.</p>
-              </div>
+          <div className="hm-head">
+            <div>
+              <div className="eyebrow">Live progressive music · worldwide</div>
+              <h1>Every prog show, on the map.</h1>
             </div>
-            <Suspense fallback={<div className="pd-map" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span className="label">Loading map…</span></div>}>
-              <EventsMap events={events} />
-            </Suspense>
+            <div className="hm-meta">
+              <span className="live">● {filtered.length} {filtered.length === 1 ? 'show' : 'shows'}</span>
+              <span className="dot" />
+              <span>in <b>{scope}</b></span>
+            </div>
           </div>
-        </section>
-      )}
+
+          {/* Location filter — drives both the map and the list */}
+          <div className="locbar">
+            <button className={`lc ${!continent && !country ? 'on' : ''}`} onClick={() => { setContinent(null); setCountry(null); }}>🌍 Worldwide</button>
+            {CONTINENT_LIST.map((c) => (
+              <button key={c} className={`lc ${continent === c ? 'on' : ''}`} onClick={() => { setContinent(continent === c ? null : c); setCountry(null); }}>{c}</button>
+            ))}
+          </div>
+          {countries.length > 0 && (
+            <div className="ctybar">
+              {countries.map(([co, n]) => (
+                <button key={co} className={`cty ${country === co ? 'on' : ''}`} onClick={() => setCountry(country === co ? null : co)}>
+                  {countryFlag(co)} {co} <i>{n}</i>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <Suspense fallback={<div className="pd-map pd-map-hero" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span className="label">Loading map…</span></div>}>
+            {!loading && events.length > 0
+              ? <EventsMap events={filtered} onCity={(c) => { setCity(c); gotoShows(); }} />
+              : <div className="pd-map pd-map-hero" />}
+          </Suspense>
+        </div>
+      </section>
 
       {/* ---------- Shows ---------- */}
       <section className="block" id="shows">
         <div className="wrap">
-          <div className="head">
-            <div>
-              <div className="eyebrow">{filteredEvents.length} shows</div>
-              <h2>Upcoming shows</h2>
+          <div className="shows-bar">
+            <div className="sb-title"><h2>Upcoming shows</h2><span className="num">{filtered.length}</span></div>
+            <div className="sb-controls">
+              <label className="ctl"><MapPin size={14} /><input type="text" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} /></label>
+              <label className="ctl"><span>From</span><input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} /></label>
+              <label className="ctl"><span>To</span><input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} /></label>
+              <select className="ctl-sel" value={genre} onChange={(e) => setGenre(e.target.value)}>
+                <option value="">All genres</option>
+                {genres.map(([g, n]) => <option key={g} value={g}>{g} ({n})</option>)}
+              </select>
+              {hasFilters && <button className="ctl-clear" onClick={clearAll}><X size={14} /> Clear</button>}
+              <div className="viewtoggle" role="group" aria-label="View">
+                <button className={view === 'grid' ? 'on' : ''} onClick={() => setView('grid')} title="Grid" aria-label="Grid view"><LayoutGrid size={16} /></button>
+                <button className={view === 'list' ? 'on' : ''} onClick={() => setView('list')} title="List" aria-label="List view"><List size={16} /></button>
+                <button className={view === 'compact' ? 'on' : ''} onClick={() => setView('compact')} title="Compact" aria-label="Compact view"><AlignJustify size={16} /></button>
+              </div>
             </div>
-          </div>
-
-          <div className="filters">
-            <button className={`chip ${activeFilter === 'all' ? 'on' : ''}`} onClick={() => setActiveFilter('all')}>All shows</button>
-            <button className={`chip ${activeFilter === 'week' ? 'on' : ''}`} onClick={() => setActiveFilter('week')}>This week</button>
-            {topSubgenres.map((s) => (
-              <button key={s} className={`chip ${activeFilter === s ? 'on' : ''}`} onClick={() => setActiveFilter(s)}>{s}</button>
-            ))}
           </div>
 
           {loading ? (
             <div className="skgrid">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="sk" />)}</div>
-          ) : filteredEvents.length === 0 ? (
+          ) : filtered.length === 0 ? (
             <div className="empty">
-              <h3>No shows match your search</h3>
-              <p>Try a different band, city or subgenre — or clear the filters.</p>
+              <h3>No shows match your filters</h3>
+              <p>Try a wider location, a different date range or genre — or clear the filters.</p>
+              {hasFilters && <button className="btn btn-ghost" onClick={clearAll} style={{ marginTop: 12 }}>Clear filters</button>}
             </div>
           ) : (
-            <div className="grid">
-              {filteredEvents.map((e) => <EventCard key={e.id} event={e} onSelect={handleSelectEvent} />)}
+            <div className={gridClass}>
+              {filtered.map((e) => <EventCard key={e.id} event={e} onSelect={handleSelectEvent} view={view} />)}
             </div>
           )}
         </div>
       </section>
 
-      {/* ---------- Country browse ---------- */}
-      {countryStats.arr.length > 0 && (
-        <section className="block">
-          <div className="wrap">
-            <div className="head">
-              <div>
-                <div className="eyebrow">One catalog · going worldwide</div>
-                <h2>Browse by country</h2>
-              </div>
-            </div>
-            <div className="regions">
-              {countryStats.arr.map(([country, count]) => (
-                <button key={country} className="region" onClick={() => { setSearchQuery(''); setActiveFilter('all'); }}>
-                  <span className="rn">{countryFlag(country)} {country}</span>
-                  <span className="rc num">{count} {count === 1 ? 'show' : 'shows'}</span>
-                  <span className="bar"><i style={{ width: `${Math.max(8, (count / countryStats.max) * 100)}%` }} /></span>
-                </button>
-              ))}
-            </div>
-            <div className="beta">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B4260F" strokeWidth="2" style={{ flex: '0 0 auto', marginTop: 1 }}>
-                <path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z" /><circle cx="12" cy="10" r="2.4" />
-              </svg>
-              <span>Location-aware “near you” with distances and an interactive map arrive with the geo update — every venue gets real coordinates.</span>
-            </div>
-          </div>
-        </section>
-      )}
+      {/* ---------- Near you ---------- */}
+      {!loading && events.length > 0 && <NearYou events={events} onSelect={handleSelectEvent} />}
 
       {/* ---------- Footer ---------- */}
       <footer className="foot">
         <div className="wrap foot-top">
           <div className="foot-brand">
             <Logo height={28} />
-            <span className="foot-fresh"><span className="pulse" /> Catalog refreshed 4 days ago · next in 11 days</span>
+            <span className="foot-fresh"><span className="pulse" /> Catalog refreshed automatically every 15 days</span>
           </div>
           <div className="foot-cols">
             <div>
               <span className="label">Discover</span>
-              <button onClick={() => setActiveFilter('week')}>This week</button>
-              <button onClick={() => document.getElementById('shows')?.scrollIntoView({ behavior: 'smooth' })}>All shows</button>
+              <button onClick={gotoShows}>All shows</button>
+              <button onClick={() => document.getElementById('map')?.scrollIntoView({ behavior: 'smooth' })}>Map</button>
             </div>
             <div>
               <span className="label">Contribute</span>
@@ -318,19 +266,13 @@ export default function HomePage() {
       {/* ---------- Mobile bottom nav ---------- */}
       <nav className="bnav">
         <a href="/"><HomeIcon size={19} /><span>Home</span></a>
-        <button onClick={() => document.getElementById('shows')?.scrollIntoView({ behavior: 'smooth' })}><SearchIcon size={19} /><span>Browse</span></button>
+        <button onClick={gotoShows}><SearchIcon size={19} /><span>Browse</span></button>
         <button className="fab" onClick={requestAddEvent} aria-label="Add a show"><Plus size={22} /></button>
         <a href={isAuthenticated ? '/userarea' : '/login'}><UserIcon size={19} /><span>Profile</span></a>
       </nav>
 
       {/* ---------- Modals ---------- */}
-      <AddEventForm
-        isOpen={showAddEvent}
-        onClose={() => setShowAddEvent(false)}
-        onEventAdded={fetchEvents}
-        onAuthRequired={() => setShowAuthRequired(true)}
-        isAuthenticated={isAuthenticated}
-      />
+      <AddEventForm isOpen={showAddEvent} onClose={() => setShowAddEvent(false)} onEventAdded={fetchEvents} onAuthRequired={() => setShowAuthRequired(true)} isAuthenticated={isAuthenticated} />
       <AuthRequiredModal isOpen={showAuthRequired} onClose={() => setShowAuthRequired(false)} />
     </div>
   );

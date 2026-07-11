@@ -31,17 +31,56 @@ const FLAGS: Record<string, string> = {
   'United Kingdom': '🇬🇧', France: '🇫🇷', Germany: '🇩🇪', Italy: '🇮🇹', Spain: '🇪🇸',
   Netherlands: '🇳🇱', Belgium: '🇧🇪', Switzerland: '🇨🇭', Austria: '🇦🇹', 'Czech Republic': '🇨🇿',
   Poland: '🇵🇱', Sweden: '🇸🇪', Denmark: '🇩🇰', Norway: '🇳🇴', Finland: '🇫🇮', Ireland: '🇮🇪',
-  Portugal: '🇵🇹', 'United States': '🇺🇸', Canada: '🇨🇦', Japan: '🇯🇵', Australia: '🇦🇺',
-  Brazil: '🇧🇷', Mexico: '🇲🇽', Other: '🌍',
+  Portugal: '🇵🇹', Greece: '🇬🇷', Hungary: '🇭🇺', Romania: '🇷🇴', Bulgaria: '🇧🇬', Estonia: '🇪🇪',
+  Slovenia: '🇸🇮', Croatia: '🇭🇷', Serbia: '🇷🇸', Turkey: '🇹🇷', Luxembourg: '🇱🇺', Iceland: '🇮🇸',
+  'United States': '🇺🇸', Canada: '🇨🇦', Mexico: '🇲🇽', Japan: '🇯🇵', Australia: '🇦🇺',
+  'New Zealand': '🇳🇿', Brazil: '🇧🇷', Argentina: '🇦🇷', Chile: '🇨🇱', Other: '🌍',
 };
 
-export function getEventCountry(city: string): string {
-  const c = (city || '').toLowerCase();
+// Country → continent, for the location filter.
+const CONTINENTS: Record<string, string> = {
+  'United Kingdom': 'Europe', France: 'Europe', Germany: 'Europe', Italy: 'Europe', Spain: 'Europe',
+  Netherlands: 'Europe', Belgium: 'Europe', Switzerland: 'Europe', Austria: 'Europe', 'Czech Republic': 'Europe',
+  Poland: 'Europe', Sweden: 'Europe', Denmark: 'Europe', Norway: 'Europe', Finland: 'Europe', Ireland: 'Europe',
+  Portugal: 'Europe', Greece: 'Europe', Hungary: 'Europe', Romania: 'Europe', Bulgaria: 'Europe', Estonia: 'Europe',
+  Slovenia: 'Europe', Croatia: 'Europe', Serbia: 'Europe', Turkey: 'Europe', Luxembourg: 'Europe', Iceland: 'Europe',
+  'United States': 'North America', Canada: 'North America', Mexico: 'North America',
+  Brazil: 'South America', Argentina: 'South America', Chile: 'South America',
+  Japan: 'Asia', Australia: 'Oceania', 'New Zealand': 'Oceania',
+};
+
+// Normalize the country token that may appear after the comma in a `città`.
+const COUNTRY_ALIAS: Record<string, string> = {
+  uk: 'United Kingdom', 'u.k.': 'United Kingdom', england: 'United Kingdom', scotland: 'United Kingdom',
+  wales: 'United Kingdom', 'great britain': 'United Kingdom', 'united kingdom': 'United Kingdom',
+  usa: 'United States', 'u.s.a.': 'United States', us: 'United States', 'united states': 'United States',
+  'united states of america': 'United States', america: 'United States',
+  'the netherlands': 'Netherlands', holland: 'Netherlands', netherlands: 'Netherlands',
+  deutschland: 'Germany', germany: 'Germany', italia: 'Italy', italy: 'Italy',
+  'españa': 'Spain', spain: 'Spain', catalonia: 'Spain', aus: 'Australia', australia: 'Australia',
+  jp: 'Japan', japan: 'Japan', 'türkiye': 'Turkey', turkiye: 'Turkey', turkey: 'Turkey', czechia: 'Czech Republic',
+};
+
+export function getEventCountry(città: string): string {
+  const parts = (città || '').split(',');
+  if (parts.length > 1) {
+    const raw = parts[parts.length - 1].trim().toLowerCase();
+    if (COUNTRY_ALIAS[raw]) return COUNTRY_ALIAS[raw];
+    const titled = raw.replace(/\b\w/g, (ch) => ch.toUpperCase());
+    if (CONTINENTS[titled] || FLAGS[titled]) return titled;
+  }
+  const c = (città || '').toLowerCase();
   for (const [country, cities] of Object.entries(COUNTRY_CITIES)) {
     if (cities.some((name) => c.includes(name))) return country;
   }
   return 'Other';
 }
+
+export function getContinent(country: string): string {
+  return CONTINENTS[country] || 'Other';
+}
+
+export const CONTINENT_LIST = ['Europe', 'North America', 'South America', 'Asia', 'Oceania'];
 
 export function countryFlag(country: string): string {
   return FLAGS[country] || '🌍';
