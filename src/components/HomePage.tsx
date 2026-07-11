@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState, lazy, Suspense } from 'react';
+import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
 import {
   RefreshCw, User as UserIcon, LogOut, Plus, Home as HomeIcon, Search as SearchIcon,
-  Shield, LayoutGrid, List, AlignJustify, X, MapPin,
+  Shield, LayoutGrid, List, AlignJustify, X, MapPin, ChevronDown,
 } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from '../lib/supabase';
@@ -33,6 +33,8 @@ export default function HomePage() {
   const [dateTo, setDateTo] = useState('');
   const [genre, setGenre] = useState('');
   const [view, setView] = useState<CardView>('grid');
+  const [locMenu, setLocMenu] = useState(false);
+  const locRef = useRef<HTMLDivElement>(null);
 
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [showAuthRequired, setShowAuthRequired] = useState(false);
@@ -62,6 +64,13 @@ export default function HomePage() {
     document.body.style.backgroundColor = '#F5F4F2';
     return () => { document.body.style.backgroundColor = prev; };
   }, []);
+
+  useEffect(() => {
+    if (!locMenu) return;
+    const onDoc = (ev: MouseEvent) => { if (locRef.current && !locRef.current.contains(ev.target as Node)) setLocMenu(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [locMenu]);
 
   useEffect(() => {
     fetchEvents();
@@ -131,10 +140,28 @@ export default function HomePage() {
           </button>
           <SmartSearch variant="bar" value={searchQuery} onChange={setSearchQuery} events={events} placeholder="Search a band, venue or city…" />
           <nav className="topnav">
-            <button className="loc-pill" type="button" onClick={() => document.getElementById('map')?.scrollIntoView({ behavior: 'smooth' })} title="Filter by location on the map">
-              <MapPin size={15} stroke="#E1341E" />
-              <span><b>{scope}</b></span>
-            </button>
+            <div className="loc-wrap" ref={locRef}>
+              <button className={`loc-pill ${locMenu ? 'open' : ''}`} type="button" onClick={() => setLocMenu((v) => !v)} aria-haspopup="listbox" aria-expanded={locMenu} title="Filter by location">
+                <MapPin size={15} stroke="#E1341E" />
+                <span><b>{scope}</b></span>
+                <ChevronDown size={13} className="loc-chev" />
+              </button>
+              {locMenu && (
+                <div className="loc-menu" role="listbox">
+                  <button className={!continent && !country ? 'on' : ''} onClick={() => { setContinent(null); setCountry(null); setLocMenu(false); }}>🌍 Worldwide</button>
+                  <div className="loc-menu-sep">Continents</div>
+                  {CONTINENT_LIST.map((c) => (
+                    <button key={c} className={continent === c && !country ? 'on' : ''} onClick={() => { setContinent(c); setCountry(null); setLocMenu(false); }}>{c}</button>
+                  ))}
+                  {countries.length > 0 && <div className="loc-menu-sep">Countries</div>}
+                  {countries.map(([co, n]) => (
+                    <button key={co} className={country === co ? 'on' : ''} onClick={() => { setCountry(co); setLocMenu(false); }}>
+                      <span>{countryFlag(co)} {co}</span><i>{n}</i>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button className="icon-btn hide-mob" onClick={handleRefresh} title="Refresh events" aria-label="Refresh"><RefreshCw size={16} /></button>
             {isAuthenticated ? (
               <>

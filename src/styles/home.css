@@ -527,3 +527,17 @@
 .pd .evc-soon { flex: 0 0 auto; font-size: 0.6rem; color: var(--accent); font-weight: 700; text-transform: uppercase; }
 .pd .evc-go { flex: 0 0 auto; color: var(--ink-3); }
 @media (max-width: 720px) { .pd .evc-loc { width: 118px; } .pd .evc-genre, .pd .evc-go { display: none; } }
+
+/* Location dropdown (navbar) */
+.pd .loc-wrap { position: relative; }
+.pd .loc-pill { gap: 6px; }
+.pd .loc-pill .loc-chev { color: var(--ink-3); transition: transform 0.15s; margin-left: -1px; }
+.pd .loc-pill.open { border-color: var(--ink-2); }
+.pd .loc-pill.open .loc-chev { transform: rotate(180deg); }
+.pd .loc-menu { position: absolute; top: calc(100% + 8px); right: 0; z-index: 60; width: min(250px, calc(100vw - 28px)); max-height: 344px; overflow-y: auto; background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 16px 40px -12px rgba(0,0,0,0.28); padding: 6px; }
+.pd .loc-menu button { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; text-align: left; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; font-family: var(--sans); font-size: 0.86rem; color: var(--ink); cursor: pointer; }
+.pd .loc-menu button:hover { background: var(--line-2); }
+.pd .loc-menu button.on { background: var(--accent-wash); color: var(--accent-deep); font-weight: 600; }
+.pd .loc-menu button i { font-style: normal; font-family: var(--mono); font-size: 0.72rem; color: var(--ink-3); }
+.pd .loc-menu-sep { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); padding: 8px 10px 4px; font-weight: 600; }
+@media (max-width: 560px) { .pd .loc-menu { right: auto; left: 0; } }
