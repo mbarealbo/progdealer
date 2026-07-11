@@ -541,3 +541,8 @@
 .pd .loc-menu button i { font-style: normal; font-family: var(--mono); font-size: 0.72rem; color: var(--ink-3); }
 .pd .loc-menu-sep { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); padding: 8px 10px 4px; font-weight: 600; }
 @media (max-width: 560px) { .pd .loc-menu { right: auto; left: 0; } }
+
+/* City filter = compact Places autocomplete in the shows toolbar */
+.pd .sb-controls .ctl-city { width: 168px; }
+.pd .sb-controls .ctl-city .ac { width: 100%; }
+.pd .sb-controls .ctl-city .ainput { height: 36px; border-radius: 9px; font-size: 0.82rem; padding: 0 11px; }

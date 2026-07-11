@@ -10,6 +10,7 @@ import { useUserRole } from '../hooks/useUserRole';
 import { getEventCountry, getContinent, CONTINENT_LIST, countryFlag } from '../utils/geo';
 import Logo from './brand/Logo';
 import SmartSearch from './SmartSearch';
+import PlacesAutocomplete from './PlacesAutocomplete';
 import NearYou from './home/NearYou';
 import EventCard, { CardView } from './home/EventCard';
 
@@ -222,7 +223,7 @@ export default function HomePage() {
           <div className="shows-bar">
             <div className="sb-title"><h2>Upcoming shows</h2><span className="num">{filtered.length}</span></div>
             <div className="sb-controls">
-              <label className="ctl"><MapPin size={14} /><input type="text" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} /></label>
+              <div className="ctl-city"><PlacesAutocomplete value={city} onChange={(v) => setCity(v)} cities placeholder="City…" /></div>
               <label className="ctl"><span>From</span><input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} /></label>
               <label className="ctl"><span>To</span><input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} /></label>
               <select className="ctl-sel" value={genre} onChange={(e) => setGenre(e.target.value)}>
