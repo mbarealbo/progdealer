@@ -9,3 +9,10 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>
 );
+
+// PWA: register the service worker (installable + offline app shell).
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
