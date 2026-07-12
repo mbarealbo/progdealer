@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
 import {
   RefreshCw, User as UserIcon, LogOut, Plus, Home as HomeIcon, Search as SearchIcon,
-  Shield, LayoutGrid, List, AlignJustify, X, MapPin, ChevronDown,
+  Shield, LayoutGrid, List, AlignJustify, X, MapPin, ChevronDown, SlidersHorizontal,
 } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from '../lib/supabase';
@@ -34,6 +34,7 @@ export default function HomePage() {
   const [dateTo, setDateTo] = useState('');
   const [genre, setGenre] = useState('');
   const [view, setView] = useState<CardView>('grid');
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [locMenu, setLocMenu] = useState(false);
   const locRef = useRef<HTMLDivElement>(null);
 
@@ -119,6 +120,7 @@ export default function HomePage() {
 
   const scope = country || continent || 'Worldwide';
   const hasFilters = !!(continent || country || city || dateFrom || dateTo || genre || searchQuery);
+  const activeCount = [continent, country, city, dateFrom, dateTo, genre].filter(Boolean).length;
   const clearAll = () => {
     setContinent(null); setCountry(null); setCity(''); setDateFrom(''); setDateTo(''); setGenre(''); setSearchQuery('');
   };
@@ -223,6 +225,7 @@ export default function HomePage() {
           <div className="shows-bar">
             <div className="sb-title"><h2>Upcoming shows</h2><span className="num">{filtered.length}</span></div>
             <div className="sb-controls">
+              <button className="filters-btn" onClick={() => setFiltersOpen(true)}><SlidersHorizontal size={15} /> Filters{activeCount > 0 && <i>{activeCount}</i>}</button>
               <div className="ctl-city"><PlacesAutocomplete value={city} onChange={(v) => setCity(v)} cities placeholder="City…" /></div>
               <label className="ctl"><span>From</span><input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} /></label>
               <label className="ctl"><span>To</span><input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} /></label>
@@ -298,6 +301,57 @@ export default function HomePage() {
         <button className="fab" onClick={requestAddEvent} aria-label="Add a show"><Plus size={22} /></button>
         <a href={isAuthenticated ? '/userarea' : '/login'}><UserIcon size={19} /><span>Profile</span></a>
       </nav>
+
+      {/* ---------- Filters sheet (mobile) ---------- */}
+      {filtersOpen && (
+        <div className="fsheet-backdrop" onClick={() => setFiltersOpen(false)}>
+          <div className="fsheet" onClick={(e) => e.stopPropagation()}>
+            <div className="fsheet-grip" />
+            <div className="fsheet-head">
+              <h3>Filters</h3>
+              <button onClick={() => setFiltersOpen(false)} aria-label="Close"><X size={18} /></button>
+            </div>
+            <div className="fs-group">
+              <label>Location</label>
+              <div className="fs-chips">
+                <button className={`lc ${!continent && !country ? 'on' : ''}`} onClick={() => { setContinent(null); setCountry(null); }}>🌍 Worldwide</button>
+                {CONTINENT_LIST.map((c) => (
+                  <button key={c} className={`lc ${continent === c && !country ? 'on' : ''}`} onClick={() => { setContinent(c); setCountry(null); }}>{c}</button>
+                ))}
+              </div>
+              {countries.length > 0 && (
+                <div className="fs-chips" style={{ marginTop: 8 }}>
+                  {countries.map(([co, n]) => (
+                    <button key={co} className={`cty ${country === co ? 'on' : ''}`} onClick={() => setCountry(country === co ? null : co)}>{countryFlag(co)} {co} <i>{n}</i></button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="fs-group">
+              <label>City</label>
+              <PlacesAutocomplete value={city} onChange={(v) => setCity(v)} cities placeholder="Any city…" />
+            </div>
+            <div className="fs-group">
+              <label>Period</label>
+              <div className="fs-dates">
+                <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} aria-label="From" />
+                <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} aria-label="To" />
+              </div>
+            </div>
+            <div className="fs-group">
+              <label>Genre</label>
+              <select value={genre} onChange={(e) => setGenre(e.target.value)}>
+                <option value="">All genres</option>
+                {genres.map(([g, n]) => <option key={g} value={g}>{g} ({n})</option>)}
+              </select>
+            </div>
+            <div className="fsheet-foot">
+              {hasFilters && <button className="btn btn-ghost" onClick={clearAll}>Clear all</button>}
+              <button className="btn btn-solid" onClick={() => setFiltersOpen(false)}>Show {filtered.length} {filtered.length === 1 ? 'show' : 'shows'}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ---------- Modals ---------- */}
       <AddEventForm isOpen={showAddEvent} onClose={() => setShowAddEvent(false)} onEventAdded={fetchEvents} onAuthRequired={() => setShowAuthRequired(true)} isAuthenticated={isAuthenticated} />
