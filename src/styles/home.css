@@ -575,3 +575,13 @@ html, body { overscroll-behavior-y: none; }
   .pd .locbar, .pd .ctybar { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .pd .locbar::-webkit-scrollbar, .pd .ctybar::-webkit-scrollbar { display: none; }
 }
+
+/* Mobile topbar: fit without overflow — brand + location on row 1, full-width
+   search on row 2; the "Add a show" button is dropped (the bottom FAB covers it). */
+@media (max-width: 767px) {
+  .pd .topbar-inner { flex-wrap: wrap; height: auto; row-gap: 9px; padding: 9px 0; }
+  .pd .brand { order: 1; }
+  .pd .topnav { order: 2; margin-left: auto; gap: 8px; }
+  .pd .topnav .btn-accent { display: none; }
+  .pd .topsearch { order: 3; flex: 1 1 100%; max-width: none; }
+}
