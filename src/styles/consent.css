@@ -121,8 +121,15 @@
 @keyframes cc-fade { to { opacity: 1; } }
 @keyframes cc-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 
+/* On phones/tablets the app shows a fixed bottom nav (.pd .bnav, ≤767px) and iOS
+   adds a home-indicator inset. Lift the banner clear of both so it can't collide
+   with the nav or get clipped at the bottom edge. */
+@media (max-width: 767px) {
+  .cc-root { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
+}
+
 @media (max-width: 560px) {
-  .cc-banner { width: 100%; margin: 0; border-radius: 16px 16px 0 0; }
+  .cc-banner { width: calc(100% - 20px); margin: 0 0 10px; }
   .cc-actions { justify-content: stretch; }
   .cc-actions .cc-btn { flex: 1 1 auto; }
 }
