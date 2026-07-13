@@ -42,8 +42,14 @@ export default function CookieConsent() {
   if (!open) return null;
 
   return (
-    <div className="cc-root" role="dialog" aria-modal="true" aria-label="Cookie preferences">
-      <div className="cc-backdrop" onClick={prefs ? () => setPrefs(false) : undefined} />
+    <div
+      className={`cc-root ${prefs ? 'cc-modal' : 'cc-bar'}`}
+      role="dialog"
+      aria-modal={prefs ? true : undefined}
+      aria-label="Cookie preferences"
+    >
+      {/* Dim + block only for the preferences modal — the initial banner never covers the site. */}
+      {prefs && <div className="cc-backdrop" onClick={() => setPrefs(false)} />}
 
       {!prefs ? (
         <section className="cc-card cc-banner">

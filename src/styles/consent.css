@@ -13,14 +13,26 @@
   --cc-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto, sans-serif;
 
   position: fixed;
-  inset: 0;
   z-index: 100000;
   display: flex;
-  align-items: flex-end;
   justify-content: center;
-  pointer-events: none;
+  pointer-events: none; /* the page stays usable; only the card/backdrop capture input */
   font-family: var(--cc-sans);
   color: var(--cc-ink);
+}
+
+/* Initial banner: anchored to the bottom like the app's bottom nav (which is
+   reliably visible on iOS). It does NOT cover the page and does NOT dim it. */
+.cc-bar {
+  left: 0; right: 0; bottom: 0;
+  align-items: flex-end;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Preferences: full-screen, centered, with a dimming backdrop. */
+.cc-modal {
+  inset: 0;
+  align-items: center;
 }
 
 .cc-backdrop {
@@ -28,6 +40,7 @@
   inset: 0;
   background: rgba(25, 26, 29, 0.32);
   opacity: 0;
+  pointer-events: auto; /* modal backdrop blocks the page and closes on outside click */
   animation: cc-fade 0.2s ease forwards;
 }
 
@@ -49,7 +62,6 @@
 }
 
 /* Centred dialog for granular preferences */
-.cc-root:has(.cc-prefs) { align-items: center; }
 .cc-prefs {
   width: min(560px, calc(100% - 32px));
   margin: 16px;
@@ -125,7 +137,8 @@
    adds a home-indicator inset. Lift the banner clear of both so it can't collide
    with the nav or get clipped at the bottom edge. */
 @media (max-width: 767px) {
-  .cc-root { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
+  /* Lift the banner above the app's fixed bottom nav (.pd .bnav) + iOS home indicator. */
+  .cc-bar { bottom: calc(64px + env(safe-area-inset-bottom)); padding-bottom: 0; }
 }
 
 @media (max-width: 560px) {
