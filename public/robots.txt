@@ -1,9 +1,7 @@
+# App/private routes are NOT disallowed on purpose: they are served with a
+# <meta name="robots" content="noindex"> by netlify/edge-functions/ssr-meta.ts,
+# and Google must be allowed to crawl them to see that noindex and drop them.
 User-agent: *
 Allow: /
-Disallow: /login
-Disallow: /reset-password
-Disallow: /userarea
-Disallow: /adminarea
-Disallow: /goodbye
 
 Sitemap: https://progdealer.com/sitemap.xml

@@ -14,6 +14,11 @@ import {
 const SEO_BLOCK = /<!--seo-start-->[\s\S]*?<!--seo-end-->/;
 const BODY_SLOT = '<!--ssr-body-->';
 
+// App/private routes that must never be indexed. We inject `noindex` here (rather
+// than only Disallow-ing in robots.txt) because Google must be able to CRAWL a page
+// to see the noindex and drop it — a robots.txt block would leave it stuck in the index.
+const NOINDEX_ROUTES = new Set(['/login', '/userarea', '/adminarea', '/reset-password', '/goodbye']);
+
 // Public values (the anon key already ships in the client bundle); env overrides.
 const SUPABASE_URL = Netlify.env.get('VITE_SUPABASE_URL') || 'https://mlnmpfohtsiyjxnjwtkk.supabase.co';
 const SELECT = 'id,nome_evento,data_ora,venue,città,sottogenere,descrizione,artisti,orario,link,immagine';
@@ -55,6 +60,7 @@ export default async function handler(request: Request, context: Context): Promi
 
   const url = new URL(request.url);
   const origin = url.origin;
+  const path = url.pathname === '/' ? '/' : url.pathname.replace(/\/+$/, '');
   let html = await res.text();
 
   // Use function replacers: injected content is arbitrary event text, and a string
@@ -62,8 +68,13 @@ export default async function handler(request: Request, context: Context): Promi
   const inject = (head: string, body: string) =>
     html.replace(SEO_BLOCK, () => head).replace(BODY_SLOT, () => body);
 
+  // Private/app routes → keep them out of search results.
+  if (NOINDEX_ROUTES.has(path)) {
+    return respond(inject('<meta name="robots" content="noindex, nofollow" />', ''), res, 200);
+  }
+
   // Home
-  if (url.pathname === '/') {
+  if (path === '/') {
     return respond(inject(siteHeadHtml(origin), siteBodyHtml()), res, 200);
   }
 
@@ -82,6 +93,6 @@ export default async function handler(request: Request, context: Context): Promi
 }
 
 export const config: Config = {
-  path: ['/', '/event/*'],
+  path: ['/', '/event/*', '/login', '/userarea', '/adminarea', '/reset-password', '/goodbye'],
   cache: 'manual',
 };
