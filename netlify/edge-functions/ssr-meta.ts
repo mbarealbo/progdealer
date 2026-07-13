@@ -11,6 +11,8 @@ import {
   eventHeadHtml, eventBodyHtml, siteHeadHtml, siteBodyHtml, type SeoEvent,
 } from '../../src/lib/seo.ts';
 
+const HOME_LIST_LIMIT = 30;
+
 const SEO_BLOCK = /<!--seo-start-->[\s\S]*?<!--seo-end-->/;
 const BODY_SLOT = '<!--ssr-body-->';
 
@@ -21,7 +23,11 @@ const NOINDEX_ROUTES = new Set(['/login', '/userarea', '/adminarea', '/reset-pas
 
 // Public values (the anon key already ships in the client bundle); env overrides.
 const SUPABASE_URL = Netlify.env.get('VITE_SUPABASE_URL') || 'https://mlnmpfohtsiyjxnjwtkk.supabase.co';
-const SELECT = 'id,nome_evento,data_ora,venue,città,sottogenere,descrizione,artisti,orario,link,immagine';
+const SELECT = 'id,nome_evento,data_ora,venue,città,sottogenere,descrizione,artisti,orario,link,immagine,lat,lng';
+
+function authHeaders(key: string) {
+  return { apikey: key, Authorization: `Bearer ${key}` };
+}
 
 async function fetchEvent(id: string): Promise<SeoEvent | null> {
   const key = Netlify.env.get('VITE_SUPABASE_ANON_KEY');
@@ -31,12 +37,30 @@ async function fetchEvent(id: string): Promise<SeoEvent | null> {
   const url = `${SUPABASE_URL}/rest/v1/eventi_prog`
     + `?id=eq.${encodeURIComponent(id)}&select=${encodeURIComponent(SELECT)}&limit=1`;
   try {
-    const r = await fetch(url, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
+    const r = await fetch(url, { headers: authHeaders(key) });
     if (!r.ok) return null;
     const rows = await r.json();
     return Array.isArray(rows) && rows.length ? (rows[0] as SeoEvent) : null;
   } catch {
     return null;
+  }
+}
+
+// Next upcoming approved events — gives AI crawlers a readable catalog on the home page.
+async function fetchUpcoming(): Promise<SeoEvent[]> {
+  const key = Netlify.env.get('VITE_SUPABASE_ANON_KEY');
+  if (!key) return [];
+  const now = new Date().toISOString();
+  const url = `${SUPABASE_URL}/rest/v1/eventi_prog`
+    + `?select=id,nome_evento,data_ora,venue,città&status=eq.approved`
+    + `&data_ora=gte.${encodeURIComponent(now)}&order=data_ora.asc&limit=${HOME_LIST_LIMIT}`;
+  try {
+    const r = await fetch(url, { headers: authHeaders(key) });
+    if (!r.ok) return [];
+    const rows = await r.json();
+    return Array.isArray(rows) ? (rows as SeoEvent[]) : [];
+  } catch {
+    return [];
   }
 }
 
@@ -75,7 +99,8 @@ export default async function handler(request: Request, context: Context): Promi
 
   // Home
   if (path === '/') {
-    return respond(inject(siteHeadHtml(origin), siteBodyHtml()), res, 200);
+    const upcoming = await fetchUpcoming();
+    return respond(inject(siteHeadHtml(origin, upcoming), siteBodyHtml(upcoming)), res, 200);
   }
 
   // Event detail

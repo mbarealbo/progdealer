@@ -1,7 +1,40 @@
-# App/private routes are NOT disallowed on purpose: they are served with a
-# <meta name="robots" content="noindex"> by netlify/edge-functions/ssr-meta.ts,
-# and Google must be allowed to crawl them to see that noindex and drop them.
+# ProgDealer crawling policy.
+# All content is public. Search engines AND AI answer engines are welcome to crawl
+# and cite us. Private app routes are not Disallowed here on purpose — they are served
+# a <meta name="robots" content="noindex"> by netlify/edge-functions/ssr-meta.ts, and a
+# crawler must be able to fetch a page to see that noindex and drop it.
 User-agent: *
+Allow: /
+
+# AI assistants / generative answer engines — explicitly welcomed (for citations).
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
 Allow: /
 
 Sitemap: https://progdealer.com/sitemap.xml

@@ -1,10 +1,12 @@
-// Shared, dependency-free SEO builders. Used by BOTH the Netlify Edge Function
+// Shared, dependency-free SEO/GEO builders. Used by BOTH the Netlify Edge Function
 // (netlify/edge-functions/ssr-meta.ts, Deno) and the client hook
 // (src/hooks/useDocumentMeta.ts) so server-injected and client-updated metadata
 // stay identical. Keep this file free of DOM/Node/Deno globals.
+import { getEventCountry } from '../utils/geo.ts';
 
 export const SITE_URL = 'https://progdealer.com';
 export const SITE_NAME = 'ProgDealer';
+export const CONTACT_EMAIL = 'hello@progdealer.com';
 export const DEFAULT_DESCRIPTION =
   'Live progressive rock, metal and post-rock shows worldwide — on an interactive map, near you. Filter by city, country, date or genre.';
 
@@ -23,6 +25,8 @@ export interface SeoEvent {
   orario?: string | null;
   link?: string | null;
   immagine?: string | null;
+  lat?: number | null;
+  lng?: number | null;
 }
 
 export function escapeHtml(s: unknown): string {
@@ -54,6 +58,12 @@ function fmtDate(iso: string): string {
   }).format(d);
 }
 
+/** Country name for the event, or '' when unknown. */
+function countryOf(e: SeoEvent): string {
+  const c = getEventCountry(e.città);
+  return c && c !== 'Other' ? c : '';
+}
+
 export function eventCanonical(e: SeoEvent, origin: string = SITE_URL): string {
   return `${origin}/event/${e.id}`;
 }
@@ -74,8 +84,10 @@ export function eventDescription(e: SeoEvent): string {
   if (e.descrizione && e.descrizione.trim().length >= 30) return clip(e.descrizione, 160);
   const date = fmtDate(e.data_ora);
   const who = e.artisti && e.artisti.length ? e.artisti.slice(0, 4).join(', ') : '';
+  const country = countryOf(e);
+  const place = [e.venue, e.città, country].filter(Boolean).join(', ');
   const parts = [
-    `${e.nome_evento} — live at ${e.venue}, ${e.città}${date ? ' on ' + date : ''}.`,
+    `${e.nome_evento} — live at ${place}${date ? ' on ' + date : ''}.`,
     who ? `Lineup: ${who}.` : '',
     e.sottogenere ? `${e.sottogenere} show.` : '',
     'Full details on ProgDealer.',
@@ -83,8 +95,18 @@ export function eventDescription(e: SeoEvent): string {
   return clip(parts.join(' '), 160);
 }
 
-/** schema.org MusicEvent JSON-LD as a plain object. */
+// ---------- JSON-LD (plain objects) ----------
+
+/** schema.org MusicEvent — enriched with geo coordinates and country for AI/answer engines. */
 export function eventJsonLd(e: SeoEvent, origin: string = SITE_URL): Record<string, unknown> {
+  const country = countryOf(e);
+  const address: Record<string, unknown> = { '@type': 'PostalAddress', addressLocality: e.città };
+  if (country) address.addressCountry = country;
+  const location: Record<string, unknown> = { '@type': 'Place', name: e.venue, address };
+  if (typeof e.lat === 'number' && typeof e.lng === 'number') {
+    location.geo = { '@type': 'GeoCoordinates', latitude: e.lat, longitude: e.lng };
+  }
+
   const jsonld: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'MusicEvent',
@@ -94,13 +116,13 @@ export function eventJsonLd(e: SeoEvent, origin: string = SITE_URL): Record<stri
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     url: eventCanonical(e, origin),
     image: [eventOgImage(e, origin)],
-    location: {
-      '@type': 'Place',
-      name: e.venue,
-      address: { '@type': 'PostalAddress', addressLocality: e.città },
-    },
+    inLanguage: 'en',
+    location,
+    organizer: { '@type': 'Organization', name: SITE_NAME, url: origin + '/' },
   };
+  if (e.sottogenere) jsonld.genre = e.sottogenere;
   if (e.descrizione && e.descrizione.trim()) jsonld.description = clip(e.descrizione, 300);
+  else jsonld.description = eventDescription(e);
   if (e.artisti && e.artisti.length) {
     jsonld.performer = e.artisti.map((a) => ({ '@type': 'MusicGroup', name: a }));
   }
@@ -110,6 +132,17 @@ export function eventJsonLd(e: SeoEvent, origin: string = SITE_URL): Record<stri
   return jsonld;
 }
 
+export function eventBreadcrumbLd(e: SeoEvent, origin: string = SITE_URL): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: SITE_NAME, item: origin + '/' },
+      { '@type': 'ListItem', position: 2, name: e.nome_evento, item: eventCanonical(e, origin) },
+    ],
+  };
+}
+
 export function siteJsonLd(origin: string = SITE_URL): Record<string, unknown> {
   return {
     '@context': 'https://schema.org',
@@ -117,6 +150,34 @@ export function siteJsonLd(origin: string = SITE_URL): Record<string, unknown> {
     name: SITE_NAME,
     url: origin + '/',
     description: DEFAULT_DESCRIPTION,
+  };
+}
+
+export function organizationJsonLd(origin: string = SITE_URL): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: SITE_NAME,
+    url: origin + '/',
+    logo: origin + '/icon-512.png',
+    image: origin + '/og-default.png',
+    description: DEFAULT_DESCRIPTION,
+    email: CONTACT_EMAIL,
+  };
+}
+
+export function upcomingItemListLd(events: SeoEvent[], origin: string = SITE_URL): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Upcoming progressive & alternative music shows',
+    numberOfItems: events.length,
+    itemListElement: events.map((e, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: eventCanonical(e, origin),
+      name: e.nome_evento,
+    })),
   };
 }
 
@@ -153,49 +214,85 @@ export function eventHeadHtml(e: SeoEvent, origin: string = SITE_URL): string {
     `<link rel="canonical" href="${escapeHtml(url)}" />`,
     ogTwitter(title, desc, url, img),
     jsonLdScript(eventJsonLd(e, origin)),
+    jsonLdScript(eventBreadcrumbLd(e, origin)),
   ].join('\n    ');
 }
 
-export function siteHeadHtml(origin: string = SITE_URL): string {
+export function siteHeadHtml(origin: string = SITE_URL, upcoming: SeoEvent[] = []): string {
   const title = 'ProgDealer: Progressive and Alternative Rock Concerts and Festivals Database';
   const desc = DEFAULT_DESCRIPTION;
   const url = origin + '/';
   const img = `${origin}/og-default.png`;
-  return [
+  const parts = [
     `<title>${escapeHtml(title)}</title>`,
     `<meta name="description" content="${escapeHtml(desc)}" />`,
     `<link rel="canonical" href="${escapeHtml(url)}" />`,
     ogTwitter(title, desc, url, img),
     jsonLdScript(siteJsonLd(origin)),
-  ].join('\n    ');
+    jsonLdScript(organizationJsonLd(origin)),
+  ];
+  if (upcoming.length) parts.push(jsonLdScript(upcomingItemListLd(upcoming, origin)));
+  return parts.join('\n    ');
 }
 
-/** Minimal semantic body rendered into #root for crawlers that do not run JS. React replaces it on hydration. */
+// ---------- Minimal, fact-rich body rendered into #root for no-JS crawlers ----------
+// React replaces it on hydration; AI answer engines read the facts from it.
+
 export function eventBodyHtml(e: SeoEvent): string {
   const date = fmtDate(e.data_ora);
-  const meta = [e.venue, e.città].filter(Boolean).join(', ')
-    + (date ? ` · ${date}` : '')
-    + (e.orario ? ` · ${e.orario}` : '');
+  const country = countryOf(e);
+  const time = e.orario || '';
+  const genre = e.sottogenere || '';
+  const lineup = e.artisti && e.artisti.length ? e.artisti.join(', ') : '';
+  const place = [e.venue, e.città, country].filter(Boolean).join(', ');
+
+  const summary =
+    `${e.nome_evento} plays live at ${place}${date ? ` on ${date}` : ''}${time ? ` at ${time}` : ''}.`
+    + (genre ? ` A ${genre} concert.` : '')
+    + (lineup ? ` Lineup: ${lineup}.` : '');
+
+  const rows: [string, string][] = [];
+  if (date) rows.push(['Date', date]);
+  if (time) rows.push(['Time', time]);
+  if (e.venue) rows.push(['Venue', e.venue]);
+  if (e.città) rows.push(['City', e.città]);
+  if (country) rows.push(['Country', country]);
+  if (genre) rows.push(['Genre', genre]);
+  if (lineup) rows.push(['Lineup', lineup]);
+
   const out: string[] = [
     `<article style="max-width:760px;margin:0 auto;padding:24px;font-family:system-ui,sans-serif;line-height:1.5">`,
     `<p><a href="/">← ProgDealer</a></p>`,
   ];
-  if (e.sottogenere) out.push(`<p>${escapeHtml(e.sottogenere)}</p>`);
+  if (genre) out.push(`<p>${escapeHtml(genre)}</p>`);
   out.push(`<h1>${escapeHtml(e.nome_evento)}</h1>`);
-  out.push(`<p>${escapeHtml(meta)}</p>`);
-  if (e.artisti && e.artisti.length) out.push(`<p><strong>Lineup:</strong> ${escapeHtml(e.artisti.join(', '))}</p>`);
+  out.push(`<p>${escapeHtml(summary)}</p>`);
+  out.push('<dl>' + rows.map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(v)}</dd>`).join('') + '</dl>');
   if (e.descrizione && e.descrizione.trim()) out.push(`<p>${escapeHtml(e.descrizione)}</p>`);
   if (e.link) out.push(`<p><a href="${escapeHtml(e.link)}" rel="nofollow noopener">Tickets &amp; info</a></p>`);
   out.push(`</article>`);
   return out.join('');
 }
 
-export function siteBodyHtml(): string {
-  return [
+export function siteBodyHtml(upcoming: SeoEvent[] = []): string {
+  const out: string[] = [
     `<section style="max-width:760px;margin:0 auto;padding:24px;font-family:system-ui,sans-serif;line-height:1.5">`,
     `<h1>Every prog show, on the map.</h1>`,
     `<p>${escapeHtml(DEFAULT_DESCRIPTION)}</p>`,
-    `<p>Live progressive, prog-metal, post-rock and psych concerts &amp; festivals worldwide.</p>`,
-    `</section>`,
-  ].join('');
+    `<p>ProgDealer is an independent, continuously updated catalog of live progressive, prog-metal, post-rock, psychedelic and avant-garde concerts &amp; festivals worldwide.</p>`,
+  ];
+  if (upcoming.length) {
+    out.push(`<h2>Upcoming shows</h2>`, `<ul>`);
+    for (const e of upcoming) {
+      const country = countryOf(e);
+      const where = [e.città, country].filter(Boolean).join(', ');
+      const meta = [where, fmtDate(e.data_ora)].filter(Boolean).join(' · ');
+      out.push(
+        `<li><a href="/event/${escapeHtml(e.id)}">${escapeHtml(e.nome_evento)}</a>${meta ? ' — ' + escapeHtml(meta) : ''}</li>`,
+      );
+    }
+    out.push(`</ul>`);
+  }
+  out.push(`</section>`);
+  return out.join('');
 }
