@@ -12,8 +12,23 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!--seo-start-->
     <title>ProgDealer: Progressive and Alternative Rock Concerts and Festivals Database</title>
     <meta name="description" content="Live progressive rock, metal and post-rock shows worldwide — on an interactive map, near you. Filter by city, country, date or genre." />
+    <link rel="canonical" href="https://progdealer.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ProgDealer" />
+    <meta property="og:title" content="ProgDealer — live progressive shows worldwide" />
+    <meta property="og:description" content="Live progressive rock, metal and post-rock shows worldwide — on an interactive map, near you." />
+    <meta property="og:url" content="https://progdealer.com/" />
+    <meta property="og:image" content="https://progdealer.com/og-default.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ProgDealer — live progressive shows worldwide" />
+    <meta name="twitter:description" content="Live progressive rock, metal and post-rock shows worldwide — on an interactive map, near you." />
+    <meta name="twitter:image" content="https://progdealer.com/og-default.png" />
+    <!--seo-end-->
+    <!-- ↑ The seo-start/seo-end block is replaced per-page by netlify/edge-functions/ssr-meta.ts. -->
+
     <!--
       Third-party scripts are intentionally NOT loaded here. Google Analytics and
       Lucky Orange are injected only after opt-in by the self-hosted cookie consent
@@ -22,7 +37,7 @@
     -->
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><!--ssr-body--></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

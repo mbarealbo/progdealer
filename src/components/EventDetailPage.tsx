@@ -4,6 +4,7 @@ import { ArrowLeft, ExternalLink, MapPin, Calendar, Clock, Users, Music, Share2 
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
 import { shouldUsePlaceholder } from '../utils/imageUtils';
+import { useEventMeta } from '../hooks/useDocumentMeta';
 import CardArt from './home/CardArt';
 import EventCard, { hueFor, seedFor } from './home/EventCard';
 
@@ -23,6 +24,9 @@ export default function EventDetailPage() {
   useEffect(() => {
     if (id) fetchEvent(id);
   }, [id]);
+
+  // Keep title/meta/OG/JSON-LD in sync on client-side navigation (mirrors the edge SSR).
+  useEventMeta(event);
 
   const fetchEvent = async (eventId: string) => {
     setLoading(true);

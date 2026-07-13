@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /reset-password
+Disallow: /userarea
+Disallow: /adminarea
+Disallow: /goodbye
+
+Sitemap: https://progdealer.com/sitemap.xml
