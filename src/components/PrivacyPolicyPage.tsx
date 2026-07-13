@@ -1,138 +1,134 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Cookie } from 'lucide-react';
+import Logo from './brand/Logo';
+import { openCookieSettings } from '../lib/consent';
 
 export default function PrivacyPolicyPage() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const prev = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = '#F5F4F2';
+    return () => { document.body.style.backgroundColor = prev; };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-coal-900 bg-noise">
-      <header className="bg-coal-800 border-b-2 border-asphalt-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
-            <div className="flex items-center space-x-4 sm:space-x-6">
-              <button
-                onClick={() => navigate('/')}
-                className="flex items-center hover:opacity-80 transition-opacity duration-200 cursor-pointer"
-                title="BACK TO HOME"
-              >
-                <div className="text-xl sm:text-2xl mr-2">🎸</div>
-                <div className="text-sm sm:text-lg font-industrial text-gray-100 tracking-wide uppercase">
-                  PROGDEALER
-                </div>
-              </button>
-              <button
-                onClick={() => navigate('/')}
-                className="industrial-button flex items-center space-x-2 text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span className="hidden sm:inline">BACK TO MAIN</span>
-                <span className="sm:hidden">BACK</span>
-              </button>
-            </div>
-          </div>
+    <div className="pd">
+      <header className="topbar">
+        <div className="wrap topbar-inner">
+          <button className="brand" onClick={() => navigate('/')} aria-label="ProgDealer home">
+            <Logo height={28} />
+          </button>
+          <div style={{ flex: 1 }} />
+          <button className="btn btn-ghost" onClick={() => navigate('/')}>
+            <ArrowLeft size={16} /> Back to home
+          </button>
         </div>
       </header>
 
-      <main className="flex justify-center p-4">
-        <div className="max-w-3xl w-full bg-coal-800 border-2 border-asphalt-600 p-6 sm:p-8 space-y-6">
-          <h1 className="text-2xl font-industrial text-gray-100 tracking-wide uppercase">
-            Privacy Policy – ProgDealer
-          </h1>
-          <p className="text-gray-300 font-condensed text-sm leading-relaxed space-y-2">
-            <span className="block">Effective date: July 2025</span>
-            <span className="block">Last updated: July 17, 2025</span>
-            <span className="block">Data Controller: Alberto Abate, VAT ID: 05532500872</span>
-            <span className="block">Contact: privacy@progdealer.com</span>
-          </p>
+      <main className="wrap legal">
+        <div className="legal-head">
+          <div className="eyebrow">Legal · Your data</div>
+          <h1>Privacy Policy</h1>
+          <div className="legal-meta">
+            <span><b>Effective date:</b> July 2025</span>
+            <span><b>Last updated:</b> 13 July 2026</span>
+            <span><b>Data Controller:</b> Alberto Abate — VAT ID 05532500872</span>
+            <span><b>Contact:</b> <a href="mailto:privacy@progdealer.com">privacy@progdealer.com</a></span>
+          </div>
+        </div>
 
-          <section className="space-y-4 text-gray-300 font-condensed text-sm leading-relaxed">
-            <h2 className="text-lg font-industrial text-gray-100 uppercase">1. What is ProgDealer?</h2>
+        <div className="legal-body">
+          <section>
+            <h2>1. What is ProgDealer?</h2>
             <p>
-              ProgDealer is a hobby project created to collect, display, and manage events related to progressive rock and alternative music. The site allows users to register and submit new music events to a shared calendar, using Supabase and Netlify as core technologies.
+              ProgDealer is an independent, non-commercial project that collects, displays and
+              manages live progressive and alternative music events on an interactive worldwide map.
+              Registered users can submit new shows to a shared catalog. The service runs on Supabase
+              (database &amp; authentication) and Netlify (hosting).
             </p>
           </section>
 
-          <section className="space-y-4 text-gray-300 font-condensed text-sm leading-relaxed">
-            <h2 className="text-lg font-industrial text-gray-100 uppercase">2. What data we collect</h2>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Email address (via registration or social login – Google or Facebook only)</li>
-              <li>IP address and device data (via Netlify logs)</li>
-              <li>User-submitted content (e.g., events added to the calendar)</li>
-              <li>Behavioral data (via analytics tools)</li>
+          <section>
+            <h2>2. What data we collect</h2>
+            <ul>
+              <li><strong>Email address</strong> — when you register, or sign in with Google.</li>
+              <li><strong>Technical/connection data</strong> — e.g. IP address and request logs kept by our hosting provider.</li>
+              <li><strong>User-submitted content</strong> — the events you add to the catalog.</li>
+              <li><strong>Usage data</strong> — only if you consent to analytics cookies (see §6 and §9).</li>
             </ul>
-            <p>We do not collect or require names, photos, or other personal identifiers.</p>
+            <p>We do not require names, photos or other personal identifiers.</p>
           </section>
 
-          <section className="space-y-4 text-gray-300 font-condensed text-sm leading-relaxed">
-            <h2 className="text-lg font-industrial text-gray-100 uppercase">3. How we collect your data</h2>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Directly: When a user registers or submits an event</li>
-              <li>Automatically: Through tools like Google Analytics and Lucky Orange</li>
-              <li>Via third parties: When logging in using Google or Facebook (only the email is collected)</li>
-            </ul>
-          </section>
-
-          <section className="space-y-4 text-gray-300 font-condensed text-sm leading-relaxed">
-            <h2 className="text-lg font-industrial text-gray-100 uppercase">4. Why we collect your data</h2>
-            <ul className="list-disc list-inside space-y-1">
-              <li>To allow registration and secure login</li>
-              <li>To let users submit music events</li>
-              <li>To analyze anonymous usage trends and improve site usability (UX/UI)</li>
-            </ul>
-            <p>We do not use your data for profiling, advertising, or automated decision-making.</p>
-          </section>
-
-          <section className="space-y-4 text-gray-300 font-condensed text-sm leading-relaxed">
-            <h2 className="text-lg font-industrial text-gray-100 uppercase">5. Legal basis for processing</h2>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Contractual necessity (e.g., creating and managing your account)</li>
-              <li>Legitimate interest (e.g., improving UX based on analytics)</li>
-              <li>Consent (e.g., cookie acceptance via Cookiebot)</li>
+          <section>
+            <h2>3. How we collect your data</h2>
+            <ul>
+              <li><strong>Directly</strong> — when you register or submit an event.</li>
+              <li><strong>Automatically</strong> — server logs, and, with your consent, analytics tools.</li>
+              <li><strong>Via Google Sign-In</strong> — if you choose it, we receive only your email address.</li>
             </ul>
           </section>
 
-          <section className="space-y-4 text-gray-300 font-condensed text-sm leading-relaxed">
-            <h2 className="text-lg font-industrial text-gray-100 uppercase">6. Third-party services</h2>
-            <p>We rely on the following providers, all GDPR-compliant:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Supabase (database, authentication, and email delivery)</li>
-              <li>Netlify (hosting and server-side logs)</li>
-              <li>Resend (transactional email service)</li>
-              <li>Google Analytics and Lucky Orange (behavioral analysis)</li>
-              <li>Cookiebot (cookie consent management)</li>
-              <li>Google / Facebook Login (only the email is retrieved when used)</li>
+          <section>
+            <h2>4. Why we collect your data</h2>
+            <ul>
+              <li>To let you register and sign in securely.</li>
+              <li>To let you submit and manage music events.</li>
+              <li>To understand aggregate, anonymous usage and improve the site — only with your consent.</li>
             </ul>
-            <p>No other third-party shares or processes your personal data.</p>
+            <p>We do not use your data for profiling, advertising or automated decision-making.</p>
           </section>
 
-          <section className="space-y-4 text-gray-300 font-condensed text-sm leading-relaxed">
-            <h2 className="text-lg font-industrial text-gray-100 uppercase">7. Data retention</h2>
-            <p>Your data is stored on GDPR-compliant infrastructure (Supabase, Netlify).</p>
-            <p>Data is retained only as long as necessary to provide the service.</p>
-            <p>If an account remains inactive for 24 months, the user will receive a warning email. In absence of response, the account and all related data will be permanently deleted.</p>
+          <section>
+            <h2>5. Legal basis for processing</h2>
+            <ul>
+              <li><strong>Contract</strong> — creating and managing your account and submissions.</li>
+              <li><strong>Legitimate interest</strong> — keeping the service secure and operational.</li>
+              <li><strong>Consent</strong> — analytics and behaviour cookies, which load only after you opt in.</li>
+            </ul>
           </section>
 
-          <section className="space-y-4 text-gray-300 font-condensed text-sm leading-relaxed">
-            <h2 className="text-lg font-industrial text-gray-100 uppercase">8. User rights</h2>
-            <p>Under the GDPR, you can:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Access your data</li>
-              <li>Request deletion</li>
-              <li>Object to processing</li>
-              <li>Correct or update your data</li>
+          <section>
+            <h2>6. Third-party services</h2>
+            <p>We rely on the following providers:</p>
+            <ul>
+              <li><strong>Supabase</strong> — database, authentication and transactional email.</li>
+              <li><strong>Netlify</strong> — hosting and server logs.</li>
+              <li><strong>Google Sign-In</strong> — optional authentication; only your email is retrieved.</li>
+              <li><strong>Google Analytics</strong> — anonymous, aggregated usage statistics (analytics cookies; consent required).</li>
+              <li><strong>Lucky Orange</strong> — heatmaps and anonymised session replay to spot usability issues (behaviour cookies; consent required).</li>
             </ul>
-            <p>You may delete your account directly from your personal profile. If you encounter any issue, email us at privacy@progdealer.com. Please note this is a hobby project and we do not operate during standard office hours.</p>
+            <p>Google Analytics and Lucky Orange are <strong>not loaded until you give consent</strong>. No other third party processes your personal data.</p>
           </section>
 
-          <section className="space-y-4 text-gray-300 font-condensed text-sm leading-relaxed">
-            <h2 className="text-lg font-industrial text-gray-100 uppercase">9. Cookies</h2>
-            <p>This site uses technical and analytics cookies. A cookie banner powered by Cookiebot is active to allow users to:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Accept or reject cookies</li>
-              <li>Customize preferences</li>
-              <li>Revoke consent at any time</li>
-            </ul>
-            <p>A full Cookie Policy page will be published soon.</p>
+          <section>
+            <h2>7. Data retention</h2>
+            <p>Your data is stored on GDPR-compliant infrastructure (Supabase, Netlify) and kept only as long as needed to provide the service.</p>
+            <p>If an account stays inactive for 24 months you will receive a warning email; with no response, the account and all related data are permanently deleted.</p>
           </section>
+
+          <section>
+            <h2>8. Your rights</h2>
+            <p>Under the GDPR you can access, correct, delete or export your data, object to processing, and withdraw consent at any time.</p>
+            <p>You can delete your account directly from your profile. For anything else, email <a href="mailto:privacy@progdealer.com">privacy@progdealer.com</a>. Please note this is an independent project run outside standard office hours.</p>
+          </section>
+
+          <section>
+            <h2>9. Cookies &amp; consent</h2>
+            <p>We use a self-hosted consent banner (no third-party consent provider). Cookies fall into three categories:</p>
+            <ul>
+              <li><strong>Strictly necessary</strong> — always on. Needed for navigation, security and keeping you signed in. These do not track you.</li>
+              <li><strong>Analytics</strong> — Google Analytics. Loaded only if you opt in.</li>
+              <li><strong>Behaviour &amp; session replay</strong> — Lucky Orange. Loaded only if you opt in.</li>
+            </ul>
+            <p>You can accept all, reject non-essential cookies, or choose per category — and change or withdraw your choice at any time.</p>
+            <button className="btn btn-accent legal-cta" onClick={openCookieSettings}>
+              <Cookie size={16} /> Manage cookie preferences
+            </button>
+          </section>
+
+          <p className="legal-updated">Last updated 13 July 2026</p>
         </div>
       </main>
     </div>

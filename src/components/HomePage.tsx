@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
 import { useUserRole } from '../hooks/useUserRole';
 import { getEventCountry, getContinent, CONTINENT_LIST, countryFlag } from '../utils/geo';
+import { openCookieSettings } from '../lib/consent';
 import Logo from './brand/Logo';
 import SmartSearch from './SmartSearch';
 import PlacesAutocomplete from './PlacesAutocomplete';
@@ -281,6 +282,7 @@ export default function HomePage() {
             <div>
               <span className="label">Project</span>
               <a href="/privacy">Privacy</a>
+              <button onClick={openCookieSettings}>Cookie settings</button>
               {isAuthenticated && <a href="/userarea">Your area</a>}
               {isAdmin && <a href="/adminarea"><Shield size={13} /> Admin</a>}
             </div>

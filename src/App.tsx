@@ -12,6 +12,7 @@ import ResetPasswordPage from './components/ResetPasswordPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import GoodbyePage from './components/GoodbyePage';
 import PrivacyPolicyPage from './components/PrivacyPolicyPage';
+import CookieConsent from './components/CookieConsent';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
@@ -113,6 +114,7 @@ function App() {
         {/* Catch all route - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <CookieConsent />
     </Router>
   );
 }

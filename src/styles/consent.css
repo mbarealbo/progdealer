@@ -1,0 +1,132 @@
+/* Self-hosted cookie consent — matches the ProgDealer "clean" look.
+   Deliberately NOT scoped under .pd so it renders identically on every route. */
+
+.cc-root {
+  --cc-paper: #f5f4f2;
+  --cc-card: #ffffff;
+  --cc-ink: #191a1d;
+  --cc-ink-2: #5c5f66;
+  --cc-ink-3: #9a9da4;
+  --cc-line: #e7e5e2;
+  --cc-accent: #e1341e;
+  --cc-accent-deep: #b4260f;
+  --cc-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto, sans-serif;
+
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+  font-family: var(--cc-sans);
+  color: var(--cc-ink);
+}
+
+.cc-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(25, 26, 29, 0.32);
+  opacity: 0;
+  animation: cc-fade 0.2s ease forwards;
+}
+
+.cc-card {
+  position: relative;
+  pointer-events: auto;
+  background: var(--cc-card);
+  border: 1px solid var(--cc-line);
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(25, 26, 29, 0.22);
+  padding: 20px 22px;
+  animation: cc-rise 0.24s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+
+/* Bottom bar for the first-choice banner */
+.cc-banner {
+  width: min(720px, calc(100% - 32px));
+  margin: 0 0 22px;
+}
+
+/* Centred dialog for granular preferences */
+.cc-root:has(.cc-prefs) { align-items: center; }
+.cc-prefs {
+  width: min(560px, calc(100% - 32px));
+  margin: 16px;
+  max-height: min(86vh, 720px);
+  overflow-y: auto;
+}
+
+.cc-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.cc-ico { color: var(--cc-accent); flex: 0 0 auto; }
+/* Escape the app's global uppercase/Oswald heading base. */
+.cc-card h2 {
+  margin: 0; font-size: 1.06rem; font-weight: 700; letter-spacing: -0.01em;
+  font-family: var(--cc-sans); text-transform: none;
+}
+
+.cc-prefs-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.cc-close {
+  border: 0; background: transparent; color: var(--cc-ink-3); cursor: pointer;
+  display: inline-flex; padding: 4px; border-radius: 8px;
+}
+.cc-close:hover { color: var(--cc-ink); background: var(--cc-paper); }
+
+.cc-text { margin: 0; font-size: 0.86rem; line-height: 1.55; color: var(--cc-ink-2); }
+.cc-text a { color: var(--cc-accent); font-weight: 600; text-decoration: none; }
+.cc-text a:hover { text-decoration: underline; }
+
+.cc-list { list-style: none; margin: 16px 0 4px; padding: 0; display: grid; gap: 10px; }
+.cc-item {
+  display: flex; align-items: center; gap: 14px;
+  border: 1px solid var(--cc-line); border-radius: 12px; padding: 12px 14px;
+  background: var(--cc-paper);
+}
+.cc-item-txt { display: flex; flex-direction: column; gap: 3px; }
+.cc-item-txt strong { font-size: 0.9rem; font-weight: 700; }
+.cc-item-txt span { font-size: 0.8rem; color: var(--cc-ink-2); line-height: 1.45; }
+.cc-lock {
+  flex: 0 0 auto; font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--cc-ink-3);
+}
+
+/* Toggle */
+.cc-switch { position: relative; flex: 0 0 auto; width: 42px; height: 24px; }
+.cc-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.cc-slider {
+  position: absolute; inset: 0; border-radius: 999px; background: #d6d4d0;
+  transition: background 0.18s;
+}
+.cc-slider::before {
+  content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+  border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+  transition: transform 0.18s;
+}
+.cc-switch input:checked + .cc-slider { background: var(--cc-accent); }
+.cc-switch input:checked + .cc-slider::before { transform: translateX(18px); }
+.cc-switch input:focus-visible + .cc-slider { box-shadow: 0 0 0 3px rgba(225, 52, 30, 0.28); }
+
+.cc-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+.cc-btn {
+  height: 40px; padding: 0 16px; border-radius: 10px; cursor: pointer;
+  font-family: var(--cc-sans); font-size: 0.88rem; font-weight: 600;
+  border: 1px solid transparent; transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.cc-btn:active { transform: translateY(1px); }
+.cc-ghost { background: transparent; border-color: var(--cc-line); color: var(--cc-ink); }
+.cc-ghost:hover { border-color: var(--cc-ink-2, #5c5f66); }
+.cc-solid { background: var(--cc-accent); color: #fff; }
+.cc-solid:hover { background: var(--cc-accent-deep); }
+
+@keyframes cc-fade { to { opacity: 1; } }
+@keyframes cc-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 560px) {
+  .cc-banner { width: 100%; margin: 0; border-radius: 16px 16px 0 0; }
+  .cc-actions { justify-content: stretch; }
+  .cc-actions .cc-btn { flex: 1 1 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cc-backdrop, .cc-card { animation-duration: 0.001s; }
+}

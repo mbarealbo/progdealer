@@ -14,20 +14,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>ProgDealer: Progressive and Alternative Rock Concerts and Festivals Database</title>
     <meta name="description" content="Live progressive rock, metal and post-rock shows worldwide — on an interactive map, near you. Filter by city, country, date or genre." />
-    <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="2728156a-d9d3-4b4f-9444-06e3424bc7ba" data-blockingmode="auto" type="text/javascript"></script>
-    <!-- Google Identity Services -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MT7RPW1YD2"></script>
-    <script async defer src="https://tools.luckyorange.com/core/lo.js?site-id=2f76a8d2"></script>
-
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-MT7RPW1YD2');
-    </script>
+    <!--
+      Third-party scripts are intentionally NOT loaded here. Google Analytics and
+      Lucky Orange are injected only after opt-in by the self-hosted cookie consent
+      (see src/lib/consent.ts). Google Identity Services is loaded on demand by the
+      login UI (see src/components/GoogleAuth.tsx).
+    -->
   </head>
   <body>
     <div id="root"></div>
