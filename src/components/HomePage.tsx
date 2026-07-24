@@ -243,6 +243,20 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Mobile-only quick nation filter */}
+          {countries.length > 0 && (
+            <div className="nation-quick" role="group" aria-label="Filter shows by country">
+              <button className={`nq ${!country ? 'on' : ''}`} onClick={() => { setContinent(null); setCountry(null); }}>
+                <span className="nq-flag">🌍</span> All
+              </button>
+              {countries.map(([co, n]) => (
+                <button key={co} className={`nq ${country === co ? 'on' : ''}`} onClick={() => setCountry(country === co ? null : co)}>
+                  <span className="nq-flag">{countryFlag(co)}</span> {co} <i>{n}</i>
+                </button>
+              ))}
+            </div>
+          )}
+
           {loading ? (
             <div className="skgrid">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="sk" />)}</div>
           ) : filtered.length === 0 ? (

@@ -542,6 +542,37 @@
 .pd .loc-menu-sep { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); padding: 8px 10px 4px; font-weight: 600; }
 @media (max-width: 560px) { .pd .loc-menu { right: auto; left: 0; } }
 
+/* Mobile-only quick nation filter — a horizontally scrollable strip of country
+   chips right under the shows header, so on phones you can jump to the relevant
+   country without opening the full Filters sheet. Hidden on desktop. */
+.pd .nation-quick { display: none; }
+@media (max-width: 767px) {
+  .pd .nation-quick {
+    display: flex; gap: 8px; align-items: center;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity; scrollbar-width: none;
+    /* bleed to the screen edges but keep first/last chip on the 16px gutter */
+    margin: 2px -16px 16px; padding: 2px 16px 8px;
+  }
+  .pd .nation-quick::-webkit-scrollbar { display: none; }
+  .pd .nq {
+    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
+    height: 38px; padding: 0 14px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink);
+    font-family: var(--sans); font-size: 0.85rem; font-weight: 600;
+    white-space: nowrap; cursor: pointer; scroll-snap-align: start;
+    transition: background 0.14s, border-color 0.14s, color 0.14s;
+  }
+  .pd .nq:active { transform: scale(0.97); }
+  .pd .nq.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .pd .nq .nq-flag { font-size: 1rem; line-height: 1; }
+  .pd .nq i {
+    font-style: normal; font-family: var(--mono); font-size: 0.7rem;
+    color: var(--ink-3); font-variant-numeric: tabular-nums;
+  }
+  .pd .nq.on i { color: rgba(255, 255, 255, 0.78); }
+}
+
 /* City filter = compact Places autocomplete in the shows toolbar */
 .pd .sb-controls .ctl-city { width: 168px; }
 .pd .sb-controls .ctl-city .ac { width: 100%; }
@@ -562,6 +593,10 @@ html, body { overscroll-behavior-y: none; }
   /* Map in dynamic-vh so it never tucks under the bottom nav */
   .pd .pd-map-hero { height: clamp(300px, 52dvh, 440px); }
 
+  /* Tighter, app-like content gutter — aligns page content with the header
+     container and keeps consistent lateral margins on small screens. */
+  .pd .wrap { padding: 0 16px; }
+
   /* Comfortable ≥42px tap targets */
   .pd .loc-pill, .pd .icon-btn { min-height: 42px; }
   .pd .viewtoggle button { width: 42px; height: 42px; }
@@ -576,13 +611,22 @@ html, body { overscroll-behavior-y: none; }
 }
 
 /* Mobile topbar: fit without overflow — brand + location on row 1, full-width
-   search on row 2; the "Add a show" button is dropped (the bottom FAB covers it). */
+   search on row 2; the "Add a show" button is dropped (the bottom FAB covers it).
+   Keeps the wrap's lateral gutter so the header sits inside a proper container
+   instead of running edge-to-edge. */
 @media (max-width: 767px) {
-  .pd .topbar-inner { flex-wrap: wrap; height: auto; row-gap: 9px; padding: 9px 0; }
+  .pd .topbar-inner {
+    flex-wrap: wrap; height: auto; row-gap: 10px;
+    /* horizontal gutter = content container; safe-area aware in standalone */
+    padding: 10px max(16px, env(safe-area-inset-right)) 11px max(16px, env(safe-area-inset-left));
+  }
   .pd .brand { order: 1; }
   .pd .topnav { order: 2; margin-left: auto; gap: 8px; }
   .pd .topnav .btn-accent { display: none; }
-  .pd .topsearch { order: 3; flex: 1 1 100%; max-width: none; }
+  .pd .topsearch { order: 3; flex: 1 1 100%; max-width: none; height: 42px; }
+  /* Location pill can grow but never crowd the brand */
+  .pd .topnav .loc-pill { max-width: 62vw; }
+  .pd .topnav .loc-pill span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
 /* Filters button (mobile) + bottom-sheet modal — button hidden on desktop */
