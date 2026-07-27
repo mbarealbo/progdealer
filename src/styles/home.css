@@ -13,6 +13,19 @@
   --accent: #e1341e;
   --accent-deep: #b4260f;
   --accent-wash: #fbe9e5;
+  /* Layered "stacked" card shadow — on-brand accent (225,52,30) instead of pink */
+  --shadow-rgb: 225, 52, 30;
+  --stack-shadow:
+    rgba(var(--shadow-rgb), 0.40) 5px 5px,
+    rgba(var(--shadow-rgb), 0.30) 10px 10px,
+    rgba(var(--shadow-rgb), 0.20) 15px 15px,
+    rgba(var(--shadow-rgb), 0.10) 20px 20px,
+    rgba(var(--shadow-rgb), 0.05) 25px 25px;
+  --stack-shadow-sm:
+    rgba(var(--shadow-rgb), 0.35) 4px 4px,
+    rgba(var(--shadow-rgb), 0.24) 8px 8px,
+    rgba(var(--shadow-rgb), 0.14) 12px 12px,
+    rgba(var(--shadow-rgb), 0.06) 16px 16px;
   --serif: 'Fraunces', 'Iowan Old Style', 'Charter', 'Palatino', Georgia, 'Times New Roman', serif;
   --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto, sans-serif;
   --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
@@ -163,11 +176,11 @@
 .pd .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
 .pd .ev {
   background: var(--card); border: 1px solid var(--line); border-radius: 14px;
-  overflow: hidden; display: flex; flex-direction: column; cursor: pointer;
-  transition: transform 0.14s, box-shadow 0.14s, border-color 0.14s;
+  overflow: hidden; display: flex; flex-direction: column; cursor: pointer; position: relative;
+  transition: transform 0.16s, box-shadow 0.16s, border-color 0.16s;
   text-align: left; padding: 0; font: inherit;
 }
-.pd .ev:hover { transform: translateY(-3px); box-shadow: 0 12px 28px -18px rgba(25, 26, 29, 0.4); }
+.pd .ev:hover { transform: translateY(-4px); box-shadow: var(--stack-shadow-sm); border-color: rgba(var(--shadow-rgb), 0.45); z-index: 2; }
 .pd .ev-vis { height: 118px; position: relative; overflow: hidden; display: flex; align-items: flex-end; padding: 12px; color: #fff; }
 .pd .ev-vis canvas, .pd .ev-vis img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .pd .ev-vis .genre {
@@ -196,10 +209,10 @@
 .pd .regions { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 12px; }
 .pd .region {
   background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-  padding: 16px; cursor: pointer; transition: border-color 0.15s, transform 0.12s;
-  display: flex; flex-direction: column; gap: 4px; text-align: left; font: inherit;
+  padding: 16px; cursor: pointer; transition: border-color 0.15s, transform 0.16s, box-shadow 0.16s;
+  display: flex; flex-direction: column; gap: 4px; text-align: left; font: inherit; position: relative;
 }
-.pd .region:hover { border-color: var(--ink); transform: translateY(-2px); }
+.pd .region:hover { border-color: rgba(var(--shadow-rgb), 0.45); transform: translateY(-3px); box-shadow: var(--stack-shadow-sm); z-index: 2; }
 .pd .region .rn { font-weight: 600; font-size: 1rem; display: flex; align-items: center; gap: 7px; }
 .pd .region .rc { font-family: var(--mono); font-size: 0.82rem; color: var(--accent-deep); font-variant-numeric: tabular-nums; font-weight: 600; }
 .pd .region .bar { height: 4px; border-radius: 2px; background: var(--line); margin-top: 8px; overflow: hidden; }
@@ -256,6 +269,7 @@
   display: inline-flex; align-items: flex-start; gap: 10px; margin: 4px 0 0;
   background: var(--accent-wash); border: 1px solid #f3c9c0; color: var(--accent-deep);
   border-radius: 12px; padding: 11px 15px; font-size: 0.83rem;
+  box-shadow: var(--stack-shadow-sm);
 }
 .pd :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 
@@ -306,7 +320,7 @@
 
 /* ---------- Auth ---------- */
 .pd .auth-wrap { min-height: calc(100vh - 57px); display: flex; align-items: center; justify-content: center; padding: 32px 20px; }
-.pd .auth-card { width: 100%; max-width: 428px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 30px; }
+.pd .auth-card { width: 100%; max-width: 428px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 30px; box-shadow: var(--stack-shadow); }
 .pd .auth-title { font-size: 1.7rem; margin-bottom: 4px; }
 .pd .auth-caption { color: var(--ink-2); font-size: 0.92rem; margin-bottom: 22px; }
 .pd .seg { display: flex; background: var(--paper); border: 1px solid var(--line); border-radius: 11px; padding: 3px; margin-bottom: 20px; }
@@ -340,7 +354,7 @@
 /* ---------- Modal (Add a show) ---------- */
 .pd-modal-overlay { position: fixed; inset: 0; z-index: 60; background: rgba(20, 20, 24, 0.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px; animation: pd-fade 0.18s ease-out; }
 @keyframes pd-fade { from { opacity: 0; } to { opacity: 1; } }
-.pd-modal { width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto; background: #fff; border: 1px solid #e7e5e2; border-radius: 16px; padding: 24px; color: #191a1d; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+.pd-modal { width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto; background: #fff; border: 1px solid #e7e5e2; border-radius: 16px; padding: 24px; color: #191a1d; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; box-shadow: rgba(225, 52, 30, 0.40) 5px 5px, rgba(225, 52, 30, 0.30) 10px 10px, rgba(225, 52, 30, 0.20) 15px 15px, rgba(225, 52, 30, 0.10) 20px 20px, rgba(225, 52, 30, 0.05) 25px 25px; }
 .pd-modal h2 { font-family: 'Fraunces', 'Iowan Old Style', Charter, Georgia, serif; font-weight: 600; text-transform: none; letter-spacing: -0.01em; font-size: 1.5rem; margin: 0; }
 .pd-modal .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .pd-modal .modal-sub { color: #5c5f66; font-size: 0.9rem; margin: 0 0 18px; }
@@ -377,14 +391,14 @@
 /* ---------- Near you (radar + list) ---------- */
 .pd .near { display: grid; grid-template-columns: 1fr; gap: 20px; }
 @media (min-width: 880px) { .pd .near { grid-template-columns: 1.05fr 1fr; } }
-.pd .radar-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; min-height: 300px; }
+.pd .radar-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; min-height: 300px; box-shadow: var(--stack-shadow); }
 .pd .radar-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; }
 .pd .radar-canvas { width: 100%; flex: 1; display: block; min-height: 240px; }
 .pd .radar-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; font-size: 0.78rem; color: var(--ink-2); }
 .pd .radar-legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: middle; }
 .pd .nearlist { display: flex; flex-direction: column; gap: 10px; }
-.pd .nearrow { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; cursor: pointer; text-align: left; font: inherit; transition: border-color 0.15s, transform 0.12s; }
-.pd .nearrow:hover { border-color: var(--ink-2); transform: translateY(-1px); }
+.pd .nearrow { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; cursor: pointer; text-align: left; font: inherit; position: relative; transition: border-color 0.16s, transform 0.16s, box-shadow 0.16s; }
+.pd .nearrow:hover { border-color: rgba(var(--shadow-rgb), 0.45); transform: translateY(-2px); box-shadow: var(--stack-shadow-sm); z-index: 2; }
 .pd .nearrow .when { flex: 0 0 auto; width: 52px; text-align: center; border-right: 1px solid var(--line); padding-right: 12px; }
 .pd .nearrow .when .d { font-family: var(--mono); font-size: 1.3rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
 .pd .nearrow .when .m { font-family: var(--mono); font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-3); margin-top: 3px; }
@@ -394,7 +408,7 @@
 .pd .nearrow .dist { flex: 0 0 auto; text-align: right; }
 .pd .nearrow .dist .km { font-family: var(--mono); font-size: 0.95rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 .pd .nearrow .dist .u { font-family: var(--mono); font-size: 0.62rem; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; }
-.pd .near-prompt { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 26px; }
+.pd .near-prompt { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 26px; box-shadow: var(--stack-shadow); }
 .pd .near-prompt .pin { width: 42px; height: 42px; border-radius: 12px; background: var(--accent-wash); color: var(--accent); display: inline-flex; align-items: center; justify-content: center; }
 .pd .near-prompt p { color: var(--ink-2); margin: 0; max-width: 46ch; }
 
@@ -503,8 +517,8 @@
 
 /* List view */
 .pd .list { display: flex; flex-direction: column; gap: 10px; }
-.pd .evl { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px 10px 10px; cursor: pointer; transition: border-color 0.14s, transform 0.14s; }
-.pd .evl:hover { border-color: var(--ink-2); transform: translateY(-1px); }
+.pd .evl { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px 10px 10px; cursor: pointer; position: relative; transition: border-color 0.16s, transform 0.16s, box-shadow 0.16s; }
+.pd .evl:hover { border-color: rgba(var(--shadow-rgb), 0.45); transform: translateY(-2px); box-shadow: var(--stack-shadow-sm); z-index: 2; }
 .pd .evl-vis { position: relative; width: 86px; height: 66px; flex: 0 0 auto; border-radius: 9px; overflow: hidden; }
 .pd .evl-vis img, .pd .evl-vis canvas, .pd .evl-vis svg { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pd .evl-vis .soon { position: absolute; top: 5px; left: 5px; font-size: 0.6rem; padding: 2px 6px; }
