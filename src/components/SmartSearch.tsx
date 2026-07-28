@@ -27,9 +27,12 @@ export default function SmartSearch({ value, onChange, events, variant = 'bar', 
 
   const q = value.trim().toLowerCase();
   const suggest = q.length >= 2 && !q.includes(':');
-  const eventMatches = suggest
+  // Match the query at a word start, so e.g. "rome" surfaces "Rome" / "Rock in
+  // Rome" but not "Andromeda". Still prefix-based, so "rom" keeps matching "Rome".
+  const rx = suggest ? new RegExp('\\b' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null;
+  const eventMatches = rx
     ? events
-        .filter((e) => [e.nome_evento, e.venue, e.città, ...(e.artisti || [])].join(' ').toLowerCase().includes(q))
+        .filter((e) => rx.test([e.nome_evento, e.venue, e.città, ...(e.artisti || [])].join(' ')))
         .slice(0, 5)
     : [];
 
