@@ -1,5 +1,5 @@
 // ProgDealer service worker — app shell + offline. Hand-rolled, no deps.
-const CACHE = 'progdealer-v2';
+const CACHE = 'progdealer-v3';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 const NAV_TIMEOUT = 3000; // ms — never let a slow/unreachable origin hold a navigation hostage.
 
