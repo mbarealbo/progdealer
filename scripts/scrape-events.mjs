@@ -25,6 +25,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { geocode } from './lib/geocode.mjs';
 import { bucketOf, findDuplicate, indexByBucket } from './lib/dedupe.mjs';
+import { parseGigpress } from './lib/gigpress.mjs';
 
 // Load .env for local runs (plain `node` doesn't read it like Vite does).
 // Real environment variables / CI secrets always take precedence.
@@ -45,13 +46,17 @@ if (existsSync('.env')) {
 // festival & artist pages capture a single line-up. Dead/404 URLs are skipped
 // gracefully, so a stale entry never breaks the run.
 const SOURCES = [
+  // The richest single source: TPA's UK gig guide lists the whole UK prog
+  // long tail (~120 artists) and updates itself. The page is too big for the
+  // LLM extractor (it returns zero events), so it gets a deterministic
+  // GigPress parser over the markdown render — 1 credit instead of 5.
+  { name: 'TPA — UK Gig Guide', url: 'https://theprogressiveaspect.net/uk-gig-guide-new/', parse: 'gigpress' },
   // Aggregators (multi-region) — Concertful area pages cover the world
   { name: 'Concertful — Europe',          url: 'https://concertful.com/area/europe/' },
   { name: 'Concertful — United States',   url: 'https://concertful.com/area/united-states/' },
   { name: 'Concertful — Canada',          url: 'https://concertful.com/area/canada/' },
   { name: 'Concertful — Australia',       url: 'https://concertful.com/area/australia/' },
   { name: 'Concertful — South America',   url: 'https://concertful.com/area/south-america/' },
-  { name: 'The Progressive Aspect',       url: 'https://www.theprogressiveaspect.net/' },
   { name: 'Progressive Rock Central',     url: 'https://progressiverockcentral.com/' },
   { name: 'Music Festival Wizard',        url: 'https://www.musicfestivalwizard.com/festivals/' },
   // Europe festivals
@@ -197,18 +202,40 @@ async function firecrawlExtract(url) {
   return body?.data?.json?.events || [];
 }
 
+// Markdown-only scrape (1 credit) for sources with a deterministic parser.
+async function firecrawlMarkdown(url) {
+  const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ url, formats: ['markdown'], onlyMainContent: true }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || !body?.success) throw new Error(body?.error || `HTTP ${res.status}`);
+  const status = body?.data?.metadata?.statusCode;
+  if (status && status >= 400) throw new Error(`source returned HTTP ${status}`);
+  return body?.data?.markdown || '';
+}
+
 // --- Web discovery -----------------------------------------------------------
 // Beyond the fixed SOURCES, find prog event pages across the whole web via
 // Firecrawl search — so coverage isn't limited to a hand-picked list.
+const YEAR = new Date().getFullYear();
 const SEARCH_QUERIES = [
-  'progressive rock concert tour 2026 tickets',
-  'prog metal festival 2026 lineup USA Europe',
-  'progressive rock gigs 2026 South America Australia Japan',
-  'neo-prog symphonic prog live 2026',
+  `progressive rock tour dates ${YEAR}`,
+  `progressive rock concert tour ${YEAR} tickets`,
+  `prog metal festival ${YEAR} lineup USA Europe`,
+  `progressive rock gigs ${YEAR} South America Australia Japan`,
+  `neo-prog symphonic prog live ${YEAR}`,
+  `psychedelic rock space rock tour ${YEAR}`,
+  `art rock avant-prog fusion concert ${YEAR}`,
+  `progressive rock festival ${YEAR + 1} lineup`,
 ];
 // Skip social, aggregators-of-setlists and databases (the latter hallucinate dates).
 const JUNK_HOST = /facebook|instagram|twitter|x\.com|youtube|youtu\.be|spotify|wikipedia|reddit|tiktok|pinterest|last\.fm|discogs|apple\.com|amazon|progarchives|rateyourmusic|allmusic|genius\.com|setlist\.fm|bandcamp|\.pdf($|\?)/i;
-const MAX_DISCOVERED = 12;
+const MAX_DISCOVERED = 24;
 
 async function firecrawlSearch(query, limit = 6) {
   try {
@@ -424,7 +451,9 @@ async function main() {
   for (const source of sources) {
     process.stdout.write(`• ${source.name} … `);
     try {
-      const raw = await firecrawlExtract(source.url);
+      const raw = source.parse === 'gigpress'
+        ? parseGigpress(await firecrawlMarkdown(source.url), source.url)
+        : await firecrawlExtract(source.url);
       let kept = 0;
       for (const r of raw) {
         const { event, skip } = normalize(r, source);
