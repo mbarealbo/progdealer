@@ -4,8 +4,8 @@
 //
 // Scrapes a curated list of progressive-music listing/festival/artist pages via
 // the Firecrawl scrape API (schema-driven LLM extraction), normalizes the result
-// to the `eventi_prog` shape and upserts it into Supabase (dedup on
-// nome_evento + data_ora + venue — same key as the app's upsert_evento RPC).
+// to the `eventi_prog` shape and upserts it into Supabase (duplicates are
+// recognised by day + city + venue — see lib/dedupe.mjs).
 //
 // Run:  node scripts/scrape-events.mjs [--dry-run] [--limit=N] [--status=pending|approved]
 //
@@ -24,6 +24,7 @@ import { writeFile, mkdir } from 'node:fs/promises';
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { geocode } from './lib/geocode.mjs';
+import { bucketOf, findDuplicate, indexByBucket } from './lib/dedupe.mjs';
 
 // Load .env for local runs (plain `node` doesn't read it like Vite does).
 // Real environment variables / CI secrets always take precedence.
@@ -59,7 +60,7 @@ const SOURCES = [
   { name: 'Midsummer Prog',               url: 'https://midsummerprog.com/' },
   // North America festivals
   { name: 'ProgPower USA',                url: 'https://www.progpowerusa.com/' },
-  { name: 'RoSfest (US)',                 url: 'https://rosfest.com/' },
+  { name: 'RoSfest (US)',                 url: 'https://www.rosfest.com/' },
   { name: 'ProgStock (US)',               url: 'https://www.progstock.com/' },
   { name: 'Cruise to the Edge',           url: 'https://cruisetotheedge.com/' },
   // Artist tour pages — major worldwide prog acts (official sites, agent-verified)
@@ -104,7 +105,6 @@ const SOURCES = [
   { name: 'Transatlantic', url: 'https://www.transatlanticweb.com/' },
   { name: 'Neal Morse', url: 'https://nealmorse.com/tour-dates/' },
   { name: 'The Flower Kings', url: 'https://www.roinestolt.com/roinestolt-tour' },
-  { name: 'Pain of Salvation', url: 'https://painofsalvation.com/tour-dates/' },
   { name: 'Ayreon', url: 'https://www.arjenlucassen.com/live/' },
   { name: 'Gazpacho', url: 'https://gazpachoworld.com/tour-dates/' },
   { name: 'Fish', url: 'https://fishmusic.scot/' },
@@ -223,16 +223,17 @@ async function firecrawlSearch(query, limit = 6) {
   } catch { return []; }
 }
 
-async function discoverSources(knownUrls) {
-  const found = new Set();
+async function discoverSources(knownHosts) {
+  const found = new Map(); // host -> url: one page per host, and never a host we already scrape
   for (const q of SEARCH_QUERIES) {
     for (const url of await firecrawlSearch(q)) {
       const clean = url.split('#')[0];
-      if (JUNK_HOST.test(clean) || knownUrls.has(clean)) continue;
-      found.add(clean);
+      const host = hostOf(clean);
+      if (JUNK_HOST.test(clean) || knownHosts.has(host) || found.has(host)) continue;
+      found.set(host, clean);
     }
   }
-  return [...found].slice(0, MAX_DISCOVERED).map((url) => ({ name: `web:${hostOf(url)}`, url }));
+  return [...found.values()].slice(0, MAX_DISCOVERED).map((url) => ({ name: `web:${hostOf(url)}`, url }));
 }
 
 // --- Normalization -----------------------------------------------------------
@@ -335,15 +336,25 @@ function classifySubgenre(eventName, description, artists) {
   return 'Progressive Rock';
 }
 
-// --- Supabase upsert (service role; same dedup key as upsert_evento) ---------
-// Fuzzy dedup key: same headliner + same day + same city = the same concert,
-// regardless of venue spelling or source — catches cross-source duplicates that
-// an exact (nome+data+venue) match misses.
-function dedupKey(nome, data_ora, città) {
-  const artist = String(nome || '').split(/\s[-–—]\s/)[0].trim().toLowerCase().replace(/\s+/g, ' ');
-  const day = String(data_ora || '').slice(0, 10);
-  const city = String(città || '').split(',')[0].trim().toLowerCase().replace(/\s+/g, ' ');
-  return `${artist}|${day}|${city}`;
+// --- Supabase upsert (service role) ------------------------------------------
+// PostgREST caps every response at max-rows (1000 by default), so the existing
+// events must be read page by page — a single .limit(10000) silently returned
+// only the first 1000 rows, and everything past it was re-inserted on each run.
+async function loadExisting(sb) {
+  const PAGE = 1000;
+  const rows = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await sb
+      .from('eventi_prog')
+      .select('nome_evento, data_ora, venue, città, link')
+      .order('data_ora', { ascending: true })
+      .order('id', { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    rows.push(...data);
+    if (data.length < PAGE) break;
+  }
+  return rows;
 }
 
 async function upsertAll(events) {
@@ -352,25 +363,38 @@ async function upsertAll(events) {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  // Load every existing event's dedup key so we never insert a duplicate concert
-  // (any source, any status). Auto-approved events must not create visible dupes.
-  const { data: existing, error: exErr } = await sb
-    .from('eventi_prog')
-    .select('nome_evento, data_ora, città')
-    .limit(10000);
-  if (exErr) { console.error('  ✖ could not load existing events:', exErr.message); return { inserted: 0, skipped: 0, errors: 1 }; }
-  const seen = new Set((existing || []).map((e) => dedupKey(e.nome_evento, e.data_ora, e['città'])));
+  // Every existing event (any source, any status) — auto-approved scrapes must
+  // never create a visible duplicate.
+  let index;
+  try {
+    const existing = await loadExisting(sb);
+    console.log(`  ${existing.length} events already in the database.`);
+    index = indexByBucket(existing);
+  } catch (err) {
+    console.error('  ✖ could not load existing events:', err.message || err);
+    return { inserted: 0, skipped: 0, errors: 1 };
+  }
 
   let inserted = 0, skipped = 0, errors = 0;
   for (const ev of events) {
-    const key = dedupKey(ev.nome_evento, ev.data_ora, ev.città);
-    if (seen.has(key)) { skipped++; continue; } // already have this concert
+    if (findDuplicate(ev, index)) { skipped++; continue; } // already have this concert
     try {
       const { error } = await sb.from('eventi_prog').insert({ ...ev, status: STATUS });
       if (error) throw error;
-      seen.add(key);
+      const bucket = bucketOf(ev);
+      if (!index.has(bucket)) index.set(bucket, []);
+      index.get(bucket).push(ev); // guard the rest of this run too
       inserted++;
     } catch (err) {
+      // The DB's unique index caught a duplicate our fuzzy pass missed — the
+      // concert is already in the table, so this is a skip, not a failure.
+      if (err?.code === '23505' || /duplicate key/i.test(err?.message || '')) {
+        skipped++;
+        const bucket = bucketOf(ev);
+        if (!index.has(bucket)) index.set(bucket, []);
+        index.get(bucket).push(ev);
+        continue;
+      }
       errors++;
       console.error(`  ✖ insert "${ev.nome_evento}": ${err.message || err}`);
     }
@@ -384,7 +408,7 @@ async function main() {
   // Discover more prog event pages across the web (skip with --no-search or --limit).
   if (!args.includes('--no-search') && !LIMIT) {
     process.stdout.write('🔎 web discovery (Firecrawl search)… ');
-    const discovered = await discoverSources(new Set(SOURCES.map((s) => s.url)));
+    const discovered = await discoverSources(new Set(SOURCES.map((s) => hostOf(s.url))));
     console.log(`+${discovered.length} sources`);
     sources = [...SOURCES, ...discovered];
   }
@@ -414,13 +438,15 @@ async function main() {
     }
   }
 
-  // De-dup within this run on the same key the DB uses.
-  const seen = new Set();
+  // De-dup within this run with the same rule the DB pass uses — an exact
+  // name+date+venue match would let two spellings of one gig through.
+  const index = indexByBucket([]);
   const events = [];
   for (const e of collected) {
-    const key = `${e.nome_evento}||${e.data_ora}||${e.venue}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
+    if (findDuplicate(e, index)) continue;
+    const bucket = bucketOf(e);
+    if (!index.has(bucket)) index.set(bucket, []);
+    index.get(bucket).push(e);
     events.push(e);
   }
 

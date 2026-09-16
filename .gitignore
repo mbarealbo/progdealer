@@ -42,3 +42,6 @@ dist-ssr
 **/*credential*
 .DS_Store
 ._*
+
+# Dedupe backups (contain full event rows)
+.firecrawl/dedupe-backup-*.json
