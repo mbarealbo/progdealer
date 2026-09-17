@@ -4,7 +4,7 @@ import {
   Shield, LayoutGrid, List, AlignJustify, X, MapPin, ChevronDown, SlidersHorizontal,
 } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/auth-js';
-import { supabase } from '../lib/supabase';
+import { supabase, fetchAllRows } from '../lib/supabase';
 import { Event } from '../types/event';
 import { useUserRole } from '../hooks/useUserRole';
 import { getEventCountry, getContinent, CONTINENT_LIST, countryFlag } from '../utils/geo';
@@ -44,11 +44,21 @@ export default function HomePage() {
 
   const fetchEvents = async () => {
     try {
-      const { data, error } = await supabase.from('eventi_prog').select('*').order('data_ora', { ascending: true });
-      if (error) throw error;
+      // Filter server-side and page through: an unpaged select caps at 1000
+      // rows, so past events were crowding today's out of the response.
       const startOfToday = new Date();
       startOfToday.setHours(0, 0, 0, 0);
-      setEvents((data || []).filter((e: Event) => (e.status || 'approved') === 'approved' && new Date(e.data_ora) >= startOfToday));
+      const data = await fetchAllRows<Event>((from, to) =>
+        supabase
+          .from('eventi_prog')
+          .select('*')
+          .gte('data_ora', startOfToday.toISOString())
+          .or('status.eq.approved,status.is.null')
+          .order('data_ora', { ascending: true })
+          .order('id', { ascending: true })
+          .range(from, to),
+      );
+      setEvents(data);
     } catch (err) {
       console.error('Error fetching events:', err);
     } finally {
