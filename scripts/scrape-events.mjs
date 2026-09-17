@@ -286,6 +286,16 @@ function normalize(raw, source) {
     date = parsed.toISOString().slice(0, 10);
   }
 
+  // Reject calendar-impossible dates ("2027-02-29"): JS silently rolls them
+  // over to the next day, but Postgres rejects them at insert time.
+  {
+    const [y, mo, d] = date.split('-').map(Number);
+    const dt = new Date(Date.UTC(y, mo - 1, d));
+    if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) {
+      return { skip: `bad date "${raw.startDate}"` };
+    }
+  }
+
   let time = (raw.time || '').trim();
   const m = time.match(HHMM);
   time = m ? `${m[1].padStart(2, '0')}:${m[2]}` : '20:00';
