@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Shield, Check, X, Clock, CheckCircle, XCircle, Trash2, Upload, Download, ExternalLink, Users, Settings, LogOut } from 'lucide-react';
 import type { User } from '@supabase/auth-js';
-import { supabase } from '../lib/supabase';
+import { supabase, fetchAllRows } from '../lib/supabase';
 import { Event } from '../types/event';
 import { UserProfile } from '../hooks/useUserRole';
 import { shouldUsePlaceholder } from '../utils/imageUtils';
@@ -50,9 +50,15 @@ export default function AdminPanel({ isAuthenticated, currentUser, userProfile, 
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.from('eventi_prog').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      setEvents(data || []);
+      const data = await fetchAllRows<Event>((from, to) =>
+        supabase
+          .from('eventi_prog')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: true })
+          .range(from, to),
+      );
+      setEvents(data);
     } catch (err) {
       console.error('Error fetching events:', err);
     } finally {
