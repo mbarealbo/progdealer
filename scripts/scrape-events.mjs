@@ -59,6 +59,9 @@ const SOURCES = [
   { name: 'Concertful — South America',   url: 'https://concertful.com/area/south-america/' },
   { name: 'Progressive Rock Central',     url: 'https://progressiverockcentral.com/' },
   { name: 'Music Festival Wizard',        url: 'https://www.musicfestivalwizard.com/festivals/' },
+  // Continental-Europe agendas (the TPA guide above is UK-only)
+  { name: 'iO Pages — Concertagenda (NL/BE)', url: 'https://www.iopages.nl/agenda' },
+  { name: 'Eclipsed — Konzerte (DE)',         url: 'https://www.eclipsed.de/de/konzerte' },
   // Europe festivals
   { name: 'Festival Crescendo',           url: 'https://www.festival-crescendo.com/' },
   { name: 'ProgPower Europe',             url: 'https://www.progpowereurope.com/' },
@@ -118,6 +121,8 @@ const SOURCES = [
   { name: 'Wobbler', url: 'https://www.wobblerofficial.com/' },
   { name: 'Sons of Apollo', url: 'https://sonsofapollo.com/' },
   { name: 'Nightwish', url: 'https://www.nightwish.com/tour/upcoming' },
+  { name: 'Rosalie Cunningham', url: 'https://rosaliecunningham.com/tour-dates-2/' },
+  { name: 'Anneke van Giersbergen', url: 'https://www.annekevangiersbergen.com/' },
 ];
 
 // --- CLI / env ---------------------------------------------------------------
@@ -232,6 +237,12 @@ const SEARCH_QUERIES = [
   `psychedelic rock space rock tour ${YEAR}`,
   `art rock avant-prog fusion concert ${YEAR}`,
   `progressive rock festival ${YEAR + 1} lineup`,
+  // Non-English queries — English-only search skews coverage to UK/US
+  `concerti rock progressivo ${YEAR} italia`,
+  `prog konzerte ${YEAR} deutschland tour`,
+  `concert rock progressif ${YEAR} france`,
+  `prog concerten ${YEAR} nederland belgië`,
+  `conciertos rock progresivo ${YEAR} españa gira`,
 ];
 // Skip social, aggregators-of-setlists and databases (the latter hallucinate dates).
 const JUNK_HOST = /facebook|instagram|twitter|x\.com|youtube|youtu\.be|spotify|wikipedia|reddit|tiktok|pinterest|last\.fm|discogs|apple\.com|amazon|progarchives|rateyourmusic|allmusic|genius\.com|setlist\.fm|bandcamp|\.pdf($|\?)/i;
