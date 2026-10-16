@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trash2, X, AlertTriangle, Shield } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface DeleteAccountModalProps {
@@ -9,8 +9,8 @@ interface DeleteAccountModalProps {
   userEmail: string;
 }
 
-export default function DeleteAccountModal({ 
-  isOpen, 
+export default function DeleteAccountModal({
+  isOpen,
   onClose,
   userEmail
 }: DeleteAccountModalProps) {
@@ -30,7 +30,7 @@ export default function DeleteAccountModal({
     try {
       // Get the current session to retrieve the JWT token
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+
       if (sessionError || !session) {
         throw new Error('User session not found. Please log in again.');
       }
@@ -57,7 +57,7 @@ export default function DeleteAccountModal({
 
       // If the Edge Function succeeds, sign out the user and redirect to goodbye page
       const { error: signOutError } = await supabase.auth.signOut();
-      
+
       if (signOutError) {
         console.error('Error signing out:', signOutError);
         // Don't block the flow, the account has already been deleted on the backend
@@ -65,10 +65,10 @@ export default function DeleteAccountModal({
 
       // Redirect to goodbye page instead of calling onAccountDeleted
       window.location.href = '/goodbye';
-      
-    } catch (error: any) {
+
+    } catch (error) {
       console.error('Error deleting account:', error);
-      setError(error.message || 'Failed to delete account. Please try again.');
+      setError((error instanceof Error && error.message) || 'Failed to delete account. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -90,118 +90,52 @@ export default function DeleteAccountModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
-      <div className="bg-coal-800 border-2 border-burgundy-600 p-4 sm:p-6 w-full max-w-md">
-        <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <div className="flex items-center space-x-3">
-            <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-burgundy-600" />
-            <h2 className="text-lg sm:text-xl font-industrial text-gray-100 tracking-wide uppercase">
-              DELETE ACCOUNT
-            </h2>
-          </div>
-          <button
-            onClick={handleClose}
-            disabled={loading}
-            className="bg-transparent border-2 border-asphalt-500 text-gray-300 p-2 hover:border-burgundy-500 hover:text-white transition-all duration-200 disabled:opacity-50"
-          >
-            <X className="h-4 w-4 sm:h-5 sm:w-5" />
-          </button>
+    <div className="pd-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
+      <div className="pd-modal narrow" role="alertdialog" aria-modal="true" aria-labelledby="del-title" aria-describedby="del-warn">
+        <div className="modal-head">
+          <h2 id="del-title">Delete your account</h2>
+          <button className="iconx" onClick={handleClose} disabled={loading} aria-label="Close"><X size={18} /></button>
         </div>
 
-        {/* Warning Message */}
-        <div className="bg-burgundy-900 border-2 border-burgundy-600 p-3 sm:p-4 mb-4 sm:mb-6">
-          <div className="flex items-start space-x-3">
-            <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-burgundy-400 mt-0.5 flex-shrink-0" />
-            <div>
-              <h3 className="text-burgundy-300 font-condensed font-bold uppercase tracking-wide text-xs sm:text-sm mb-2">
-                PERMANENT ACTION WARNING
-              </h3>
-              <p className="text-burgundy-300 text-xs sm:text-sm font-condensed leading-relaxed">
-                Are you sure you want to permanently delete your account? This action cannot be undone.
-              </p>
-            </div>
-          </div>
+        <div id="del-warn" className="alert-err" style={{ marginTop: 10 }}>
+          This permanently deletes your account. It cannot be undone.
         </div>
 
-        {/* Account Info */}
-        <div className="bg-coal-900 border border-asphalt-600 p-3 sm:p-4 mb-4 sm:mb-6">
-          <h4 className="text-gray-100 font-condensed font-bold uppercase tracking-wide text-xs sm:text-sm mb-2">
-            ACCOUNT TO BE DELETED
-          </h4>
-          <p className="text-gray-300 font-condensed text-xs sm:text-sm">
-            {userEmail}
-          </p>
+        <div className="liner">
+          <dl>
+            <dt>Account</dt>
+            <dd>{userEmail}</dd>
+            <dt>Removed</dt>
+            <dd>Your profile, every show you submitted, your login and your preferences</dd>
+          </dl>
         </div>
 
-        {/* What will be deleted */}
-        <div className="bg-coal-900 border border-asphalt-600 p-3 sm:p-4 mb-4 sm:mb-6">
-          <h4 className="text-gray-100 font-condensed font-bold uppercase tracking-wide text-xs sm:text-sm mb-3">
-            WHAT WILL BE DELETED
-          </h4>
-          <ul className="text-gray-300 font-condensed text-xs sm:text-sm space-y-1">
-            <li>• Your user profile and account data</li>
-            <li>• All events you have submitted</li>
-            <li>• Your login credentials and access</li>
-            <li>• All associated user preferences</li>
-          </ul>
-        </div>
-
-        {/* Confirmation Input */}
-        <div className="mb-4 sm:mb-6">
-          <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
-            TYPE "DELETE" TO CONFIRM
-          </label>
+        <div className="afield">
+          <label htmlFor="del-confirm">Type DELETE to confirm</label>
           <input
+            id="del-confirm"
+            className="ainput"
             type="text"
             value={confirmationText}
             onChange={(e) => setConfirmationText(e.target.value.toUpperCase())}
             disabled={loading}
-            className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-burgundy-600 text-sm disabled:opacity-50"
-            placeholder="TYPE DELETE HERE"
+            placeholder="DELETE"
             autoComplete="off"
           />
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <div className="bg-burgundy-900 border-2 border-burgundy-600 text-burgundy-300 p-3 mb-4 font-condensed text-xs sm:text-sm">
-            {error}
-          </div>
-        )}
+        {error && <div className="alert-err" role="alert">{error}</div>}
 
-        {/* Action Buttons - Stack on mobile */}
-        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+        <div className="modal-actions">
+          <button className="ghost" onClick={handleClose} disabled={loading}>Cancel</button>
           <button
-            onClick={handleClose}
-            disabled={loading}
-            className="w-full sm:flex-1 bg-transparent border-2 border-asphalt-500 text-gray-300 px-4 py-2 uppercase tracking-wide font-condensed font-bold hover:border-asphalt-400 hover:text-white transition-all duration-200 text-xs sm:text-sm disabled:opacity-50"
-          >
-            CANCEL
-          </button>
-          <button
+            className="btn btn-danger solid"
+            style={{ height: 50, justifyContent: 'center', fontSize: '1rem' }}
             onClick={handleDeleteAccount}
             disabled={loading || confirmationText !== 'DELETE'}
-            className="w-full sm:flex-1 bg-burgundy-800 border-2 border-burgundy-600 text-white px-4 py-2 uppercase tracking-wide font-condensed font-bold hover:bg-burgundy-700 transition-all duration-200 disabled:opacity-50 text-xs sm:text-sm flex items-center justify-center space-x-2"
           >
-            {loading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>DELETING...</span>
-              </>
-            ) : (
-              <>
-                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>DELETE ACCOUNT</span>
-              </>
-            )}
+            {loading ? <><span className="spin" /> Deleting…</> : <><Trash2 size={16} /> Delete account</>}
           </button>
-        </div>
-
-        {/* Additional Warning */}
-        <div className="mt-4 pt-4 border-t border-asphalt-600">
-          <p className="text-gray-500 text-xs font-condensed uppercase tracking-wide text-center">
-            This action is irreversible. Your account and all associated data will be permanently removed.
-          </p>
         </div>
       </div>
     </div>

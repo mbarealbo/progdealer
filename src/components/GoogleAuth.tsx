@@ -14,8 +14,8 @@ declare global {
     google?: {
       accounts: {
         id: {
-          initialize: (config: any) => void;
-          renderButton: (element: HTMLElement, config: any) => void;
+          initialize: (config: Record<string, unknown>) => void;
+          renderButton: (element: HTMLElement, config: Record<string, unknown>) => void;
           prompt: () => void;
           disableAutoSelect: () => void;
         };
@@ -40,6 +40,8 @@ export default function GoogleAuth({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string>('');
   const [scriptLoaded, setScriptLoaded] = useState(false);
+  // The effects below must run once, but call the latest init/onError (set after their definitions).
+  const latest = useRef<{ init: () => void; onError?: (error: string) => void }>({ init: () => {} });
 
   const GOOGLE_CLIENT_ID = '1022711096361-kesedefvdj2tivlhb2tjl2d5vlseenp3.apps.googleusercontent.com';
 
@@ -64,17 +66,13 @@ export default function GoogleAuth({
       // Check if script is already loaded
       if (window.google?.accounts?.id) {
         setScriptLoaded(true);
-        initializeGoogleAuth();
         return;
       }
 
       // Check if script tag already exists
       const existingScript = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
       if (existingScript) {
-        existingScript.addEventListener('load', () => {
-          setScriptLoaded(true);
-          initializeGoogleAuth();
-        });
+        existingScript.addEventListener('load', () => setScriptLoaded(true));
         return;
       }
 
@@ -83,13 +81,10 @@ export default function GoogleAuth({
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
       script.defer = true;
-      script.onload = () => {
-        setScriptLoaded(true);
-        initializeGoogleAuth();
-      };
+      script.onload = () => setScriptLoaded(true); // the effect below initialises it, once
       script.onerror = () => {
         console.error('Failed to load Google Identity Services script');
-        onError?.('Failed to load Google authentication service');
+        latest.current.onError?.('Failed to load Google authentication service');
       };
       
       document.head.appendChild(script);
@@ -121,9 +116,9 @@ export default function GoogleAuth({
         setUserEmail(data.user.email || '');
         onSuccess?.();
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Google authentication error:', error);
-      onError?.(error.message || 'Authentication failed');
+      onError?.((error instanceof Error && error.message) || 'Authentication failed');
     } finally {
       setIsLoading(false);
     }
@@ -165,10 +160,12 @@ export default function GoogleAuth({
     }
   };
 
+  latest.current = { init: initializeGoogleAuth, onError };
+
   // Re-render button when auth status changes
   useEffect(() => {
     if (scriptLoaded && !isAuthenticated) {
-      initializeGoogleAuth();
+      latest.current.init();
     }
   }, [scriptLoaded, isAuthenticated]);
 
@@ -191,9 +188,9 @@ export default function GoogleAuth({
       }
       
       console.log('Successfully logged out');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Logout error:', error);
-      onError?.(error.message || 'Logout failed');
+      onError?.((error instanceof Error && error.message) || 'Logout failed');
     } finally {
       setIsLoading(false);
     }
@@ -201,56 +198,33 @@ export default function GoogleAuth({
 
   if (isAuthenticated && showLogout) {
     return (
-      <div className={`space-y-3 ${className}`}>
-        <div className="bg-green-900 border-2 border-green-600 text-green-300 p-3 font-condensed text-sm uppercase tracking-wide text-center">
-          ✅ SIGNED IN AS {userEmail}
-        </div>
-        <button
-          onClick={handleLogout}
-          disabled={isLoading}
-          className="w-full bg-burgundy-800 border-2 border-burgundy-600 text-white px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:bg-burgundy-700 transition-all duration-200 disabled:opacity-50 text-sm"
-        >
-          {isLoading ? 'SIGNING OUT...' : 'SIGN OUT'}
+      <div className={`gauth ${className}`}>
+        <div className="alert-ok" role="status" style={{ marginBottom: 0 }}>Signed in as {userEmail}</div>
+        <button type="button" className="btn btn-ghost" onClick={handleLogout} disabled={isLoading}>
+          {isLoading ? 'Signing out…' : 'Sign out'}
         </button>
       </div>
     );
   }
 
   return (
-    <div className={`space-y-3 ${className}`}>
-      {/* Custom styled container for Google button */}
-      <div className="relative flex justify-center">
-        <div
-          ref={googleButtonRef}
-          className="w-full"
-          style={{ minHeight: '44px' }}
-        />
-        
-        {/* Loading overlay */}
+    <div className={`gauth ${className}`}>
+      <div className="gauth-slot">
+        <div ref={googleButtonRef} style={{ minHeight: 44 }} />
+
         {isLoading && (
-          <div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center">
-            <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              <span className="text-sm font-medium text-gray-700">Signing in...</span>
-            </div>
-          </div>
+          <div className="gauth-busy" role="status"><span className="spin dark" /> Signing in…</div>
         )}
-        
-        {/* Fallback button if Google script fails to load */}
+
+        {/* Placeholder while the Google script loads (or if it fails to load) */}
         {!scriptLoaded && !isLoading && (
-          <button
-            onClick={() => onError?.('Google authentication service is not available')}
-            className="w-full bg-gray-100 border-2 border-gray-300 text-gray-700 px-4 py-3 transition-all duration-200 flex items-center justify-center space-x-3 text-sm font-medium"
-          >
-            <div className="w-5 h-5 bg-gray-400 rounded"></div>
-            <span>Loading Google Sign-In...</span>
+          <button type="button" className="gauth-fallback" onClick={() => onError?.('Google authentication service is not available')} style={{ position: 'absolute', inset: 0 }}>
+            Loading Google Sign-In…
           </button>
         )}
       </div>
-      
-      <p className="text-xs text-gray-500 text-center font-condensed">
-        By continuing with Google, you agree to our terms of service
-      </p>
+
+      <p className="gauth-terms">By continuing with Google, you agree to our terms of service</p>
     </div>
   );
 }

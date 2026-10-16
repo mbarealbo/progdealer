@@ -3,6 +3,14 @@ import type { KeyboardEvent } from 'react';
 import { Search as SearchIcon, MapPin, Music } from 'lucide-react';
 import { Event } from '../types/event';
 
+// Shape of a Places API (New) autocomplete response, as far as we read it.
+type PlacePrediction = {
+  placeId: string;
+  text?: { text?: string };
+  structuredFormat?: { mainText?: { text?: string }; secondaryText?: { text?: string } };
+};
+type AutocompleteResponse = { suggestions?: { placePrediction?: PlacePrediction }[] };
+
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
 
 interface City { placeId: string; main: string; secondary: string; }
@@ -16,7 +24,7 @@ interface Props {
 }
 
 // Public "smart" search: suggests matching shows from the catalog (instant,
-// local) and real cities via Google Places. Available to everyone — no login.
+// local) and real cities via Google Places. Available to everyone, no login.
 export default function SmartSearch({ value, onChange, events, variant = 'bar', placeholder }: Props) {
   const [open, setOpen] = useState(false);
   const [cities, setCities] = useState<City[]>([]);
@@ -59,13 +67,13 @@ export default function SmartSearch({ value, onChange, events, variant = 'bar', 
       body: JSON.stringify({ input, sessionToken: tokenRef.current, languageCode: 'en', includedPrimaryTypes: ['(cities)'] }),
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-      .then((data) => {
+      .then((data: AutocompleteResponse) => {
         setCities(
           (data.suggestions || [])
-            .map((s: any) => s.placePrediction)
-            .filter(Boolean)
+            .map((s) => s.placePrediction)
+            .filter((p): p is PlacePrediction => Boolean(p))
             .slice(0, 3)
-            .map((p: any) => ({
+            .map((p) => ({
               placeId: p.placeId,
               main: p.structuredFormat?.mainText?.text ?? p.text?.text ?? '',
               secondary: p.structuredFormat?.secondaryText?.text ?? '',
@@ -106,7 +114,7 @@ export default function SmartSearch({ value, onChange, events, variant = 'bar', 
   return (
     <div className={`ac ${variant === 'hero' ? 'ac-hero' : 'ac-bar'}`} ref={boxRef}>
       <div className={containerClass}>
-        <SearchIcon size={variant === 'hero' ? 18 : 16} strokeWidth={2} color="#9A9DA4" />
+        <SearchIcon size={variant === 'hero' ? 18 : 16} strokeWidth={2} aria-hidden="true" />
         <input
           type="text"
           value={value}

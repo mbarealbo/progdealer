@@ -1,13 +1,13 @@
 {
-  "name": "ProgDealer — Progressive music shows worldwide",
+  "name": "ProgDealer: progressive music shows worldwide",
   "short_name": "ProgDealer",
-  "description": "Live progressive rock, metal and post-rock shows worldwide — on the map, near you.",
+  "description": "Live progressive rock, metal and post-rock shows worldwide, on the map and near you.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#F5F4F2",
-  "theme_color": "#F5F4F2",
+  "background_color": "#ECE7DC",
+  "theme_color": "#ECE7DC",
   "categories": ["music", "events", "entertainment"],
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

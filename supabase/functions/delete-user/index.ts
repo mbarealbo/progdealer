@@ -168,6 +168,7 @@ Deno.serve(async (req) => {
           redirectTo: `${Deno.env.get('SITE_URL') || 'http://localhost:5173'}/goodbye`
         }
       })
+      if (emailError) console.error('Could not prepare the deletion email:', emailError.message)
 
       // For account deletion confirmation, we'll use a custom approach
       // since Supabase doesn't have a built-in "account deleted" email trigger

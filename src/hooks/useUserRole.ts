@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/auth-js';
 
@@ -15,50 +15,7 @@ export function useUserRole(user: User | null) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  useEffect(() => {
-    if (!user) {
-      setProfile(null);
-      setIsAdmin(false);
-      setLoading(false);
-      return;
-    }
-
-    fetchUserProfile();
-  }, [user]);
-
-  const fetchUserProfile = async () => {
-    if (!user) return;
-
-    try {
-      setLoading(true);
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        // If profile doesn't exist, create it
-        if (error.code === 'PGRST116') {
-          await createUserProfile();
-          return;
-        }
-        throw error;
-      }
-
-      setProfile(data);
-      setIsAdmin(data.user_role === 'admin');
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      setProfile(null);
-      setIsAdmin(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const createUserProfile = async () => {
+  const createUserProfile = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -104,7 +61,48 @@ export function useUserRole(user: User | null) {
       });
       setIsAdmin(false);
     }
-  };
+  }, [user]);
+
+  const fetchUserProfile = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      // First sign-in: no profile yet, so create it
+      if (!data) {
+        await createUserProfile();
+        return;
+      }
+
+      setProfile(data);
+      setIsAdmin(data.user_role === 'admin');
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      setProfile(null);
+      setIsAdmin(false);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, createUserProfile]);
+
+  useEffect(() => {
+    if (!user) {
+      setProfile(null);
+      setIsAdmin(false);
+      setLoading(false);
+      return;
+    }
+
+    fetchUserProfile();
+  }, [user, fetchUserProfile]);
 
   const refreshProfile = () => {
     if (user) {

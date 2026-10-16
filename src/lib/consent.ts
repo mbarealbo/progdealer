@@ -1,4 +1,4 @@
-// Self-hosted cookie consent — replaces Cookiebot.
+// Self-hosted cookie consent: replaces Cookiebot.
 // Non-essential trackers (Google Analytics, Lucky Orange) are NEVER loaded until
 // the visitor opts in. Consent is stored first-party, is granular per category,
 // expires so we re-ask, and is fully revocable.
@@ -7,7 +7,7 @@ export interface ConsentState {
   analytics: boolean; // Google Analytics
   marketing: boolean; // Lucky Orange (session replay / behaviour)
   ts: number;         // epoch ms when the choice was made
-  v: number;          // consent version — bump to force a fresh prompt
+  v: number;          // consent version: bump to force a fresh prompt
 }
 
 // Bump this when the set of trackers or the policy materially changes: existing
@@ -43,19 +43,30 @@ function injectScript(src: string, attrs: Record<string, string> = {}) {
   document.head.appendChild(s);
 }
 
+type TrackerWindow = Window & {
+  __pdGA?: boolean;
+  __pdLO?: boolean;
+  dataLayer?: unknown[];
+  gtag?: (...args: unknown[]) => void;
+};
+
 function loadAnalytics() {
-  const w = window as any;
+  const w = window as TrackerWindow;
   if (w.__pdGA) return;
   w.__pdGA = true;
   injectScript(`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`);
-  w.dataLayer = w.dataLayer || [];
-  w.gtag = function gtag() { w.dataLayer.push(arguments); };
-  w.gtag('js', new Date());
-  w.gtag('config', GA_ID);
+  const dataLayer = (w.dataLayer = w.dataLayer || []);
+  // Google's own snippet: gtag.js reads the Arguments object itself, so this
+  // must stay `arguments` (a rest array would silently break tracking).
+  // eslint-disable-next-line prefer-rest-params
+  const gtag: (...args: unknown[]) => void = function gtag() { dataLayer.push(arguments); };
+  w.gtag = gtag;
+  gtag('js', new Date());
+  gtag('config', GA_ID);
 }
 
 function loadMarketing() {
-  const w = window as any;
+  const w = window as TrackerWindow;
   if (w.__pdLO) return;
   w.__pdLO = true;
   injectScript(`https://tools.luckyorange.com/core/lo.js?site-id=${LO_SITE}`, { defer: '' });
@@ -85,7 +96,7 @@ function clearTrackerCookies() {
 
 /**
  * Persist a decision and act on it. If the visitor turns OFF a category that was
- * previously ON, we clear those cookies and reload — the only reliable way to
+ * previously ON, we clear those cookies and reload: the only reliable way to
  * stop a tracker that is already running in this tab.
  */
 export function saveConsent(analytics: boolean, marketing: boolean): ConsentState {

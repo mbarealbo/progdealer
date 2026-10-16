@@ -66,9 +66,11 @@ export type Database = {
   };
 };
 
+export interface ImportResult { success: boolean; event: string; error?: string; id?: unknown }
+
 // Utility function to import events with deduplication
-export async function importEvents(events: ImportEvent[]) {
-  const results = [];
+export async function importEvents(events: ImportEvent[]): Promise<ImportResult[]> {
+  const results: ImportResult[] = [];
   
   for (const event of events) {
     try {
@@ -157,7 +159,7 @@ export function classifySubgenre(eventName: string, description?: string, artist
   };
 
   // Match keywords as whole words/phrases (word boundaries) to avoid false
-  // substring hits — e.g. "german" inside "Germany" or "can" inside "American".
+  // substring hits, e.g. "german" inside "Germany" or "can" inside "American".
   const matchesWord = (keyword: string) => {
     const esc = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return new RegExp('(^|[^a-z0-9])' + esc + '([^a-z0-9]|$)').test(text);

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, MapPin, Calendar, Clock, Users, Music, Share2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Share2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
-import { shouldUsePlaceholder } from '../utils/imageUtils';
 import { useEventMeta } from '../hooks/useDocumentMeta';
-import CardArt from './home/CardArt';
-import EventCard, { hueFor, seedFor } from './home/EventCard';
+import { splitTitle, timeOf, fullDate } from '../utils/eventText';
+import EventCard, { Sleeve } from './home/EventCard';
+import Logo from './brand/Logo';
 
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -14,12 +14,7 @@ export default function EventDetailPage() {
   const [event, setEvent] = useState<Event | null>(null);
   const [relatedEvents, setRelatedEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const prev = document.body.style.backgroundColor;
-    document.body.style.backgroundColor = '#F5F4F2';
-    return () => { document.body.style.backgroundColor = prev; };
-  }, []);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (id) fetchEvent(id);
@@ -31,7 +26,7 @@ export default function EventDetailPage() {
   const fetchEvent = async (eventId: string) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.from('eventi_prog').select('*').eq('id', eventId).single();
+      const { data, error } = await supabase.from('eventi_prog').select('*').eq('id', eventId).maybeSingle();
       if (error) throw error;
       setEvent(data);
 
@@ -43,7 +38,7 @@ export default function EventDetailPage() {
           .neq('id', eventId)
           .gte('data_ora', new Date().toISOString())
           .order('data_ora', { ascending: true })
-          .limit(3);
+          .limit(4);
         setRelatedEvents(related || []);
       }
     } catch (err) {
@@ -53,30 +48,41 @@ export default function EventDetailPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return {
-      full: date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
-      time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
-    };
-  };
-
   const handleShare = async () => {
-    if (navigator.share && event) {
+    if (!event) return;
+    if (navigator.share) {
       try {
-        await navigator.share({ title: event.nome_evento, text: `${event.nome_evento} - ${event.città}`, url: window.location.href });
+        await navigator.share({ title: event.nome_evento, text: `${event.nome_evento}, ${event.città}`, url: window.location.href });
       } catch { /* cancelled */ }
     } else {
-      navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
+
+  const bar = (
+    <div className="detail-bar">
+      <div className="detail-bar-inner">
+        <button className="linkbtn" onClick={() => navigate('/')}>
+          <ArrowLeft size={18} /> <span className="hide-mob">Back to shows</span>
+        </button>
+        <button className="brand" onClick={() => navigate('/')} aria-label="ProgDealer home">
+          <Logo height={30} />
+        </button>
+        <button className="linkbtn" onClick={handleShare} disabled={!event}>
+          <Share2 size={18} /> <span className="hide-mob">{copied ? 'Link copied' : 'Share'}</span>
+        </button>
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
       <div className="pd">
-        <div className="loading" style={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="sk" style={{ width: 120, height: 120, borderRadius: 20, marginBottom: 16 }} />
-          <p className="label">Loading event…</p>
+        {bar}
+        <div className="page-center">
+          <div className="state-loading"><span className="spin dark" /><span className="label">Loading show…</span></div>
         </div>
       </div>
     );
@@ -85,109 +91,91 @@ export default function EventDetailPage() {
   if (!event) {
     return (
       <div className="pd">
-        <div className="empty" style={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <h3>Event not found</h3>
-          <button className="cta" style={{ marginTop: 16 }} onClick={() => navigate('/')}>Back to shows</button>
+        {bar}
+        <div className="page-center">
+          <div className="state-card">
+            <div className="eyebrow">Out of print</div>
+            <h1>Show not found</h1>
+            <p>This show may have been removed, or the link is wrong.</p>
+            <button className="btn btn-accent" onClick={() => navigate('/')}>Back to shows</button>
+          </div>
         </div>
       </div>
     );
   }
 
-  const dateInfo = formatDate(event.data_ora);
-  const hasImage = !shouldUsePlaceholder(event.immagine);
+  const genre = event.sottogenere || 'Progressive';
+  const { main, sub } = splitTitle(event.nome_evento);
 
   return (
     <div className="pd">
-      {/* Back / share bar */}
-      <div className="detail-bar">
-        <div className="detail-bar-inner">
-          <button className="linkbtn" onClick={() => navigate('/')}>
-            <ArrowLeft size={16} /> Back to shows
-          </button>
-          <button className="linkbtn" onClick={handleShare}>
-            <Share2 size={16} /> <span className="hide-mob">Share</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Hero */}
-      <div className="detail-hero">
-        {hasImage ? (
-          <img src={event.immagine} alt={event.nome_evento} />
-        ) : (
-          <CardArt hue={hueFor(event.sottogenere)} seed={seedFor(event.id)} />
-        )}
-      </div>
+      {bar}
 
       <div className="detail-wrap">
-        <div className="detail-head">
-          <span className="detail-chip">{event.sottogenere || 'Progressive'}</span>
-          <h1 className="detail-title">{event.nome_evento}</h1>
-        </div>
+        <div className="dt-top">
+          <div className="dt-sleeve" aria-hidden="true">
+            <div className="dt-vinyl"><span className="grooves" /><span className="lbl" /><span className="hole" /></div>
+            <div className="dt-cover"><Sleeve event={event} /></div>
+          </div>
 
-        {/* Info */}
-        <div className="info-grid">
-          <div className="info-card">
-            <Calendar size={19} />
-            <div>
-              <div className="k">Date</div>
-              <div className="v">{dateInfo.full}</div>
-            </div>
-          </div>
-          <div className="info-card">
-            <Clock size={19} />
-            <div>
-              <div className="k">Time</div>
-              <div className="v num">{dateInfo.time}{event.orario ? ` — ${event.orario}` : ''}</div>
-            </div>
-          </div>
-          <div className="info-card">
-            <MapPin size={19} />
-            <div>
-              <div className="k">Venue</div>
-              <div className="v">{event.venue}</div>
-              <div className="v2">{event.città}</div>
-            </div>
-          </div>
-          <div className="info-card">
-            <Music size={19} />
-            <div>
-              <div className="k">Source</div>
-              <div className="v" style={{ textTransform: 'capitalize' }}>{event.fonte}</div>
-              <div className="v2">{event.tipo_inserimento === 'manual' ? 'User submitted' : 'Auto-scraped'}</div>
+          <div className="dt-head">
+            <div className="eyebrow">{genre} · Side A</div>
+            <h1 className="detail-title">{main}</h1>
+            {sub && <p className="dt-sub">{sub}</p>}
+            <div className="dt-actions">
+              {event.link && (
+                <a className="cta" href={event.link} target="_blank" rel="noopener noreferrer">
+                  Tickets &amp; info <ExternalLink size={16} />
+                </a>
+              )}
+              <button className="btn btn-ghost" onClick={handleShare}><Share2 size={16} /> {copied ? 'Link copied' : 'Share'}</button>
             </div>
           </div>
         </div>
 
-        {/* Description */}
-        {event.descrizione && (
-          <div className="detail-section">
-            <h2>Description</h2>
-            <p>{event.descrizione}</p>
+        <div className="dt-body">
+          <div className="liner">
+            <div className="liner-head eyebrow">Liner notes</div>
+            <dl>
+              <dt>Date</dt>
+              <dd>{fullDate(event.data_ora)}</dd>
+              <dt>Time</dt>
+              <dd className="num">{timeOf(event.data_ora) ?? 'Not announced yet'}{event.orario && <small>{event.orario}</small>}</dd>
+              <dt>Venue</dt>
+              <dd>{event.venue}</dd>
+              <dt>City</dt>
+              <dd>{event.città}</dd>
+              <dt>Source</dt>
+              <dd>{event.fonte}<small>{event.tipo_inserimento === 'manual' ? 'Submitted by a fan' : 'Collected automatically'}</small></dd>
+            </dl>
           </div>
-        )}
 
-        {/* Lineup */}
-        {event.artisti && event.artisti.length > 0 && (
-          <div className="detail-section">
-            <h2><Users size={14} /> Lineup</h2>
-            <div className="lineup">
-              {event.artisti.map((artist, i) => <span key={i}>{artist}</span>)}
-            </div>
+          <div>
+            {event.descrizione && (
+              <div className="detail-section">
+                <h2>About the show</h2>
+                <p>{event.descrizione}</p>
+              </div>
+            )}
+            {event.artisti && event.artisti.length > 0 && (
+              <div className="detail-section">
+                <h2>Lineup</h2>
+                <div className="lineup">
+                  {event.artisti.map((artist, i) => <span key={i}><i>{String(i + 1).padStart(2, '0')}</i>{artist}</span>)}
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
-        {/* CTA */}
-        {event.link && (
-          <a className="cta" href={event.link} target="_blank" rel="noopener noreferrer">
-            View event / tickets <ExternalLink size={16} />
-          </a>
-        )}
-
-        {/* Related */}
         {relatedEvents.length > 0 && (
           <div className="detail-related">
-            <h2>More {event.sottogenere} shows</h2>
+            <div className="head">
+              <div>
+                <div className="eyebrow">Also in the catalog</div>
+                <h2>More {genre}</h2>
+              </div>
+            </div>
             <div className="rel-grid">
               {relatedEvents.map((r) => (
                 <EventCard key={r.id} event={r} onSelect={(e) => navigate(`/event/${e.id}`)} />

@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Shield, Check, X, Clock, CheckCircle, XCircle, Trash2, Upload, Download, ExternalLink, Users, Settings, LogOut } from 'lucide-react';
 import type { User } from '@supabase/auth-js';
 import { supabase, fetchAllRows } from '../lib/supabase';
 import { Event } from '../types/event';
 import { UserProfile } from '../hooks/useUserRole';
-import { shouldUsePlaceholder } from '../utils/imageUtils';
-import { getEventCountry, countryFlag } from '../utils/geo';
+import { Sleeve } from './home/EventCard';
 import ImportEvents from './ImportEvents';
 import UserManagement from './UserManagement';
 import PanelHeader from './PanelHeader';
@@ -19,7 +18,8 @@ interface AdminPanelProps {
   onBackToMain: () => void;
 }
 
-const dateFmt = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+// Show times are stored as the venue's wall clock (see utils/eventText), so print them in UTC.
+const dateFmt = new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
 
 function StatusBadge({ status }: { status?: string }) {
   const s = status || 'approved';
@@ -36,14 +36,11 @@ export default function AdminPanel({ isAuthenticated, currentUser, userProfile, 
   const [showImportModal, setShowImportModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  useEffect(() => {
-    const prev = document.body.style.backgroundColor;
-    document.body.style.backgroundColor = '#F5F4F2';
-    return () => { document.body.style.backgroundColor = prev; };
-  }, []);
+  const onAuthRequiredRef = useRef(onAuthRequired);
+  onAuthRequiredRef.current = onAuthRequired;
 
   useEffect(() => {
-    if (!isAuthenticated || !userProfile || userProfile.user_role !== 'admin') { onAuthRequired(); return; }
+    if (!isAuthenticated || !userProfile || userProfile.user_role !== 'admin') { onAuthRequiredRef.current(); return; }
     fetchEvents();
   }, [isAuthenticated, userProfile]);
 
@@ -128,17 +125,17 @@ export default function AdminPanel({ isAuthenticated, currentUser, userProfile, 
           right={<button className="icon-btn" onClick={onLogout} title="Log out" aria-label="Log out"><LogOut size={16} /></button>}
         />
         <main className="panel-main panel-narrow">
-          <div className="panel-title"><Settings size={22} /><h1>Settings</h1></div>
+          <div className="panel-title"><Settings size={26} /><h1>Settings</h1></div>
           <p className="panel-greet">Account configuration</p>
           <div className="stack" style={{ marginTop: 22 }}>
-            <div className="panel-card" style={{ padding: 20 }}>
-              <h2 style={{ fontFamily: 'inherit', fontSize: '1.05rem', fontWeight: 600, marginBottom: 16 }}>Account</h2>
+            <div className="panel-card pad">
+              <h2 className="card-title">Account</h2>
               <div className="info-row"><span className="k">Email</span><span className="val">{userProfile?.email || currentUser?.email || 'Admin'}</span></div>
               <div className="info-row" style={{ marginBottom: 0 }}><span className="k">Role</span><span><span className="role-tag admin" style={{ marginTop: 0 }}>admin</span></span></div>
             </div>
-            <div className="panel-card" style={{ padding: 20 }}>
-              <h2 style={{ fontFamily: 'inherit', fontSize: '1.05rem', fontWeight: 600, marginBottom: 6 }}>Preferences</h2>
-              <p style={{ color: 'var(--ink-3)', fontSize: '.86rem', margin: 0 }}>Notifications and favourite bands are coming soon.</p>
+            <div className="panel-card pad">
+              <h2 className="card-title">Preferences</h2>
+              <p className="muted">Notifications and favourite bands are coming soon.</p>
             </div>
           </div>
         </main>
@@ -161,14 +158,15 @@ export default function AdminPanel({ isAuthenticated, currentUser, userProfile, 
       />
 
       <main className="panel-main">
-        <div className="panel-title"><Shield size={22} /><h1>Admin panel</h1></div>
+        <div className="eyebrow">Backstage</div>
+        <div className="panel-title" style={{ marginTop: 10 }}><Shield size={26} /><h1>Admin panel</h1></div>
         <div><span className="role-tag admin">admin</span></div>
 
-        <div className="stats" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-          <div className="stat"><Shield size={22} style={{ color: 'var(--accent)' }} /><div><div className="n">{events.length}</div><div className="l">Total shows</div></div></div>
-          <div className="stat"><Clock size={22} style={{ color: '#9a6a12' }} /><div><div className="n">{count('pending')}</div><div className="l">Pending review</div></div></div>
-          <div className="stat"><CheckCircle size={22} style={{ color: '#1f7a37' }} /><div><div className="n">{count('approved')}</div><div className="l">Approved</div></div></div>
-          <div className="stat"><XCircle size={22} style={{ color: 'var(--accent)' }} /><div><div className="n">{count('rejected')}</div><div className="l">Rejected</div></div></div>
+        <div className="stats">
+          <div className="stat"><div className="n">{events.length}</div><div className="l">Total shows</div></div>
+          <div className="stat"><div className="n">{count('pending')}</div><div className="l"><i style={{ background: 'var(--mustard)' }} />Pending review</div></div>
+          <div className="stat"><div className="n">{count('approved')}</div><div className="l"><i style={{ background: 'var(--teal)' }} />Approved</div></div>
+          <div className="stat"><div className="n">{count('rejected')}</div><div className="l"><i style={{ background: 'var(--rust)' }} />Rejected</div></div>
         </div>
 
         <div className="toolbar">
@@ -179,7 +177,7 @@ export default function AdminPanel({ isAuthenticated, currentUser, userProfile, 
               </button>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div className="filters">
             {count('pending') > 0 && (
               <button className="btn-ok" onClick={approveAllPending}><Check size={15} /> Approve all · {count('pending')}</button>
             )}
@@ -194,7 +192,7 @@ export default function AdminPanel({ isAuthenticated, currentUser, userProfile, 
         )}
 
         <div className="panel-card">
-          <div className="ph">Shows ({filteredEvents.length})</div>
+          <div className="ph"><span>Shows</span><span>{filteredEvents.length}</span></div>
           {loading ? (
             <div className="empty" style={{ padding: '48px 0' }}><span className="label">Loading shows…</span></div>
           ) : filteredEvents.length === 0 ? (
@@ -202,21 +200,19 @@ export default function AdminPanel({ isAuthenticated, currentUser, userProfile, 
           ) : (
             filteredEvents.map((event) => {
               const status = event.status || 'approved';
-              const country = getEventCountry(event.città);
-              const hasImg = !shouldUsePlaceholder(event.immagine);
               return (
                 <div key={event.id} className="erow">
-                  <div className="thumb">{hasImg && <img src={event.immagine} alt="" loading="lazy" />}</div>
+                  <div className="thumb"><Sleeve event={event} showCatNo={false} /></div>
                   <div className="info">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                    <div className="info-top">
                       <h3>{event.nome_evento}</h3>
                       <StatusBadge status={event.status} />
                     </div>
                     <div className="meta">
                       <span>{dateFmt.format(new Date(event.data_ora))}</span>
-                      <span>{countryFlag(country)} {event.venue}, {event.città}</span>
+                      <span>{event.venue}, {event.città}</span>
                       <span>{event.sottogenere}</span>
-                      <span style={{ color: 'var(--ink-3)' }}>{event.fonte} · {event.tipo_inserimento}</span>
+                      <span className="src">{event.fonte} · {event.tipo_inserimento}</span>
                     </div>
                   </div>
                   <div className="acts">
@@ -239,7 +235,7 @@ export default function AdminPanel({ isAuthenticated, currentUser, userProfile, 
       </main>
 
       {showImportModal && (
-        <ImportEvents onEventsImported={() => { fetchEvents(); setShowImportModal(false); }} />
+        <ImportEvents onClose={() => setShowImportModal(false)} onEventsImported={fetchEvents} />
       )}
     </div>
   );

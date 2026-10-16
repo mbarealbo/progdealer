@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import Logo from './brand/Logo';
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -22,70 +25,57 @@ export default function ResetPasswordPage() {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      setSuccess('Password updated successfully');
+      setSuccess('Password updated. Taking you to sign in…');
       setTimeout(() => navigate('/login', { replace: true }), 1500);
-    } catch (err: any) {
-      setError(err.message || 'Failed to update password');
+    } catch (err) {
+      setError((err instanceof Error && err.message) || 'Failed to update password');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-coal-900 p-4">
-      <div className="bg-coal-800 border-2 border-asphalt-600 p-8 w-full max-w-md">
-        <h2 className="text-xl font-industrial text-gray-100 tracking-wide uppercase mb-6">
-          Set New Password
-        </h2>
+    <div className="pd">
+      <div className="detail-bar">
+        <div className="detail-bar-inner">
+          <button className="linkbtn" onClick={() => navigate('/')}>
+            <ArrowLeft size={18} /> <span className="hide-mob">Back to shows</span>
+          </button>
+          <button className="brand" onClick={() => navigate('/')} aria-label="ProgDealer home">
+            <Logo height={30} />
+          </button>
+          <span style={{ width: 44 }} aria-hidden="true" />
+        </div>
+      </div>
 
-        {success && (
-          <div className="bg-green-900 border-2 border-green-600 text-green-300 p-3 mb-4 font-condensed text-sm uppercase tracking-wide">
-            {success}
-          </div>
-        )}
-        {error && (
-          <div className="bg-burgundy-900 border-2 border-burgundy-600 text-burgundy-300 p-3 mb-4 font-condensed text-sm tracking-wide">
-            {error}
-          </div>
-        )}
+      <div className="auth-wrap">
+        <div className="auth-card">
+          <div className="eyebrow">Your account</div>
+          <h1 className="auth-title">Set a new password</h1>
+          <p className="auth-caption">Choose a password of at least 6 characters.</p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
-              New Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full bg-coal-900 border-2 border-asphalt-600 text-gray-100 px-3 py-2 font-condensed focus:outline-none focus:border-industrial-green-600 text-sm"
-            />
-          </div>
-          <div className="pt-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-industrial-green-800 border-2 border-industrial-green-600 text-white px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:bg-industrial-green-700 transition-all duration-200 disabled:opacity-50"
-            >
-              {loading ? 'Updating...' : 'Update Password'}
+          {success && <div className="alert-ok" role="status">{success}</div>}
+          {error && <div className="alert-err" role="alert">{error}</div>}
+
+          <form onSubmit={handleSubmit}>
+            <div className="afield">
+              <label htmlFor="rp-new">New password</label>
+              <div className="ainput-wrap">
+                <input id="rp-new" className="ainput" style={{ paddingRight: 46 }} type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} autoComplete="new-password" />
+                <button type="button" className="eye" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+            <div className="afield">
+              <label htmlFor="rp-confirm">Confirm password</label>
+              <input id="rp-confirm" className="ainput" type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} autoComplete="new-password" />
+            </div>
+            <button type="submit" className="submit-btn" disabled={loading}>
+              {loading ? <><span className="spin" /> Updating…</> : 'Update password'}
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

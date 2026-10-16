@@ -48,7 +48,7 @@ export default function CookieConsent() {
       aria-modal={prefs ? true : undefined}
       aria-label="Cookie preferences"
     >
-      {/* Dim + block only for the preferences modal — the initial banner never covers the site. */}
+      {/* Dim + block only for the preferences modal: the initial banner never covers the site. */}
       {prefs && <div className="cc-backdrop" onClick={() => setPrefs(false)} />}
 
       {!prefs ? (
@@ -91,7 +91,7 @@ export default function CookieConsent() {
             <li className="cc-item">
               <div className="cc-item-txt">
                 <strong>Analytics</strong>
-                <span>Google Analytics — anonymous, aggregated stats about how the site is used.</span>
+                <span>Google Analytics: anonymous, aggregated stats about how the site is used.</span>
               </div>
               <label className="cc-switch">
                 <input type="checkbox" checked={analytics} onChange={(e) => setAnalytics(e.target.checked)} />
@@ -102,7 +102,7 @@ export default function CookieConsent() {
             <li className="cc-item">
               <div className="cc-item-txt">
                 <strong>Behaviour &amp; session replay</strong>
-                <span>Lucky Orange — heatmaps and anonymised session recordings to spot usability issues.</span>
+                <span>Lucky Orange: heatmaps and anonymised session recordings to spot usability issues.</span>
               </div>
               <label className="cc-switch">
                 <input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} />

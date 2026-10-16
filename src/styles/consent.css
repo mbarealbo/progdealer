@@ -1,25 +1,18 @@
-/* Self-hosted cookie consent — matches the ProgDealer "clean" look.
-   Deliberately NOT scoped under .pd so it renders identically on every route. */
+/* Self-hosted cookie consent, in the Gatefold look.
+   Deliberately NOT scoped under .pd so it renders identically on every route;
+   colours and fonts come from the :root tokens in gatefold.css. */
 
 .cc-root {
-  --cc-paper: #f5f4f2;
-  --cc-card: #ffffff;
-  --cc-ink: #191a1d;
-  --cc-ink-2: #5c5f66;
-  --cc-ink-3: #9a9da4;
-  --cc-line: #e7e5e2;
-  --cc-accent: #e1341e;
-  --cc-accent-deep: #b4260f;
-  --cc-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto, sans-serif;
-
   position: fixed;
   z-index: 100000;
   display: flex;
   justify-content: center;
   pointer-events: none; /* the page stays usable; only the card/backdrop capture input */
-  font-family: var(--cc-sans);
-  color: var(--cc-ink);
+  font-family: var(--sans);
+  color: var(--ink);
+  line-height: 1.5;
 }
+.cc-root *, .cc-root *::before, .cc-root *::after { box-sizing: border-box; }
 
 /* Initial banner: anchored to the bottom like the app's bottom nav (which is
    reliably visible on iOS). It does NOT cover the page and does NOT dim it. */
@@ -30,15 +23,12 @@
 }
 
 /* Preferences: full-screen, centered, with a dimming backdrop. */
-.cc-modal {
-  inset: 0;
-  align-items: center;
-}
+.cc-modal { inset: 0; align-items: center; }
 
 .cc-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(25, 26, 29, 0.32);
+  background: rgba(36, 38, 31, 0.4);
   opacity: 0;
   pointer-events: auto; /* modal backdrop blocks the page and closes on outside click */
   animation: cc-fade 0.2s ease forwards;
@@ -47,102 +37,72 @@
 .cc-card {
   position: relative;
   pointer-events: auto;
-  background: var(--cc-card);
-  border: 1px solid var(--cc-line);
-  border-radius: 16px;
-  box-shadow: 0 18px 50px rgba(25, 26, 29, 0.22);
-  padding: 20px 22px;
+  background: var(--paper-2);
+  border: 1px solid var(--ink);
+  box-shadow: var(--print-lg);
+  padding: 22px 24px;
   animation: cc-rise 0.24s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
 }
 
-/* Bottom bar for the first-choice banner */
-.cc-banner {
-  width: min(720px, calc(100% - 32px));
-  margin: 0 0 22px;
-}
-
-/* Centred dialog for granular preferences */
-.cc-prefs {
-  width: min(560px, calc(100% - 32px));
-  margin: 16px;
-  max-height: min(86vh, 720px);
-  overflow-y: auto;
-}
+.cc-banner { width: min(740px, calc(100% - 32px)); margin: 0 0 22px; }
+.cc-prefs { width: min(580px, calc(100% - 32px)); margin: 16px; max-height: min(86vh, 720px); overflow-y: auto; }
 
 .cc-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.cc-ico { color: var(--cc-accent); flex: 0 0 auto; }
-/* Escape the app's global uppercase/Oswald heading base. */
-.cc-card h2 {
-  margin: 0; font-size: 1.06rem; font-weight: 700; letter-spacing: -0.01em;
-  font-family: var(--cc-sans); text-transform: none;
-}
+.cc-ico { color: var(--teal); flex: 0 0 auto; }
+.cc-card h2 { margin: 0; font-family: var(--serif); font-weight: 400; font-size: 1.4rem; line-height: 1.15; letter-spacing: -0.01em; }
 
-.cc-prefs-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.cc-prefs-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
 .cc-close {
-  border: 0; background: transparent; color: var(--cc-ink-3); cursor: pointer;
-  display: inline-flex; padding: 4px; border-radius: 8px;
+  width: 44px; height: 44px; flex: 0 0 auto; border-radius: 50%; border: 1px solid var(--line);
+  background: transparent; color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
 }
-.cc-close:hover { color: var(--cc-ink); background: var(--cc-paper); }
+.cc-close:hover { border-color: var(--ink); }
 
-.cc-text { margin: 0; font-size: 0.86rem; line-height: 1.55; color: var(--cc-ink-2); }
-.cc-text a { color: var(--cc-accent); font-weight: 600; text-decoration: none; }
-.cc-text a:hover { text-decoration: underline; }
+.cc-text { margin: 0; font-size: 0.92rem; line-height: 1.55; color: var(--ink-2); }
+.cc-text a { color: var(--teal); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 
-.cc-list { list-style: none; margin: 16px 0 4px; padding: 0; display: grid; gap: 10px; }
-.cc-item {
-  display: flex; align-items: center; gap: 14px;
-  border: 1px solid var(--cc-line); border-radius: 12px; padding: 12px 14px;
-  background: var(--cc-paper);
-}
-.cc-item-txt { display: flex; flex-direction: column; gap: 3px; }
-.cc-item-txt strong { font-size: 0.9rem; font-weight: 700; }
-.cc-item-txt span { font-size: 0.8rem; color: var(--cc-ink-2); line-height: 1.45; }
-.cc-lock {
-  flex: 0 0 auto; font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.06em; color: var(--cc-ink-3);
-}
+.cc-list { list-style: none; margin: 16px 0 4px; padding: 0; border-top: 1px solid var(--ink); }
+.cc-item { display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.cc-item-txt { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.cc-item-txt strong { font-size: 0.96rem; font-weight: 600; }
+.cc-item-txt span { font-size: 0.86rem; color: var(--ink-2); line-height: 1.45; }
+.cc-lock { flex: 0 0 auto; font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
 
 /* Toggle */
-.cc-switch { position: relative; flex: 0 0 auto; width: 42px; height: 24px; }
-.cc-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
-.cc-slider {
-  position: absolute; inset: 0; border-radius: 999px; background: #d6d4d0;
-  transition: background 0.18s;
-}
+.cc-switch { position: relative; flex: 0 0 auto; width: 46px; height: 26px; }
+.cc-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; z-index: 1; }
+.cc-slider { position: absolute; inset: 0; border-radius: 999px; background: var(--sand); border: 1px solid var(--ink-3); transition: background 0.18s; }
 .cc-slider::before {
   content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
-  border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
-  transition: transform 0.18s;
+  border-radius: 50%; background: var(--paper-2); border: 1px solid var(--ink-3); transition: transform 0.18s;
 }
-.cc-switch input:checked + .cc-slider { background: var(--cc-accent); }
-.cc-switch input:checked + .cc-slider::before { transform: translateX(18px); }
-.cc-switch input:focus-visible + .cc-slider { box-shadow: 0 0 0 3px rgba(225, 52, 30, 0.28); }
+.cc-switch input:checked + .cc-slider { background: var(--teal); border-color: var(--teal); }
+.cc-switch input:checked + .cc-slider::before { transform: translateX(20px); border-color: var(--teal); }
+.cc-switch input:focus-visible + .cc-slider { outline: 2px solid var(--teal); outline-offset: 2px; }
 
 .cc-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 18px; }
 .cc-btn {
-  height: 40px; padding: 0 16px; border-radius: 10px; cursor: pointer;
-  font-family: var(--cc-sans); font-size: 0.88rem; font-weight: 600;
+  height: 44px; padding: 0 18px; border-radius: 999px; cursor: pointer;
+  font-family: var(--sans); font-size: 0.92rem; font-weight: 600;
   border: 1px solid transparent; transition: background 0.15s, border-color 0.15s, transform 0.1s;
 }
 .cc-btn:active { transform: translateY(1px); }
-.cc-ghost { background: transparent; border-color: var(--cc-line); color: var(--cc-ink); }
-.cc-ghost:hover { border-color: var(--cc-ink-2, #5c5f66); }
-.cc-solid { background: var(--cc-accent); color: #fff; }
-.cc-solid:hover { background: var(--cc-accent-deep); }
+.cc-ghost { background: transparent; border-color: var(--line); color: var(--ink); }
+.cc-ghost:hover { border-color: var(--ink); }
+.cc-solid { background: var(--teal); color: #fff; }
+.cc-solid:hover { background: var(--teal-deep); }
 
 @keyframes cc-fade { to { opacity: 1; } }
 @keyframes cc-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 
-/* On phones/tablets the app shows a fixed bottom nav (.pd .bnav, ≤767px) and iOS
-   adds a home-indicator inset. Lift the banner clear of both so it can't collide
-   with the nav or get clipped at the bottom edge. */
+/* On phones the app shows a fixed bottom nav (.pd .bnav, up to 767px) and iOS adds a
+   home-indicator inset: lift the banner clear of both. */
 @media (max-width: 767px) {
-  /* Lift the banner above the app's fixed bottom nav (.pd .bnav) + iOS home indicator. */
-  .cc-bar { bottom: calc(64px + env(safe-area-inset-bottom)); padding-bottom: 0; }
+  .cc-bar { bottom: calc(68px + env(safe-area-inset-bottom)); padding-bottom: 0; }
 }
 
 @media (max-width: 560px) {
-  .cc-banner { width: calc(100% - 20px); margin: 0 0 10px; }
+  .cc-banner { width: calc(100% - 20px); margin: 0 0 10px; padding: 18px; }
   .cc-actions { justify-content: stretch; }
   .cc-actions .cc-btn { flex: 1 1 auto; }
 }
