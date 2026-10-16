@@ -1,7 +1,7 @@
-// ProgDealer service worker — app shell + offline. Hand-rolled, no deps.
-const CACHE = 'progdealer-v2';
+// ProgDealer service worker: app shell + offline. Hand-rolled, no deps.
+const CACHE = 'progdealer-v4';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
-const NAV_TIMEOUT = 3000; // ms — never let a slow/unreachable origin hold a navigation hostage.
+const NAV_TIMEOUT = 3000; // ms: never let a slow/unreachable origin hold a navigation hostage.
 
 // fetch() that gives up after `ms` so a hung TLS/connection can't block the page.
 function fetchWithTimeout(request, ms) {
@@ -35,7 +35,7 @@ self.addEventListener('fetch', (e) => {
   // Let cross-origin (Supabase, Google auth, analytics, map tiles) go straight to the network.
   if (url.origin !== self.location.origin) return;
 
-  // SPA navigations: network-first but time-boxed — fall back to the cached shell fast
+  // SPA navigations: network-first but time-boxed, fall back to the cached shell fast
   // when the network is slow or the origin is unreachable (instead of hanging ~75s).
   if (request.mode === 'navigate') {
     e.respondWith(

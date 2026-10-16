@@ -7,7 +7,9 @@ import type { User as SupabaseUser } from '@supabase/auth-js';
 import { supabase, fetchAllRows } from '../lib/supabase';
 import { Event } from '../types/event';
 import { useUserRole } from '../hooks/useUserRole';
-import { getEventCountry, getContinent, CONTINENT_LIST, countryFlag } from '../utils/geo';
+import { CONTINENT_LIST } from '../utils/geo';
+import { coordsForEvent, eventCountry, eventContinent } from '../utils/coords';
+import { isTonight, isThisWeek } from '../utils/eventText';
 import { openCookieSettings } from '../lib/consent';
 import Logo from './brand/Logo';
 import SmartSearch from './SmartSearch';
@@ -18,6 +20,8 @@ import EventCard, { CardView } from './home/EventCard';
 const EventsMap = lazy(() => import('./home/EventsMap'));
 import AddEventForm from './AddEventForm';
 import AuthRequiredModal from './AuthRequiredModal';
+
+const nf = new Intl.NumberFormat('en-US');
 
 export default function HomePage() {
   const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
@@ -73,12 +77,6 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    const prev = document.body.style.backgroundColor;
-    document.body.style.backgroundColor = '#F5F4F2';
-    return () => { document.body.style.backgroundColor = prev; };
-  }, []);
-
-  useEffect(() => {
     if (!locMenu) return;
     const onDoc = (ev: MouseEvent) => { if (locRef.current && !locRef.current.contains(ev.target as Node)) setLocMenu(false); };
     document.addEventListener('mousedown', onDoc);
@@ -97,13 +95,29 @@ export default function HomePage() {
     return () => { window.removeEventListener('eventApproved', onApproved); subscription.unsubscribe(); };
   }, []);
 
+  // Shows per continent, for the counts on the location chips.
+  const continentCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const e of events) {
+      const c = eventContinent(e);
+      m.set(c, (m.get(c) || 0) + 1);
+    }
+    return m;
+  }, [events]);
+
+  // Continents to offer: only those with shows (all of them while loading).
+  const continents = useMemo(
+    () => (events.length ? CONTINENT_LIST.filter((c) => continentCounts.get(c) || c === continent) : CONTINENT_LIST),
+    [events.length, continentCounts, continent],
+  );
+
   // Countries present (optionally scoped to the selected continent), with counts.
   const countries = useMemo(() => {
     const m = new Map<string, number>();
     for (const e of events) {
-      const co = getEventCountry(e.città);
+      const co = eventCountry(e);
       if (co === 'Other') continue;
-      if (continent && getContinent(co) !== continent) continue;
+      if (continent && eventContinent(e) !== continent) continue;
       m.set(co, (m.get(co) || 0) + 1);
     }
     return [...m.entries()].sort((a, b) => b[1] - a[1]);
@@ -117,8 +131,8 @@ export default function HomePage() {
 
   const filtered = useMemo(() => {
     let out = events;
-    if (continent) out = out.filter((e) => getContinent(getEventCountry(e.città)) === continent);
-    if (country) out = out.filter((e) => getEventCountry(e.città) === country);
+    if (continent) out = out.filter((e) => eventContinent(e) === continent);
+    if (country) out = out.filter((e) => eventCountry(e) === country);
     if (city.trim()) { const v = city.toLowerCase().trim(); out = out.filter((e) => e.città.toLowerCase().includes(v)); }
     if (dateFrom) out = out.filter((e) => e.data_ora.slice(0, 10) >= dateFrom);
     if (dateTo) out = out.filter((e) => e.data_ora.slice(0, 10) <= dateTo);
@@ -128,6 +142,12 @@ export default function HomePage() {
       [e.nome_evento, e.venue, e.città, e.sottogenere, ...(e.artisti || [])].some((f) => (f || '').toLowerCase().includes(q)));
     return out;
   }, [events, continent, country, city, dateFrom, dateTo, genre, searchQuery]);
+
+  const stats = useMemo(() => ({
+    week: filtered.filter((e) => isThisWeek(e.data_ora)).length,
+    tonight: filtered.filter((e) => isTonight(e.data_ora)).length,
+    located: filtered.filter((e) => coordsForEvent(e)).length,
+  }), [filtered]);
 
   const scope = country || continent || 'Worldwide';
   const hasFilters = !!(continent || country || city || dateFrom || dateTo || genre || searchQuery);
@@ -143,6 +163,7 @@ export default function HomePage() {
   const gotoShows = () => document.getElementById('shows')?.scrollIntoView({ behavior: 'smooth' });
 
   const gridClass = view === 'grid' ? 'grid' : view === 'list' ? 'list' : 'compact';
+  const showWord = (n: number) => (n === 1 ? 'show' : 'shows');
 
   return (
     <div className="pd">
@@ -150,33 +171,35 @@ export default function HomePage() {
       <header className="topbar">
         <div className="wrap topbar-inner">
           <button className="brand" onClick={() => (window.location.href = '/')} aria-label="ProgDealer home">
-            <Logo height={28} />
+            <Logo height={34} />
           </button>
-          <SmartSearch variant="bar" value={searchQuery} onChange={setSearchQuery} events={events} placeholder="Search a band, venue or city…" />
-          <nav className="topnav">
+          <SmartSearch variant="bar" value={searchQuery} onChange={setSearchQuery} events={events} placeholder="A band, a city, a venue" />
+          <nav className="topnav" aria-label="Main">
             <div className="loc-wrap" ref={locRef}>
               <button className={`loc-pill ${locMenu ? 'open' : ''}`} type="button" onClick={() => setLocMenu((v) => !v)} aria-haspopup="listbox" aria-expanded={locMenu} title="Filter by location">
-                <MapPin size={15} stroke="#E1341E" />
-                <span><b>{scope}</b></span>
-                <ChevronDown size={13} className="loc-chev" />
+                <MapPin size={15} />
+                <span>{scope}</span>
+                <ChevronDown size={14} className="loc-chev" />
               </button>
               {locMenu && (
                 <div className="loc-menu" role="listbox">
-                  <button className={!continent && !country ? 'on' : ''} onClick={() => { setContinent(null); setCountry(null); setLocMenu(false); }}>🌍 Worldwide</button>
+                  <button className={!continent && !country ? 'on' : ''} onClick={() => { setContinent(null); setCountry(null); setLocMenu(false); }}>Worldwide <i>{nf.format(events.length)}</i></button>
                   <div className="loc-menu-sep">Continents</div>
-                  {CONTINENT_LIST.map((c) => (
-                    <button key={c} className={continent === c && !country ? 'on' : ''} onClick={() => { setContinent(c); setCountry(null); setLocMenu(false); }}>{c}</button>
+                  {continents.map((c) => (
+                    <button key={c} className={continent === c && !country ? 'on' : ''} onClick={() => { setContinent(c); setCountry(null); setLocMenu(false); }}>
+                      {c} <i>{continentCounts.get(c) || 0}</i>
+                    </button>
                   ))}
                   {countries.length > 0 && <div className="loc-menu-sep">Countries</div>}
                   {countries.map(([co, n]) => (
                     <button key={co} className={country === co ? 'on' : ''} onClick={() => { setCountry(co); setLocMenu(false); }}>
-                      <span>{countryFlag(co)} {co}</span><i>{n}</i>
+                      <span>{co}</span><i>{n}</i>
                     </button>
                   ))}
                 </div>
               )}
             </div>
-            <button className="icon-btn hide-mob" onClick={handleRefresh} title="Refresh events" aria-label="Refresh"><RefreshCw size={16} /></button>
+            <button className="icon-btn hide-mob" onClick={handleRefresh} title="Refresh shows" aria-label="Refresh shows"><RefreshCw size={16} /></button>
             {isAuthenticated ? (
               <>
                 <a className="icon-btn hide-mob" href="/userarea" title="Your area" aria-label="Your area"><UserIcon size={16} /></a>
@@ -190,65 +213,79 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* ---------- HERO: the map ---------- */}
+      {/* ---------- Side A: the map ---------- */}
       <section className="hero-map" id="map">
         <div className="wrap">
           <div className="hm-head">
-            <div>
-              <div className="eyebrow">Live progressive music · worldwide</div>
+            <div className="hm-title">
+              <div className="eyebrow">Side A · The map</div>
               <h1>Every prog show, on the map.</h1>
             </div>
-            <div className="hm-meta">
-              <span className="live">● {filtered.length} {filtered.length === 1 ? 'show' : 'shows'}</span>
-              <span className="dot" />
-              <span>in <b>{scope}</b></span>
+            <div className="hm-side">
+              <p className="hm-intro">A hand-kept catalog of progressive concerts and festivals, from Canterbury to Zeuhl. Refreshed every 15 days.</p>
+              <div className="hm-stats" aria-live="polite">
+                <div><b>{loading ? '…' : nf.format(filtered.length)}</b><span>{scope === 'Worldwide' ? 'Upcoming' : `In ${scope}`}</span></div>
+                <div><b>{loading ? '…' : nf.format(stats.week)}</b><span>This week</span></div>
+                <div><b>{loading ? '…' : nf.format(stats.tonight)}</b><span>Tonight</span></div>
+              </div>
             </div>
           </div>
 
-          {/* Location filter — drives both the map and the list */}
-          <div className="locbar">
-            <button className={`lc ${!continent && !country ? 'on' : ''}`} onClick={() => { setContinent(null); setCountry(null); }}>🌍 Worldwide</button>
-            {CONTINENT_LIST.map((c) => (
-              <button key={c} className={`lc ${continent === c ? 'on' : ''}`} onClick={() => { setContinent(continent === c ? null : c); setCountry(null); }}>{c}</button>
+          {/* Location filter: drives both the map and the list */}
+          <div className="locbar" role="group" aria-label="Region">
+            <button className={`lc ${!continent && !country ? 'on' : ''}`} aria-pressed={!continent && !country} onClick={() => { setContinent(null); setCountry(null); }}>Worldwide</button>
+            {continents.map((c) => (
+              <button key={c} className={`lc ${continent === c ? 'on' : ''}`} aria-pressed={continent === c} onClick={() => { setContinent(continent === c ? null : c); setCountry(null); }}>
+                {c} <i>{continentCounts.get(c) || 0}</i>
+              </button>
             ))}
           </div>
           {countries.length > 0 && (
-            <div className="ctybar">
+            <div className="ctybar" role="group" aria-label="Country">
               {countries.map(([co, n]) => (
-                <button key={co} className={`cty ${country === co ? 'on' : ''}`} onClick={() => setCountry(country === co ? null : co)}>
-                  {countryFlag(co)} {co} <i>{n}</i>
+                <button key={co} className={`cty ${country === co ? 'on' : ''}`} aria-pressed={country === co} onClick={() => setCountry(country === co ? null : co)}>
+                  {co} <i>{n}</i>
                 </button>
               ))}
             </div>
           )}
 
-          <Suspense fallback={<div className="pd-map pd-map-hero" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span className="label">Loading map…</span></div>}>
-            {!loading && events.length > 0
-              ? <EventsMap events={filtered} onCity={(c) => { setCity(c); gotoShows(); }} />
-              : <div className="pd-map pd-map-hero" />}
-          </Suspense>
+          <div className="map-sleeve">
+            <div className="map-sleeve-head">
+              <span>PD-MAP · {loading ? '…' : nf.format(stats.located)} {showWord(stats.located)} with a venue on the map</span>
+              <span>Tap a pin to see the shows in that city</span>
+            </div>
+            <Suspense fallback={<div className="pd-map pd-map-hero pd-map-empty"><span className="label">Loading map…</span></div>}>
+              {!loading && events.length > 0
+                ? <EventsMap events={filtered} onCity={(c) => { setCity(c); gotoShows(); }} />
+                : <div className="pd-map pd-map-hero pd-map-empty"><span className="label">{loading ? 'Loading map…' : 'No shows to map'}</span></div>}
+            </Suspense>
+          </div>
         </div>
       </section>
 
-      {/* ---------- Shows ---------- */}
+      {/* ---------- Side B: the shows ---------- */}
       <section className="block" id="shows">
         <div className="wrap">
           <div className="shows-bar">
-            <div className="sb-title"><h2>Upcoming shows</h2><span className="num">{filtered.length}</span></div>
+            <div className="sb-title">
+              <div className="eyebrow">Side B</div>
+              <h2>Upcoming shows<span className="num">{nf.format(filtered.length)}</span></h2>
+            </div>
             <div className="sb-controls">
               <button className="filters-btn" onClick={() => setFiltersOpen(true)}><SlidersHorizontal size={15} /> Filters{activeCount > 0 && <i>{activeCount}</i>}</button>
-              <div className="ctl-city"><PlacesAutocomplete value={city} onChange={(v) => setCity(v)} cities placeholder="City…" /></div>
+              <div className="ctl-city"><PlacesAutocomplete value={city} onChange={(v) => setCity(v)} cities placeholder="Any city" ariaLabel="City" /></div>
               <label className="ctl"><span>From</span><input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} /></label>
               <label className="ctl"><span>To</span><input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} /></label>
-              <select className="ctl-sel" value={genre} onChange={(e) => setGenre(e.target.value)}>
-                <option value="">All genres</option>
+              <select className="ctl-sel" value={genre} onChange={(e) => setGenre(e.target.value)} aria-label="Subgenre">
+                <option value="">All subgenres</option>
                 {genres.map(([g, n]) => <option key={g} value={g}>{g} ({n})</option>)}
               </select>
               {hasFilters && <button className="ctl-clear" onClick={clearAll}><X size={14} /> Clear</button>}
               <div className="viewtoggle" role="group" aria-label="View">
-                <button className={view === 'grid' ? 'on' : ''} onClick={() => setView('grid')} title="Grid" aria-label="Grid view"><LayoutGrid size={16} /></button>
-                <button className={view === 'list' ? 'on' : ''} onClick={() => setView('list')} title="List" aria-label="List view"><List size={16} /></button>
-                <button className={view === 'compact' ? 'on' : ''} onClick={() => setView('compact')} title="Compact" aria-label="Compact view"><AlignJustify size={16} /></button>
+                <button className={view === 'grid' ? 'on' : ''} aria-pressed={view === 'grid'} onClick={() => setView('grid')} aria-label="Sleeves view"><LayoutGrid size={16} /><span className="vt-label">Sleeves</span></button>
+                <button className={view === 'list' ? 'on' : ''} aria-pressed={view === 'list'} onClick={() => setView('list')} aria-label="Tracklist view"><List size={16} /><span className="vt-label">Tracklist</span></button>
+                <button className={view === 'compact' ? 'on' : ''} aria-pressed={view === 'compact'} onClick={() => setView('compact')} aria-label="Compact view"><AlignJustify size={16} /><span className="vt-label">Compact</span></button>
               </div>
             </div>
           </div>
@@ -258,26 +295,26 @@ export default function HomePage() {
           ) : filtered.length === 0 ? (
             <div className="empty">
               <h3>No shows match your filters</h3>
-              <p>Try a wider location, a different date range or genre — or clear the filters.</p>
-              {hasFilters && <button className="btn btn-ghost" onClick={clearAll} style={{ marginTop: 12 }}>Clear filters</button>}
+              <p>Try a wider location, a different date range or subgenre, or clear the filters.</p>
+              {hasFilters && <button className="btn btn-ghost" onClick={clearAll} style={{ marginTop: 16 }}>Clear filters</button>}
             </div>
           ) : (
             <div className={gridClass}>
-              {filtered.map((e) => <EventCard key={e.id} event={e} onSelect={handleSelectEvent} view={view} />)}
+              {filtered.map((e, i) => <EventCard key={e.id} event={e} onSelect={handleSelectEvent} view={view} index={i} />)}
             </div>
           )}
         </div>
       </section>
 
-      {/* ---------- Near you ---------- */}
+      {/* ---------- Bonus track: near you ---------- */}
       {!loading && events.length > 0 && <NearYou events={events} onSelect={handleSelectEvent} />}
 
       {/* ---------- Footer ---------- */}
       <footer className="foot">
         <div className="wrap foot-top">
           <div className="foot-brand">
-            <Logo height={28} />
-            <span className="foot-fresh"><span className="pulse" /> Catalog refreshed automatically every 15 days</span>
+            <Logo height={34} />
+            <span className="foot-fresh"><span className="pulse" /> Catalog refreshed every 15 days</span>
           </div>
           <div className="foot-cols">
             <div>
@@ -300,14 +337,14 @@ export default function HomePage() {
         </div>
         <div className="wrap">
           <p className="foot-note">
-            ProgDealer — for fans who still believe a fifteen-minute track with a flute solo deserves to be heard live.
-            Worldwide catalog aggregated automatically and curated by hand.
+            ProgDealer is for fans who still believe a fifteen-minute track with a flute solo deserves to be heard live.
+            Worldwide catalog, aggregated automatically and curated by hand.
           </p>
         </div>
       </footer>
 
       {/* ---------- Mobile bottom nav ---------- */}
-      <nav className="bnav">
+      <nav className="bnav" aria-label="Quick">
         <a href="/"><HomeIcon size={19} /><span>Home</span></a>
         <button onClick={gotoShows}><SearchIcon size={19} /><span>Browse</span></button>
         <button className="fab" onClick={requestAddEvent} aria-label="Add a show"><Plus size={22} /></button>
@@ -317,7 +354,7 @@ export default function HomePage() {
       {/* ---------- Filters sheet (mobile) ---------- */}
       {filtersOpen && (
         <div className="fsheet-backdrop" onClick={() => setFiltersOpen(false)}>
-          <div className="fsheet" onClick={(e) => e.stopPropagation()}>
+          <div className="fsheet" role="dialog" aria-modal="true" aria-label="Filters" onClick={(e) => e.stopPropagation()}>
             <div className="fsheet-grip" />
             <div className="fsheet-head">
               <h3>Filters</h3>
@@ -326,22 +363,22 @@ export default function HomePage() {
             <div className="fs-group">
               <label>Location</label>
               <div className="fs-chips">
-                <button className={`lc ${!continent && !country ? 'on' : ''}`} onClick={() => { setContinent(null); setCountry(null); }}>🌍 Worldwide</button>
-                {CONTINENT_LIST.map((c) => (
-                  <button key={c} className={`lc ${continent === c && !country ? 'on' : ''}`} onClick={() => { setContinent(c); setCountry(null); }}>{c}</button>
+                <button className={`lc ${!continent && !country ? 'on' : ''}`} onClick={() => { setContinent(null); setCountry(null); }}>Worldwide</button>
+                {continents.map((c) => (
+                  <button key={c} className={`lc ${continent === c && !country ? 'on' : ''}`} onClick={() => { setContinent(c); setCountry(null); }}>{c} <i>{continentCounts.get(c) || 0}</i></button>
                 ))}
               </div>
               {countries.length > 0 && (
                 <div className="fs-chips" style={{ marginTop: 8 }}>
                   {countries.map(([co, n]) => (
-                    <button key={co} className={`cty ${country === co ? 'on' : ''}`} onClick={() => setCountry(country === co ? null : co)}>{countryFlag(co)} {co} <i>{n}</i></button>
+                    <button key={co} className={`cty ${country === co ? 'on' : ''}`} onClick={() => setCountry(country === co ? null : co)}>{co} <i>{n}</i></button>
                   ))}
                 </div>
               )}
             </div>
             <div className="fs-group">
               <label>City</label>
-              <PlacesAutocomplete value={city} onChange={(v) => setCity(v)} cities placeholder="Any city…" />
+              <PlacesAutocomplete value={city} onChange={(v) => setCity(v)} cities placeholder="Any city" ariaLabel="City" />
             </div>
             <div className="fs-group">
               <label>Period</label>
@@ -351,15 +388,15 @@ export default function HomePage() {
               </div>
             </div>
             <div className="fs-group">
-              <label>Genre</label>
-              <select value={genre} onChange={(e) => setGenre(e.target.value)}>
-                <option value="">All genres</option>
+              <label htmlFor="fs-genre">Subgenre</label>
+              <select id="fs-genre" value={genre} onChange={(e) => setGenre(e.target.value)}>
+                <option value="">All subgenres</option>
                 {genres.map(([g, n]) => <option key={g} value={g}>{g} ({n})</option>)}
               </select>
             </div>
             <div className="fsheet-foot">
               {hasFilters && <button className="btn btn-ghost" onClick={clearAll}>Clear all</button>}
-              <button className="btn btn-solid" onClick={() => setFiltersOpen(false)}>Show {filtered.length} {filtered.length === 1 ? 'show' : 'shows'}</button>
+              <button className="btn btn-solid" onClick={() => setFiltersOpen(false)}>Show {nf.format(filtered.length)} {showWord(filtered.length)}</button>
             </div>
           </div>
         </div>

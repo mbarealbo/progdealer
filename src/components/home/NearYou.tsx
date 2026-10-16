@@ -5,7 +5,7 @@ import { coordsForEvent, haversineKm } from '../../utils/coords';
 
 type Located = { event: Event; dist: number; brng: number; lat: number; lng: number };
 
-const dayFmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit' });
+const monthFmt = new Intl.DateTimeFormat('en-GB', { month: 'short', timeZone: 'UTC' });
 
 // Initial bearing from point a to b, radians clockwise from north.
 function bearing(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
@@ -69,14 +69,14 @@ export default function NearYou({ events, onSelect }: { events: Event[]; onSelec
       const maxR = Math.min(w, h) / 2 - 24;
 
       // rings at 1/3, 2/3, 3/3 of the farthest shown pin
-      ctx.strokeStyle = '#E7E5E2'; ctx.lineWidth = 1;
-      ctx.fillStyle = '#B7B9BE'; ctx.font = '10px ui-monospace, Menlo, monospace';
+      ctx.strokeStyle = '#CFC6B5'; ctx.lineWidth = 1;
+      ctx.fillStyle = '#5B5A50'; ctx.font = "10px 'IBM Plex Mono', ui-monospace, Menlo, monospace";
       [1 / 3, 2 / 3, 1].forEach((f) => {
         const r = f * maxR;
         ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
         ctx.fillText(`${fmtKm(maxDist * f)}km`, cx + 3, cy - r + 12);
       });
-      ctx.strokeStyle = '#F0EEEB';
+      ctx.strokeStyle = '#DDD5C6';
       ctx.beginPath(); ctx.moveTo(cx - maxR, cy); ctx.lineTo(cx + maxR, cy); ctx.moveTo(cx, cy - maxR); ctx.lineTo(cx, cy + maxR); ctx.stroke();
 
       // pins by bearing + distance
@@ -85,16 +85,16 @@ export default function NearYou({ events, onSelect }: { events: Event[]; onSelec
         const x = cx + Math.sin(p.brng) * r;
         const y = cy - Math.cos(p.brng) * r;
         ctx.beginPath(); ctx.arc(x, y, 5.5, 0, Math.PI * 2);
-        ctx.fillStyle = '#E1341E'; ctx.fill();
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.stroke();
+        ctx.fillStyle = '#1F5C5A'; ctx.fill();
+        ctx.strokeStyle = '#F6F2EA'; ctx.lineWidth = 1.6; ctx.stroke();
         if (idx < 3) {
-          ctx.fillStyle = '#5C5F66'; ctx.font = '600 10px -apple-system, Segoe UI, sans-serif';
+          ctx.fillStyle = '#4A4A41'; ctx.font = "600 11px 'Instrument Sans Variable', system-ui, sans-serif";
           ctx.fillText(p.event.città.split(',')[0], x + 9, y + 3);
         }
       });
       // you
       ctx.beginPath(); ctx.arc(cx, cy, 6.5, 0, Math.PI * 2);
-      ctx.fillStyle = '#191A1D'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#D49A12'; ctx.fill(); ctx.strokeStyle = '#24261F'; ctx.lineWidth = 2; ctx.stroke();
     };
     draw();
     window.addEventListener('resize', draw);
@@ -106,7 +106,7 @@ export default function NearYou({ events, onSelect }: { events: Event[]; onSelec
       <div className="wrap">
         <div className="head">
           <div>
-            <div className="eyebrow">Personalised · your location stays on your device</div>
+            <div className="eyebrow">Bonus track · your location stays on your device</div>
             <h2>Happening near you</h2>
           </div>
           {status === 'ready' && (
@@ -120,7 +120,7 @@ export default function NearYou({ events, onSelect }: { events: Event[]; onSelec
             <p>
               {status === 'denied'
                 ? "Couldn't read your location. Check the browser's location permission and try again."
-                : 'See the shows closest to you, sorted by distance. We only use your location in the browser — nothing is stored.'}
+                : 'See the shows closest to you, sorted by distance. We only use your location in the browser: nothing is stored.'}
             </p>
             <button className="btn btn-accent" onClick={requestLocation} disabled={status === 'locating'}>
               {status === 'locating' ? <><span className="spin" /> Locating…</> : <><LocateFixed size={16} /> Use my location</>}
@@ -135,8 +135,8 @@ export default function NearYou({ events, onSelect }: { events: Event[]; onSelec
               </div>
               <canvas className="radar-canvas" ref={canvasRef} aria-label="Map of shows around your location" />
               <div className="radar-legend">
-                <span><i style={{ background: '#191A1D' }} />You</span>
-                <span><i style={{ background: '#E1341E' }} />Upcoming show</span>
+                <span><i style={{ background: '#D49A12', boxShadow: '0 0 0 1.5px #24261F' }} />You</span>
+                <span><i style={{ background: '#1F5C5A' }} />Upcoming show</span>
               </div>
             </div>
 
@@ -146,8 +146,8 @@ export default function NearYou({ events, onSelect }: { events: Event[]; onSelec
                 return (
                   <button key={event.id} className="nearrow" onClick={() => onSelect(event)}>
                     <div className="when">
-                      <div className="d">{String(d.getDate()).padStart(2, '0')}</div>
-                      <div className="m">{dayFmt.format(d).split(' ')[0]}</div>
+                      <div className="d">{String(d.getUTCDate()).padStart(2, '0')}</div>
+                      <div className="m">{monthFmt.format(d)}</div>
                     </div>
                     <div className="body">
                       <div className="title">{event.nome_evento}</div>

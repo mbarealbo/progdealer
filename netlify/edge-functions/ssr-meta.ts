@@ -18,7 +18,7 @@ const BODY_SLOT = '<!--ssr-body-->';
 
 // App/private routes that must never be indexed. We inject `noindex` here (rather
 // than only Disallow-ing in robots.txt) because Google must be able to CRAWL a page
-// to see the noindex and drop it — a robots.txt block would leave it stuck in the index.
+// to see the noindex and drop it; a robots.txt block would leave it stuck in the index.
 const NOINDEX_ROUTES = new Set(['/login', '/userarea', '/adminarea', '/reset-password', '/goodbye']);
 
 // Public values (the anon key already ships in the client bundle); env overrides.
@@ -32,7 +32,7 @@ function authHeaders(key: string) {
 async function fetchEvent(id: string): Promise<SeoEvent | null> {
   const key = Netlify.env.get('VITE_SUPABASE_ANON_KEY');
   if (!key) return null;
-  // Only look up plausible UUIDs — cheap guard against junk paths.
+  // Only look up plausible UUIDs: cheap guard against junk paths.
   if (!/^[0-9a-fA-F-]{16,40}$/.test(id)) return null;
   const url = `${SUPABASE_URL}/rest/v1/eventi_prog`
     + `?id=eq.${encodeURIComponent(id)}&select=${encodeURIComponent(SELECT)}&limit=1`;
@@ -46,7 +46,7 @@ async function fetchEvent(id: string): Promise<SeoEvent | null> {
   }
 }
 
-// Next upcoming approved events — gives AI crawlers a readable catalog on the home page.
+// Next upcoming approved events: gives AI crawlers a readable catalog on the home page.
 async function fetchUpcoming(): Promise<SeoEvent[]> {
   const key = Netlify.env.get('VITE_SUPABASE_ANON_KEY');
   if (!key) return [];
@@ -85,7 +85,7 @@ export default async function handler(request: Request, context: Context): Promi
   const url = new URL(request.url);
   const origin = url.origin;
   const path = url.pathname === '/' ? '/' : url.pathname.replace(/\/+$/, '');
-  let html = await res.text();
+  const html = await res.text();
 
   // Use function replacers: injected content is arbitrary event text, and a string
   // replacement would interpret `$&`, `$\``, `$$`, … as special patterns.

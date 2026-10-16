@@ -1,5 +1,6 @@
-import { X, UserPlus, LogIn } from 'lucide-react';
+import { X, LogIn } from 'lucide-react';
 import GoogleAuth from './GoogleAuth';
+import { LogoMark } from './brand/Logo';
 
 interface AuthRequiredModalProps {
   isOpen: boolean;
@@ -13,15 +14,13 @@ export default function AuthRequiredModal({ isOpen, onClose }: AuthRequiredModal
 
   return (
     <div className="pd-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="pd-modal" role="dialog" aria-modal="true" aria-label="Sign in required" style={{ maxWidth: 420, textAlign: 'center' }}>
+      <div className="pd-modal narrow" role="dialog" aria-modal="true" aria-labelledby="auth-req-title">
         <div className="modal-head">
-          <h2 style={{ display: 'inline-flex', alignItems: 'center', gap: 9 }}>
-            <UserPlus size={20} color="#E1341E" /> Sign in required
-          </h2>
+          <LogoMark size={44} />
           <button className="iconx" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </div>
-
-        <p className="modal-sub" style={{ marginTop: 8 }}>
+        <h2 id="auth-req-title" style={{ marginTop: 14 }}>Sign in to add a show</h2>
+        <p className="modal-sub" style={{ marginTop: 10 }}>
           Create a free account to submit shows and help build the worldwide prog catalog. It takes under a minute.
         </p>
 

@@ -28,12 +28,6 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
   const from = location.state?.from?.pathname || '/';
 
   useEffect(() => {
-    const prev = document.body.style.backgroundColor;
-    document.body.style.backgroundColor = '#F5F4F2';
-    return () => { document.body.style.backgroundColor = prev; };
-  }, []);
-
-  useEffect(() => {
     if (isAuthenticated) {
       navigate(from, { replace: true });
     }
@@ -73,13 +67,14 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
         navigate(from, { replace: true });
         resetForm();
       }
-    } catch (error: any) {
-      if (error.message?.includes('email_not_confirmed')) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('email_not_confirmed')) {
         setError('Please check your email and click the confirmation link before logging in.');
-      } else if (error.message?.includes('Invalid login credentials')) {
+      } else if (message.includes('Invalid login credentials')) {
         setError('Invalid email or password. Please check your credentials and try again.');
       } else {
-        setError(error.message || 'Login failed');
+        setError(message || 'Login failed');
       }
     } finally {
       setLoading(false);
@@ -111,12 +106,13 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
           setMode('login');
         }
       }
-    } catch (error: any) {
-      if (error.message?.includes('User already registered')) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('User already registered')) {
         setError('An account with this email already exists. Please try logging in instead.');
         setMode('login');
       } else {
-        setError(error.message || 'Registration failed. Please try again.');
+        setError(message || 'Registration failed. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -144,17 +140,19 @@ export default function LoginPage({ isAuthenticated, onAuthenticated }: LoginPag
     <div className="pd">
       <div className="detail-bar">
         <div className="detail-bar-inner">
-          <button className="brand" onClick={() => navigate('/')} aria-label="ProgDealer home">
-            <Logo height={26} />
-          </button>
           <button className="linkbtn" onClick={() => navigate('/')}>
-            <ArrowLeft size={16} /> Back to shows
+            <ArrowLeft size={18} /> <span className="hide-mob">Back to shows</span>
           </button>
+          <button className="brand" onClick={() => navigate('/')} aria-label="ProgDealer home">
+            <Logo height={30} />
+          </button>
+          <span style={{ width: 44 }} aria-hidden="true" />
         </div>
       </div>
 
       <div className="auth-wrap">
         <div className="auth-card">
+          <div className="eyebrow">Your account</div>
           <h1 className="auth-title">{mode === 'login' ? 'Welcome back' : 'Create your account'}</h1>
           <p className="auth-caption">
             {mode === 'login' ? 'Sign in to save shows and submit gigs.' : 'Join to track prog shows worldwide.'}

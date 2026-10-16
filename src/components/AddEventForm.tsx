@@ -77,7 +77,7 @@ export default function AddEventForm({
       const { error } = await supabase.from('eventi_prog').insert([eventData]);
       if (error) throw error;
 
-      // Silent notification to admin — don't block or surface errors to the user
+      // Silent notification to admin: don't block or surface errors to the user
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
@@ -134,7 +134,7 @@ export default function AddEventForm({
     return (
       <div className="pd-success-toast">
         <span className="ok"><Check size={18} /></span>
-        Show submitted — thanks! It's now pending review.
+        Show submitted, thanks! It's now pending review.
       </div>
     );
   }
@@ -144,7 +144,7 @@ export default function AddEventForm({
     return (
       <button
         className="btn btn-accent"
-        style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 50, height: 52, borderRadius: 999, boxShadow: '0 8px 20px -6px rgba(225,52,30,.5)' }}
+        style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 50, height: 52, boxShadow: 'var(--print)' }}
         onClick={() => { if (!isAuthenticated && onAuthRequired) onAuthRequired(); else setIsOpen(true); }}
         title="Add a show"
       >
@@ -155,38 +155,42 @@ export default function AddEventForm({
 
   return (
     <div className="pd-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setIsOpen(false); }}>
-      <div className="pd-modal" role="dialog" aria-modal="true" aria-label="Add a show">
+      <div className="pd-modal" role="dialog" aria-modal="true" aria-labelledby="add-show-title">
         <div className="modal-head">
-          <h2>Add a show</h2>
+          <div>
+            <div className="eyebrow">New pressing</div>
+            <h2 id="add-show-title" style={{ marginTop: 8 }}>Add a show</h2>
+          </div>
           <button className="iconx" onClick={() => setIsOpen(false)} aria-label="Close"><X size={18} /></button>
         </div>
-        <p className="modal-sub">Spotted a gig we're missing? Submit it — it goes live after a quick review.</p>
+        <p className="modal-sub">Spotted a gig we're missing? Submit it: it goes live after a quick review.</p>
 
         <form onSubmit={handleSubmit}>
           <div className="afield">
-            <label>Event name *</label>
-            <input className="ainput" type="text" name="nome_evento" value={formData.nome_evento} onChange={handleChange} required placeholder="e.g. Steven Wilson — Live in London" />
+            <label htmlFor="af-name">Event name *</label>
+            <input id="af-name" className="ainput" type="text" name="nome_evento" value={formData.nome_evento} onChange={handleChange} required placeholder="e.g. Steven Wilson - The Overview" />
+            <span className="hint">Band first, then the tour after a hyphen.</span>
           </div>
 
           <div className="form-2">
             <div className="afield">
-              <label>Date &amp; time *</label>
-              <input className="ainput" type="datetime-local" name="data_ora" value={formData.data_ora} onChange={handleChange} required />
+              <label htmlFor="af-date">Date &amp; time *</label>
+              <input id="af-date" className="ainput" type="datetime-local" name="data_ora" value={formData.data_ora} onChange={handleChange} required />
             </div>
             <div className="afield">
               <label>City *</label>
-              <PlacesAutocomplete value={formData.città} onChange={(v) => setFormData((f) => ({ ...f, città: v }))} onCoords={setCityCoords} cities required placeholder="e.g. London" />
+              <PlacesAutocomplete value={formData.città} onChange={(v) => setFormData((f) => ({ ...f, città: v }))} onCoords={setCityCoords} cities required placeholder="e.g. London" ariaLabel="City" />
             </div>
           </div>
 
           <div className="form-2">
             <div className="afield">
               <label>Venue *</label>
-              <PlacesAutocomplete value={formData.venue} onChange={(v) => setFormData((f) => ({ ...f, venue: v }))} onCoords={setVenueCoords} required placeholder="Venue name" />
+              <PlacesAutocomplete value={formData.venue} onChange={(v) => setFormData((f) => ({ ...f, venue: v }))} onCoords={setVenueCoords} required placeholder="Venue name" ariaLabel="Venue" />
             </div>
             <div className="afield">
-              <label>Event link</label>
-              <input className="ainput" type="url" name="link" value={formData.link} onChange={handleChange} placeholder="https:// (optional)" />
+              <label htmlFor="af-link">Event link</label>
+              <input id="af-link" className="ainput" type="url" name="link" value={formData.link} onChange={handleChange} placeholder="https:// (optional)" />
             </div>
           </div>
 
@@ -198,9 +202,9 @@ export default function AddEventForm({
             <div>
               <div className="form-2">
                 <div className="afield">
-                  <label>Subgenre</label>
+                  <label htmlFor="af-genre">Subgenre</label>
                   <div className="ainput-wrap">
-                    <select className="ainput" name="sottogenere" value={formData.sottogenere} onChange={handleChange}>
+                    <select id="af-genre" className="ainput" name="sottogenere" value={formData.sottogenere} onChange={handleChange}>
                       <option value="">Auto-detect from event name</option>
                       {PROG_SUBGENRES.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
@@ -208,8 +212,8 @@ export default function AddEventForm({
                   </div>
                 </div>
                 <div className="afield">
-                  <label>Time info</label>
-                  <input className="ainput" type="text" name="orario" value={formData.orario} onChange={handleChange} placeholder="e.g. Doors 20:00, start 21:00" />
+                  <label htmlFor="af-time">Time info</label>
+                  <input id="af-time" className="ainput" type="text" name="orario" value={formData.orario} onChange={handleChange} placeholder="e.g. Doors 20:00, start 21:00" />
                 </div>
               </div>
 
@@ -217,7 +221,7 @@ export default function AddEventForm({
                 <label>Artists</label>
                 {artists.map((artist, index) => (
                   <div key={index} className="artist-row">
-                    <input className="ainput" type="text" value={artist} onChange={(e) => handleArtistChange(index, e.target.value)} placeholder={`Artist ${index + 1}`} />
+                    <input className="ainput" type="text" value={artist} onChange={(e) => handleArtistChange(index, e.target.value)} placeholder={`Artist ${index + 1}`} aria-label={`Artist ${index + 1}`} />
                     {artists.length > 1 && (
                       <button type="button" className="mini-btn" onClick={() => removeArtist(index)} aria-label="Remove artist"><Minus size={16} /></button>
                     )}
@@ -227,13 +231,13 @@ export default function AddEventForm({
               </div>
 
               <div className="afield">
-                <label>Description</label>
-                <textarea className="atextarea" name="descrizione" value={formData.descrizione} onChange={handleChange} rows={3} placeholder="What's the show about?" />
+                <label htmlFor="af-desc">Description</label>
+                <textarea id="af-desc" className="atextarea" name="descrizione" value={formData.descrizione} onChange={handleChange} rows={3} placeholder="What's the show about?" />
               </div>
 
               <div className="afield">
-                <label>Image URL</label>
-                <input className="ainput" type="url" name="immagine" value={formData.immagine} onChange={handleChange} placeholder="https:// (optional)" />
+                <label htmlFor="af-img">Image URL</label>
+                <input id="af-img" className="ainput" type="url" name="immagine" value={formData.immagine} onChange={handleChange} placeholder="https:// (optional)" />
                 {formData.immagine && (
                   <div className="preview"><img src={formData.immagine} alt="Preview" /></div>
                 )}

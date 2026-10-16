@@ -1,9 +1,11 @@
-// Generate PWA app icons (dependency-free PNG encoder) — the "Signal" equalizer
-// mark (one bar in the accent colour) on the ink background. Run: node scripts/gen-icons.mjs
+// Generate the PWA app icons (dependency-free PNG encoder): the "Gatefold"
+// record-label mark (ink disc, grooves, mustard label with a petrol-teal
+// quarter, spindle hole) on paper. Run: node scripts/gen-icons.mjs
 import { deflateSync } from 'node:zlib';
 import { writeFileSync, mkdirSync } from 'node:fs';
 
-const INK = [0x19, 0x1a, 0x1d], PAPER = [0xf5, 0xf4, 0xf2], ACCENT = [0xe1, 0x34, 0x1e];
+const PAPER = [0xec, 0xe7, 0xdc], INK = [0x24, 0x26, 0x1f], GROOVE = [0x4a, 0x4c, 0x42];
+const MUSTARD = [0xd4, 0x9a, 0x12], TEAL = [0x1f, 0x5c, 0x5a];
 
 const CRC = (() => {
   const t = [];
@@ -29,42 +31,41 @@ function png(size, rgba) {
   return Buffer.concat([sig, chunk('IHDR', ihdr), chunk('IDAT', idat), chunk('IEND', Buffer.alloc(0))]);
 }
 
-// Rounded-rect equalizer icon. pad = safe-zone padding (bigger for maskable).
-function icon(size, pad = 0.17, rounded = false) {
+// Colour of the mark at (u, v), in the mark's own 40-unit space centred on 20,20.
+function markColor(u, v) {
+  const dx = u - 20, dy = v - 20, d = Math.hypot(dx, dy);
+  if (d > 19) return null; // outside the disc: background
+  if (d <= 1.8) return PAPER; // spindle hole
+  if (d <= 7.8) return dx >= 0 && dy <= 0 ? TEAL : MUSTARD; // label, teal top-right quarter
+  if (Math.abs(d - 14.5) <= 0.4 || Math.abs(d - 11.5) <= 0.4) return GROOVE;
+  return INK;
+}
+
+// `scale` = disc diameter as a share of the icon (smaller for maskable safe zone).
+function icon(size, scale) {
   const buf = Buffer.alloc(size * size * 4);
-  const px = (x, y, [r, g, b]) => { const i = (y * size + x) * 4; buf[i] = r; buf[i + 1] = g; buf[i + 2] = b; buf[i + 3] = 255; };
-  // background (optionally rounded for the non-maskable "any" icon)
-  const rad = rounded ? size * 0.22 : 0;
-  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
-    if (rounded) {
-      const cx = Math.min(x, size - 1 - x), cy = Math.min(y, size - 1 - y);
-      if (cx < rad && cy < rad && Math.hypot(rad - cx, rad - cy) > rad) { const i = (y * size + x) * 4; buf[i + 3] = 0; continue; }
-    }
-    px(x, y, INK);
-  }
-  // equalizer bars, vertically centred, one in accent
-  const zone = size * (1 - 2 * pad), x0 = size * pad;
-  const bars = 5, gap = zone * 0.055;
-  const bw = (zone - gap * (bars - 1)) / bars;
-  const rel = [0.42, 0.72, 1.0, 0.58, 0.5], accentBar = 2;
-  const br = Math.max(2, Math.round(bw * 0.28)); // bar corner radius
-  for (let b = 0; b < bars; b++) {
-    const bh = Math.round(zone * rel[b]);
-    const bx = Math.round(x0 + b * (bw + gap));
-    const by = Math.round((size - bh) / 2);
-    const w = Math.round(bw), col = b === accentBar ? ACCENT : PAPER;
-    for (let y = by; y < by + bh; y++) for (let x = bx; x < bx + w; x++) {
-      const ex = Math.min(x - bx, bx + w - 1 - x), ey = Math.min(y - by, by + bh - 1 - y);
-      if (ex < br && ey < br && Math.hypot(br - ex, br - ey) > br) continue; // round corners
-      px(x, y, col);
+  const SS = 4; // supersampling per axis, for smooth edges
+  const unit = (size * scale) / 38; // 38 units = disc diameter
+  const off = size / 2 - 20 * unit;
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      let r = 0, g = 0, b = 0;
+      for (let sy = 0; sy < SS; sy++) for (let sx = 0; sx < SS; sx++) {
+        const u = (x + (sx + 0.5) / SS - off) / unit;
+        const v = (y + (sy + 0.5) / SS - off) / unit;
+        const c = markColor(u, v) || PAPER;
+        r += c[0]; g += c[1]; b += c[2];
+      }
+      const i = (y * size + x) * 4, n = SS * SS;
+      buf[i] = Math.round(r / n); buf[i + 1] = Math.round(g / n); buf[i + 2] = Math.round(b / n); buf[i + 3] = 255;
     }
   }
   return png(size, buf);
 }
 
 mkdirSync('public', { recursive: true });
-writeFileSync('public/icon-192.png', icon(192, 0.17));
-writeFileSync('public/icon-512.png', icon(512, 0.17));
-writeFileSync('public/icon-maskable-512.png', icon(512, 0.26)); // extra safe-zone padding
-writeFileSync('public/apple-touch-icon.png', icon(180, 0.16, true)); // rounded, iOS
-console.log('✓ wrote public/{icon-192,icon-512,icon-maskable-512,apple-touch-icon}.png');
+writeFileSync('public/icon-192.png', icon(192, 0.78));
+writeFileSync('public/icon-512.png', icon(512, 0.78));
+writeFileSync('public/icon-maskable-512.png', icon(512, 0.62)); // stays inside the maskable safe zone
+writeFileSync('public/apple-touch-icon.png', icon(180, 0.74)); // full-bleed paper, iOS rounds the corners
+console.log('wrote public/{icon-192,icon-512,icon-maskable-512,apple-touch-icon}.png');

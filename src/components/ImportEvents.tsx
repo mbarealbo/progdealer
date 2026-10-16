@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { Upload, X, Check, AlertTriangle, FileText } from 'lucide-react';
-import { importEvents } from '../lib/supabase';
+import { importEvents, type ImportResult } from '../lib/supabase';
 import { ImportEvent } from '../types/event';
 import { shouldUsePlaceholder } from '../utils/imageUtils';
 
 interface ImportEventsProps {
+  onClose: () => void;
   onEventsImported: () => void;
 }
 
-export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function ImportEvents({ onClose, onEventsImported }: ImportEventsProps) {
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<ImportResult[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
@@ -27,11 +27,8 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragActive(false);
-    
     const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      handleFileSelect(files[0]);
-    }
+    if (files.length > 0) handleFileSelect(files[0]);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -46,51 +43,35 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files.length > 0) {
-      handleFileSelect(files[0]);
-    }
+    if (files && files.length > 0) handleFileSelect(files[0]);
   };
 
-  const processFileWithPython = async (file: File): Promise<ImportEvent[]> => {
+  // Maps a schema.org-style JSON export onto our event columns.
+  const processFile = async (file: File): Promise<ImportEvent[]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      
+
       reader.onload = async (e) => {
         try {
           const jsonContent = e.target?.result as string;
-
-          // Since we can't actually write files in the browser, we'll pass the JSON content
-          // directly to a simulated Python script execution
-          
-          // For now, we'll simulate the Python script behavior in JavaScript
-          // In a real implementation, this would call the Python script via an API endpoint
           const rawEvents = JSON.parse(jsonContent);
           const eventsArray = Array.isArray(rawEvents) ? rawEvents : [rawEvents];
-          
+
           const processedEvents: ImportEvent[] = [];
-          
+
           for (const event of eventsArray) {
             try {
               const nome_evento = (event.name || event.nome_evento || '').trim();
-              
-              // Handle date normalization
+
               let data_ora = event.startDate || event.data_ora || '';
               if (!data_ora) continue;
-              
-              try {
-                // Normalize date to ISO format
-                const parsedDate = new Date(data_ora);
-                if (isNaN(parsedDate.getTime())) continue;
-                data_ora = parsedDate.toISOString();
-              } catch {
-                continue;
-              }
-              
-              // Handle location mapping
+              const parsedDate = new Date(data_ora);
+              if (isNaN(parsedDate.getTime())) continue;
+              data_ora = parsedDate.toISOString();
+
               const location = event.location || {};
               let venue = '';
               let città = '';
-              
               if (typeof location === 'object' && location !== null) {
                 venue = (location.name || '').trim();
                 const address = location.address || {};
@@ -99,93 +80,60 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
                 venue = String(location || '').trim();
                 città = (event.city || '').trim();
               }
-              
-              const sottogenere = (event.subgenre || event.sottogenere || 'Progressive').trim();
-              const link = event.url || event.link || '';
-              const fonte = event.fonte || 'import';
-              const tipo_inserimento = event.tipo_inserimento || 'scraped';
-              const descrizione = event.description || event.descrizione || null;
-              const artisti = event.artists || event.artisti || null;
-              const orario = event.time || event.orario || null;
+
               let immagine = event.image || event.immagine || null;
-              
-              // Clean up image URL - set to null if it should use placeholder
-              if (shouldUsePlaceholder(immagine)) {
-                immagine = null;
-              }
-              
-              const event_id = event.event_id || event.id || null;
-              
-              const mappedEvent: ImportEvent = {
+              if (shouldUsePlaceholder(immagine)) immagine = null;
+
+              processedEvents.push({
                 nome_evento,
                 data_ora,
                 venue,
                 città,
-                sottogenere,
-                descrizione,
-                artisti,
-                orario,
-                link,
+                sottogenere: (event.subgenre || event.sottogenere || 'Progressive').trim(),
+                descrizione: event.description || event.descrizione || null,
+                artisti: event.artists || event.artisti || null,
+                orario: event.time || event.orario || null,
+                link: event.url || event.link || '',
                 immagine,
-                fonte,
-                tipo_inserimento: tipo_inserimento as 'scraped' | 'manual',
-                event_id
-              };
-              
-              processedEvents.push(mappedEvent);
+                fonte: event.fonte || 'import',
+                tipo_inserimento: (event.tipo_inserimento || 'scraped') as 'scraped' | 'manual',
+                event_id: event.event_id || event.id || null,
+              });
             } catch (error) {
               console.warn('Skipping invalid event:', error);
-              continue;
             }
           }
-          
+
           resolve(processedEvents);
         } catch (error) {
           reject(new Error(`Failed to process JSON: ${error}`));
         }
       };
-      
-      reader.onerror = () => {
-        reject(new Error('Failed to read file'));
-      };
-      
+
+      reader.onerror = () => reject(new Error('Failed to read file'));
       reader.readAsText(file);
     });
   };
 
   const handleImport = async () => {
     if (!selectedFile) return;
-
     setLoading(true);
     setResults([]);
 
     try {
-      // Process file with Python script simulation
-      const processedEvents = await processFileWithPython(selectedFile);
-      
+      const processedEvents = await processFile(selectedFile);
+
       if (processedEvents.length === 0) {
-        setResults([{ 
-          success: false, 
-          event: 'No valid events found', 
-          error: 'No events could be processed from the uploaded file' 
-        }]);
+        setResults([{ success: false, event: 'No valid events found', error: 'No events could be processed from the uploaded file' }]);
         return;
       }
 
-      // Import processed events
       const importResults = await importEvents(processedEvents);
       setResults(importResults);
-      
-      if (importResults.some(r => r.success)) {
-        onEventsImported();
-      }
+      if (importResults.some((r) => r.success)) onEventsImported();
     } catch (error) {
       console.error('Import error:', error);
-      setResults([{ 
-        success: false, 
-        event: 'Processing Error', 
-        error: String(error) 
-      }]);
+      setResults([{ success: false, event: 'Processing error', error: String(error) }]);
     } finally {
       setLoading(false);
     }
@@ -196,183 +144,82 @@ export default function ImportEvents({ onEventsImported }: ImportEventsProps) {
     setSelectedFile(null);
   };
 
-  if (!isOpen) {
-    return (
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 sm:bottom-24 right-4 sm:right-8 bg-coal-800 hover:bg-coal-700 border-2 border-asphalt-600 hover:border-industrial-green-600 text-white p-3 sm:p-4 transition-all duration-200 z-50"
-        title="IMPORT EVENTS"
-      >
-        <Upload className="h-5 w-5 sm:h-6 sm:w-6" />
-      </button>
-    );
-  }
+  const ok = results.filter((r) => r.success).length;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
-      <div className="bg-coal-800 border-2 border-asphalt-600 p-4 sm:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <h2 className="text-lg sm:text-2xl font-industrial text-gray-100 tracking-wide uppercase">
-            IMPORT EVENTS
-          </h2>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="bg-transparent border-2 border-asphalt-500 text-gray-300 p-2 hover:border-burgundy-500 hover:text-white transition-all duration-200"
-          >
-            <X className="h-5 w-5 sm:h-6 sm:w-6" />
+    <div className="pd-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget && !loading) onClose(); }}>
+      <div className="pd-modal wide" role="dialog" aria-modal="true" aria-labelledby="imp-title">
+        <div className="modal-head">
+          <div>
+            <div className="eyebrow">Backstage</div>
+            <h2 id="imp-title" style={{ marginTop: 8 }}>Import shows</h2>
+          </div>
+          <button className="iconx" onClick={onClose} disabled={loading} aria-label="Close"><X size={18} /></button>
+        </div>
+        <p className="modal-sub">Upload a JSON file with an array of events. They are added to the catalog straight away.</p>
+
+        <div
+          className={`dropzone ${dragActive ? 'on' : ''}`}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+        >
+          {selectedFile ? (
+            <div className="file">
+              <FileText size={28} />
+              <div>
+                <strong>{selectedFile.name}</strong>
+                <div className="label" style={{ marginTop: 2 }}>{(selectedFile.size / 1024).toFixed(1)} KB</div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <Upload size={30} />
+              <p>Drop a JSON file here, or</p>
+              <input type="file" accept=".json,application/json" onChange={handleFileInput} id="imp-file" className="sr-only" />
+              <label htmlFor="imp-file" className="btn btn-ghost" style={{ marginTop: 12 }}>Choose a file</label>
+            </>
+          )}
+        </div>
+
+        <div className="fmt">
+          <strong>Supported fields</strong>
+          <ul>
+            <li><code>name</code> to <code>nome_evento</code></li>
+            <li><code>startDate</code> to <code>data_ora</code></li>
+            <li><code>location.name</code> to <code>venue</code></li>
+            <li><code>location.address.addressLocality</code> to <code>città</code></li>
+            <li><code>url</code> to <code>link</code></li>
+            <li><code>subgenre</code> to <code>sottogenere</code></li>
+          </ul>
+        </div>
+
+        <div className="modal-actions">
+          {(results.length > 0 || selectedFile) && (
+            <button className="ghost" onClick={clearResults} disabled={loading}>Clear</button>
+          )}
+          <button className="submit-btn" onClick={handleImport} disabled={loading || !selectedFile}>
+            {loading ? <><span className="spin" /> Importing…</> : <><Upload size={16} /> Import</>}
           </button>
         </div>
 
-        <div className="space-y-4 sm:space-y-6">
-          {/* File Upload Area */}
-          <div>
-            <label className="block text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 sm:mb-3 uppercase tracking-wide">
-              📁 UPLOAD JSON FILE
-            </label>
-            
-            {/* Drag & Drop Area */}
-            <div
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              className={`border-2 border-dashed p-6 sm:p-8 text-center transition-all duration-200 ${
-                dragActive
-                  ? 'border-industrial-green-600 bg-industrial-green-900 bg-opacity-20'
-                  : 'border-asphalt-500 hover:border-asphalt-400'
-              }`}
-            >
-              {selectedFile ? (
-                <div className="flex items-center justify-center space-x-3">
-                  <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-industrial-green-600" />
+        {results.length > 0 && (
+          <div className="results">
+            <div className="liner-head eyebrow" style={{ padding: '12px 0 6px' }}>Results</div>
+            <ul>
+              {results.map((result, index) => (
+                <li key={index}>
+                  {result.success ? <Check size={16} className="ok" /> : <AlertTriangle size={16} className="ko" />}
                   <div>
-                    <p className="text-gray-100 font-condensed font-bold uppercase tracking-wide text-sm sm:text-base">
-                      {selectedFile.name}
-                    </p>
-                    <p className="text-gray-400 text-xs sm:text-sm font-condensed uppercase tracking-wide">
-                      {(selectedFile.size / 1024).toFixed(1)} KB
-                    </p>
+                    {result.event}
+                    {result.error && <small>{result.error}</small>}
                   </div>
-                </div>
-              ) : (
-                <div>
-                  <Upload className="h-8 w-8 sm:h-12 sm:w-12 text-gray-500 mx-auto mb-4" />
-                  <p className="text-gray-300 font-condensed font-bold uppercase tracking-wide mb-2 text-sm sm:text-base">
-                    DROP JSON FILE HERE
-                  </p>
-                  <p className="text-gray-500 text-xs sm:text-sm font-condensed uppercase tracking-wide mb-4">
-                    OR CLICK TO SELECT
-                  </p>
-                  <input
-                    type="file"
-                    accept=".json,application/json"
-                    onChange={handleFileInput}
-                    className="hidden"
-                    id="file-input"
-                  />
-                  <label
-                    htmlFor="file-input"
-                    className="industrial-button cursor-pointer inline-block text-xs sm:text-sm px-3 sm:px-4 py-2"
-                  >
-                    SELECT FILE
-                  </label>
-                </div>
-              )}
-            </div>
-
-            {/* File Format Info */}
-            <div className="mt-4 p-3 sm:p-4 bg-coal-900 border border-asphalt-600">
-              <h4 className="text-xs sm:text-sm font-condensed font-bold text-gray-100 mb-2 uppercase tracking-wide">
-                📋 SUPPORTED FORMAT
-              </h4>
-              <p className="text-xs text-gray-400 font-condensed mb-2">
-                Upload a JSON file containing an array of event objects. The Python script will automatically map fields like:
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-500 font-condensed">
-                <div>• <code>name</code> → <code>nome_evento</code></div>
-                <div>• <code>startDate</code> → <code>data_ora</code></div>
-                <div>• <code>location.name</code> → <code>venue</code></div>
-                <div>• <code>location.address.addressLocality</code> → <code>città</code></div>
-                <div>• <code>url</code> → <code>link</code></div>
-                <div>• <code>subgenre</code> → <code>sottogenere</code></div>
-              </div>
-            </div>
+                </li>
+              ))}
+            </ul>
+            <div className="results-sum">{ok} imported · {results.length - ok} failed</div>
           </div>
-
-          {/* Import Button - Stack on mobile */}
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-            <button
-              onClick={handleImport}
-              disabled={loading || !selectedFile}
-              className="w-full sm:flex-1 bg-industrial-green-600 border-2 border-industrial-green-600 text-white px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:bg-industrial-green-700 hover:border-industrial-green-700 transition-all duration-200 disabled:opacity-50 flex items-center justify-center space-x-2 text-sm"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>PROCESSING...</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-base sm:text-lg">🤖</span>
-                  <span>IMPORT</span>
-                </>
-              )}
-            </button>
-            {(results.length > 0 || selectedFile) && (
-              <button
-                onClick={clearResults}
-                className="w-full sm:w-auto bg-transparent border-2 border-asphalt-500 text-gray-300 px-4 py-3 uppercase tracking-wide font-condensed font-bold hover:border-burgundy-500 hover:text-white transition-all duration-200 text-sm"
-              >
-                CLEAR
-              </button>
-            )}
-          </div>
-
-          {/* Results */}
-          {results.length > 0 && (
-            <div className="bg-coal-900 border-2 border-asphalt-600 p-3 sm:p-4">
-              <h3 className="text-base sm:text-lg font-industrial text-gray-100 mb-3 sm:mb-4 uppercase tracking-wide">
-                IMPORT RESULTS
-              </h3>
-              <div className="space-y-2 max-h-48 sm:max-h-60 overflow-y-auto">
-                {results.map((result, index) => (
-                  <div
-                    key={index}
-                    className={`flex items-center space-x-2 sm:space-x-3 p-2 border text-xs sm:text-sm ${
-                      result.success
-                        ? 'border-industrial-green-600 bg-industrial-green-900'
-                        : 'border-burgundy-600 bg-burgundy-900'
-                    }`}
-                  >
-                    {result.success ? (
-                      <Check className="h-3 w-3 sm:h-4 sm:w-4 text-industrial-green-400" />
-                    ) : (
-                      <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-burgundy-400" />
-                    )}
-                    <div className="flex-1">
-                      <span className="font-condensed font-bold uppercase">
-                        {result.event}
-                      </span>
-                      {result.error && (
-                        <p className="text-xs text-gray-400 font-condensed">
-                          {result.error}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 sm:mt-4 text-xs sm:text-sm font-condensed text-gray-400">
-                <span className="text-industrial-green-400">
-                  {results.filter(r => r.success).length} SUCCESS
-                </span>
-                {' • '}
-                <span className="text-burgundy-400">
-                  {results.filter(r => !r.success).length} FAILED
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

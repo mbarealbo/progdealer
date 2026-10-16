@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 
+// Shape of a Places API (New) autocomplete response, as far as we read it.
+type PlacePrediction = {
+  placeId: string;
+  text?: { text?: string };
+  structuredFormat?: { mainText?: { text?: string }; secondaryText?: { text?: string } };
+};
+type AutocompleteResponse = { suggestions?: { placePrediction?: PlacePrediction }[] };
+
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
 
 interface Suggestion {
@@ -19,12 +27,14 @@ interface Props {
   cities?: boolean;
   /** Receive the picked place's coordinates (null while the field is edited by hand). */
   onCoords?: (coords: { lat: number; lng: number } | null) => void;
+  /** Accessible name when the field has no visible label. */
+  ariaLabel?: string;
 }
 
 // Venue/city autocomplete backed by Google Places API (New).
 // Degrades to a plain text input when no API key is configured, and never
 // blocks typing if the API errors out.
-export default function PlacesAutocomplete({ value, onChange, placeholder, required, cities, onCoords }: Props) {
+export default function PlacesAutocomplete({ value, onChange, placeholder, required, cities, onCoords, ariaLabel }: Props) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
@@ -54,11 +64,11 @@ export default function PlacesAutocomplete({ value, onChange, placeholder, requi
       }),
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-      .then((data) => {
+      .then((data: AutocompleteResponse) => {
         const list: Suggestion[] = (data.suggestions || [])
-          .map((s: any) => s.placePrediction)
-          .filter(Boolean)
-          .map((p: any) => ({
+          .map((s) => s.placePrediction)
+          .filter((p): p is PlacePrediction => Boolean(p))
+          .map((p) => ({
             placeId: p.placeId,
             text: p.text?.text ?? '',
             main: p.structuredFormat?.mainText?.text ?? p.text?.text ?? '',
@@ -117,6 +127,7 @@ export default function PlacesAutocomplete({ value, onChange, placeholder, requi
         required={required}
         placeholder={placeholder}
         autoComplete="off"
+        aria-label={ariaLabel}
         onChange={(e) => handleInput(e.target.value)}
         onKeyDown={onKeyDown}
         onFocus={() => { if (suggestions.length) setOpen(true); }}

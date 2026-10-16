@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { User as UserIcon, Trash2, ExternalLink, Clock, CheckCircle, XCircle, Plus, Settings, LogOut } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from '../lib/supabase';
 import { Event } from '../types/event';
 import { UserProfile } from '../hooks/useUserRole';
-import { shouldUsePlaceholder } from '../utils/imageUtils';
-import { getEventCountry, countryFlag } from '../utils/geo';
+import { Sleeve } from './home/EventCard';
 import AddEventForm from './AddEventForm';
 import DeleteAccountModal from './DeleteAccountModal';
 import PanelHeader from './PanelHeader';
@@ -19,7 +18,8 @@ interface UserPanelProps {
   onBackToMain: () => void;
 }
 
-const dateFmt = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+// Show times are stored as the venue's wall clock (see utils/eventText), so print them in UTC.
+const dateFmt = new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
 
 function StatusBadge({ status }: { status?: string }) {
   const s = status || 'pending';
@@ -36,25 +36,15 @@ export default function UserPanel({ isAuthenticated, currentUser, userProfile, o
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  useEffect(() => {
-    const prev = document.body.style.backgroundColor;
-    document.body.style.backgroundColor = '#F5F4F2';
-    return () => { document.body.style.backgroundColor = prev; };
-  }, []);
-
-  useEffect(() => {
-    if (!isAuthenticated) { onAuthRequired(); return; }
-    fetchUserEvents();
-  }, [isAuthenticated]);
-
-  const fetchUserEvents = async () => {
-    if (!currentUser) return;
+  const userId = currentUser?.id;
+  const fetchUserEvents = useCallback(async () => {
+    if (!userId) return;
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('eventi_prog')
         .select('*')
-        .eq('user_id', currentUser.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
       if (error) throw error;
       setUserEvents(data || []);
@@ -63,7 +53,16 @@ export default function UserPanel({ isAuthenticated, currentUser, userProfile, o
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  const onAuthRequiredRef = useRef(onAuthRequired);
+  onAuthRequiredRef.current = onAuthRequired;
+
+  // Runs again once the user is known: the session can arrive before the user.
+  useEffect(() => {
+    if (!isAuthenticated) { onAuthRequiredRef.current(); return; }
+    fetchUserEvents();
+  }, [isAuthenticated, fetchUserEvents]);
 
   const handleDeleteEvent = async (eventId: string) => {
     if (!confirm('Delete this show? This cannot be undone.')) return;
@@ -93,12 +92,12 @@ export default function UserPanel({ isAuthenticated, currentUser, userProfile, o
           right={<button className="icon-btn" onClick={onLogout} title="Log out" aria-label="Log out"><LogOut size={16} /></button>}
         />
         <main className="panel-main panel-narrow">
-          <div className="panel-title"><Settings size={22} /><h1>Settings</h1></div>
+          <div className="panel-title"><Settings size={26} /><h1>Settings</h1></div>
           <p className="panel-greet">Account configuration</p>
 
           <div className="stack" style={{ marginTop: 22 }}>
-            <div className="panel-card" style={{ padding: 20 }}>
-              <h2 style={{ fontFamily: 'inherit', fontSize: '1.05rem', fontWeight: 600, marginBottom: 16 }}>Account</h2>
+            <div className="panel-card pad">
+              <h2 className="card-title">Account</h2>
               <div className="info-row">
                 <span className="k">Email</span>
                 <span className="val">{userProfile?.email || currentUser?.email || 'User'}</span>
@@ -109,9 +108,9 @@ export default function UserPanel({ isAuthenticated, currentUser, userProfile, o
               </div>
             </div>
 
-            <div className="panel-card" style={{ padding: 20 }}>
-              <h2 style={{ fontFamily: 'inherit', fontSize: '1.05rem', fontWeight: 600, marginBottom: 6 }}>Preferences</h2>
-              <p style={{ color: 'var(--ink-3)', fontSize: '.86rem', margin: 0 }}>Notifications and favourite bands are coming soon.</p>
+            <div className="panel-card pad">
+              <h2 className="card-title">Preferences</h2>
+              <p className="muted">Notifications and favourite bands are coming soon.</p>
             </div>
 
             <div className="danger-zone">
@@ -149,14 +148,15 @@ export default function UserPanel({ isAuthenticated, currentUser, userProfile, o
       />
 
       <main className="panel-main">
-        <div className="panel-title"><UserIcon size={22} /><h1>Your area</h1></div>
+        <div className="eyebrow">Your record collection</div>
+        <div className="panel-title" style={{ marginTop: 10 }}><UserIcon size={26} /><h1>Your area</h1></div>
         <div><span className={`role-tag ${role}`}>{role}</span></div>
         <p className="panel-greet">Hello, {userProfile?.email || currentUser?.email}</p>
 
         <div className="stats">
-          <div className="stat"><UserIcon size={22} style={{ color: 'var(--accent)' }} /><div><div className="n">{userEvents.length}</div><div className="l">Total shows</div></div></div>
-          <div className="stat"><CheckCircle size={22} style={{ color: '#1f7a37' }} /><div><div className="n">{count('approved')}</div><div className="l">Approved</div></div></div>
-          <div className="stat"><Clock size={22} style={{ color: '#9a6a12' }} /><div><div className="n">{count('pending')}</div><div className="l">Pending</div></div></div>
+          <div className="stat"><div className="n">{userEvents.length}</div><div className="l">Your shows</div></div>
+          <div className="stat"><div className="n">{count('approved')}</div><div className="l"><i style={{ background: 'var(--teal)' }} />Approved</div></div>
+          <div className="stat"><div className="n">{count('pending')}</div><div className="l"><i style={{ background: 'var(--mustard)' }} />Pending</div></div>
         </div>
 
         <div className="toolbar">
@@ -171,7 +171,7 @@ export default function UserPanel({ isAuthenticated, currentUser, userProfile, o
         </div>
 
         <div className="panel-card">
-          <div className="ph">Your shows ({filteredEvents.length})</div>
+          <div className="ph"><span>Your shows</span><span>{filteredEvents.length}</span></div>
           {loading ? (
             <div className="empty" style={{ padding: '48px 0' }}><span className="label">Loading your shows…</span></div>
           ) : userEvents.length === 0 ? (
@@ -180,19 +180,17 @@ export default function UserPanel({ isAuthenticated, currentUser, userProfile, o
             <div className="empty" style={{ padding: '48px 20px' }}><h3>No {filter} shows</h3><p>Try a different filter.</p></div>
           ) : (
             filteredEvents.map((event) => {
-              const country = getEventCountry(event.città);
-              const hasImg = !shouldUsePlaceholder(event.immagine);
               return (
                 <div key={event.id} className="erow">
-                  <div className="thumb">{hasImg && <img src={event.immagine} alt="" loading="lazy" />}</div>
+                  <div className="thumb"><Sleeve event={event} showCatNo={false} /></div>
                   <div className="info">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                    <div className="info-top">
                       <h3>{event.nome_evento}</h3>
                       <StatusBadge status={event.status} />
                     </div>
                     <div className="meta">
                       <span>{dateFmt.format(new Date(event.data_ora))}</span>
-                      <span>{countryFlag(country)} {event.venue}, {event.città}</span>
+                      <span>{event.venue}, {event.città}</span>
                       <span>{event.sottogenere}</span>
                     </div>
                   </div>
