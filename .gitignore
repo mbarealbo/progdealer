@@ -43,5 +43,9 @@ dist-ssr
 .DS_Store
 ._*
 
-# Dedupe backups (contain full event rows)
+# Dedupe and rejection backups (contain full event rows)
 .firecrawl/dedupe-backup-*.json
+.firecrawl/rejected-*.json
+
+# Social graphics output (regenerate with npm run social:ads / social:weekly)
+social-out/

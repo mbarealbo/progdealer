@@ -7,7 +7,10 @@
 // to the `eventi_prog` shape and upserts it into Supabase (duplicates are
 // recognised by day + city + venue — see lib/dedupe.mjs).
 //
-// Run:  node scripts/scrape-events.mjs [--dry-run] [--limit=N] [--status=pending|approved]
+// Run:  node scripts/scrape-events.mjs [--dry-run] [--limit=N] [--only=name] [--status=pending|approved]
+//
+// --only=name scrapes just the sources whose name contains `name` (case
+// insensitive, no web discovery): a cheap way to test one source.
 //
 // Env (required for a real run):
 //   FIRECRAWL_API_KEY            Firecrawl API key (fc-...)
@@ -23,9 +26,12 @@
 import { writeFile, mkdir } from 'node:fs/promises';
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { geocode } from './lib/geocode.mjs';
+import { geocode, hasNoCity } from './lib/geocode.mjs';
 import { bucketOf, findDuplicate, indexByBucket } from './lib/dedupe.mjs';
 import { parseGigpress } from './lib/gigpress.mjs';
+import { parseTourTable } from './lib/tourtable.mjs';
+import { parseConcertful } from './lib/concertful.mjs';
+import { fetchSeated } from './lib/seated.mjs';
 
 // Load .env for local runs (plain `node` doesn't read it like Vite does).
 // Real environment variables / CI secrets always take precedence.
@@ -51,12 +57,15 @@ const SOURCES = [
   // LLM extractor (it returns zero events), so it gets a deterministic
   // GigPress parser over the markdown render — 1 credit instead of 5.
   { name: 'TPA — UK Gig Guide', url: 'https://theprogressiveaspect.net/uk-gig-guide-new/', parse: 'gigpress' },
-  // Aggregators (multi-region) — Concertful area pages cover the world
-  { name: 'Concertful — Europe',          url: 'https://concertful.com/area/europe/' },
-  { name: 'Concertful — United States',   url: 'https://concertful.com/area/united-states/' },
-  { name: 'Concertful — Canada',          url: 'https://concertful.com/area/canada/' },
-  { name: 'Concertful — Australia',       url: 'https://concertful.com/area/australia/' },
-  { name: 'Concertful — South America',   url: 'https://concertful.com/area/south-america/' },
+  // Concertful artist pages: every upcoming date of one artist on one page,
+  // read by a parser (lib/concertful.mjs, 1 credit). For prog acts whose own
+  // site has no readable list (TesseracT, Soen, Periphery) or lists fewer
+  // dates than Concertful does (Haken, The Pineapple Thief). Concertful's area
+  // pages are gone: page one is today only and gave about 4 prog events each.
+  ...[
+    'tesseract', 'soen', 'haken', 'periphery', 'ne-obliviscaris', 'thank-you-scientist',
+    'protest-the-hero', 'coheed-and-cambria', 'the-pineapple-thief', 'slift', 'sungazer', 'adrian-belew',
+  ].map((slug) => ({ name: `Concertful: ${slug}`, url: `https://concertful.com/tour/${slug}/`, parse: 'concertful' })),
   { name: 'Progressive Rock Central',     url: 'https://progressiverockcentral.com/' },
   { name: 'Music Festival Wizard',        url: 'https://www.musicfestivalwizard.com/festivals/' },
   // Continental-Europe agendas (the TPA guide above is UK-only)
@@ -68,12 +77,13 @@ const SOURCES = [
   { name: 'Midsummer Prog',               url: 'https://midsummerprog.com/' },
   // North America festivals
   { name: 'ProgPower USA',                url: 'https://www.progpowerusa.com/' },
-  { name: 'RoSfest (US)',                 url: 'https://www.rosfest.com/' },
   { name: 'ProgStock (US)',               url: 'https://www.progstock.com/' },
   { name: 'Cruise to the Edge',           url: 'https://cruisetotheedge.com/' },
   // Artist tour pages — major worldwide prog acts (official sites, agent-verified)
+  // A long plain table (92 dates): the LLM extractor stops partway, the table
+  // parser reads it all (lib/tourtable.mjs). `name` is the headliner.
+  { name: 'Rush', url: 'https://www.rush.com/tour/fifty-something/', parse: 'table' },
   { name: 'Yes', url: 'https://yesworld.com/live/' },
-  { name: 'Genesis', url: 'https://genesis-music.com/' },
   { name: 'Jethro Tull', url: 'https://jethrotull.com/tour-dates/' },
   { name: 'Steve Hackett', url: 'https://www.hackettsongs.com/tour.html' },
   { name: 'Gentle Giant', url: 'https://gentlegiantband.com/' },
@@ -92,7 +102,12 @@ const SOURCES = [
   { name: 'Arena', url: 'https://www.arenaband.co.uk/' },
   { name: 'Pallas', url: 'https://www.pallasofficial.com/' },
   { name: 'Steven Wilson', url: 'https://stevenwilsonhq.com/tour-dates/' },
-  { name: 'Porcupine Tree', url: 'https://porcupinetree.com/tour-dates/' },
+  // Seated widgets: their JSON feed is read directly (lib/seated.mjs), free and
+  // without the LLM. `seated` is the widget's data-artist-id.
+  { name: 'Porcupine Tree', url: 'https://porcupinetree.com/tour-dates/', seated: 'c27258fa-5bef-44bb-9cdb-41c02a25120e' },
+  { name: 'Dream Theater', url: 'https://dreamtheater.net/tour/', seated: '0be43148-933a-4b3c-a8e8-b17aa922bd00' },
+  { name: 'Gazpacho', url: 'https://gazpachoworld.com/tour-dates/', seated: '1174bdde-24ab-4982-a248-8c9915018327' },
+  { name: 'Ozric Tentacles', url: 'https://ozrics.com/live-shows/', seated: 'cf3d5355-945a-47ec-bcfe-388b826b0df8' },
   { name: 'The Pineapple Thief', url: 'https://www.pineapplethief.com/tour/' },
   { name: 'Big Big Train', url: 'https://www.bigbigtrain.com/live/' },
   { name: 'Anathema', url: 'https://www.anathemamusic.com/tour-dates/' },
@@ -100,8 +115,6 @@ const SOURCES = [
   { name: 'Leprous', url: 'https://leprous.net/tours/' },
   { name: 'Opeth', url: 'https://www.opeth.com/tour-dates' },
   { name: 'Haken', url: 'https://hakenmusic.com/tour/' },
-  { name: 'TesseracT', url: 'https://www.tesseractband.co.uk/tour-dates' },
-  { name: 'Dream Theater', url: 'https://dreamtheater.net/tour/' },
   { name: 'Devin Townsend', url: 'https://hevydevy.com/tour-dates/' },
   { name: 'Between the Buried and Me', url: 'https://www.betweentheburiedandme.com/tour-dates/' },
   { name: "Caligula's Horse", url: 'https://www.caligulashorse.com/' },
@@ -114,10 +127,15 @@ const SOURCES = [
   { name: 'Neal Morse', url: 'https://nealmorse.com/tour-dates/' },
   { name: 'The Flower Kings', url: 'https://www.roinestolt.com/roinestolt-tour' },
   { name: 'Ayreon', url: 'https://www.arjenlucassen.com/live/' },
-  { name: 'Gazpacho', url: 'https://gazpachoworld.com/tour-dates/' },
   { name: 'Fish', url: 'https://fishmusic.scot/' },
   { name: 'Mostly Autumn', url: 'https://www.mostly-autumn.com/tour-dates' },
-  { name: 'Frost*', url: 'https://frost.life/live' },
+  { name: 'Frost*', url: 'https://frost.life/frost-live' },
+  { name: 'Motorpsycho', url: 'https://motorpsycho.no/gigs/' },
+  { name: 'BEAT (Belew, Vai, Levin)', url: 'https://www.beat-tour.com/' },
+  { name: "Claudio Simonetti's Goblin", url: 'https://www.goblinsimonetti.com/tour-dates' },
+  { name: 'Karnivool', url: 'https://www.karnivool.com/' },
+  { name: 'Tangerine Dream', url: 'https://www.tangerinedreammusic.com/en/concerts/index.asp' },
+  { name: 'Airbag', url: 'https://www.airbagsound.com/' },
   { name: 'Wobbler', url: 'https://www.wobblerofficial.com/' },
   { name: 'Sons of Apollo', url: 'https://sonsofapollo.com/' },
   { name: 'Nightwish', url: 'https://www.nightwish.com/tour/upcoming' },
@@ -129,6 +147,7 @@ const SOURCES = [
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
 const LIMIT = Number((args.find(a => a.startsWith('--limit=')) || '').split('=')[1]) || 0;
+const ONLY = ((args.find(a => a.startsWith('--only=')) || '').split('=')[1] || '').toLowerCase();
 const STATUS =
   (args.find(a => a.startsWith('--status=')) || '').split('=')[1] ||
   process.env.SCRAPED_STATUS ||
@@ -160,7 +179,7 @@ const EXTRACT_SCHEMA = {
           time:        { type: 'string', description: '24h HH:MM if known, else empty' },
           venue:       { type: 'string' },
           city:        { type: 'string' },
-          country:     { type: 'string' },
+          country:     { type: 'string', description: 'Country in full English (Italy, not ITA or IT)' },
           artists:     { type: 'array', items: { type: 'string' } },
           url:         { type: 'string', description: 'Event/ticket page URL if present' },
           description: { type: 'string', description: 'Short line-up / notes' },
@@ -179,7 +198,13 @@ const EXTRACT_PROMPT =
   'King Crimson, Yes, Genesis, Marillion, Steve Hackett, Jethro Tull, Porcupine Tree, Opeth, ' +
   'Haken, Dream Theater, Gong, Magma, PFM, Banco, Ånglagård, Leprous, TesseracT, Riverside, ' +
   'Steven Wilson, Gentle Giant, Camel, Van der Graaf Generator. EXCLUDE mainstream pop, ' +
-  'hip-hop, EDM, country and any non-progressive act. Only events dated today or later. ' +
+  'hip-hop, EDM, country and any non-progressive act. ' +
+  // Without today's date the model guesses what "upcoming" means and which
+  // year a bare "12 March" belongs to.
+  `Today is ${new Date().toISOString().slice(0, 10)}: only events dated today or later. ` +
+  'Take the year from the date itself or from the section heading above it; only when the ' +
+  'page gives no year at all, use the first such date on or after today. ' +
+  'List every upcoming date on the page, one event per show, even when a tour has many. ' +
   'Return startDate in strict ISO format YYYY-MM-DD and time as 24h HH:MM when known.';
 
 async function firecrawlExtract(url) {
@@ -279,6 +304,8 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const HHMM = /^(\d{1,2}):(\d{2})$/;
 // Placeholder tokens the extractor emits when a field is unknown.
 const PLACEHOLDER = /^(tba|tbd|tbc|n\/?a|na|unknown|to be (announced|confirmed|determined))$/i;
+// A whole tour in one row: "Multiple Locations", "Various Venues UK".
+const VAGUE_VENUE = /\b(multiple|various|several)\b/i;
 const startOfToday = new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00');
 
 const clean = (s) => {
@@ -325,6 +352,9 @@ function normalize(raw, source) {
   if (!city && !venueClean) return { skip: 'no location' };
   const città = [city, country].filter(Boolean).join(', ') || 'Unknown';
   const venue = venueClean || 'TBA';
+  // A tour summary, not a show: a vague venue and no single city ("Various,
+  // USA", "UK, UK"). It gets no pin and its date is just the tour's first night.
+  if (VAGUE_VENUE.test(venue) && hasNoCity(città)) return { skip: 'tour summary' };
   const artisti = Array.isArray(raw.artists)
     ? raw.artists.map(a => String(a).trim()).filter(Boolean)
     : [];
@@ -451,16 +481,26 @@ async function upsertAll(events) {
 }
 
 // --- Main --------------------------------------------------------------------
+// Raw events of one source: a parser where the page is regular, else the LLM.
+async function readSource(source) {
+  if (source.seated) return fetchSeated(source.seated, source.name);
+  if (source.parse === 'gigpress') return parseGigpress(await firecrawlMarkdown(source.url), source.url);
+  if (source.parse === 'table') return parseTourTable(await firecrawlMarkdown(source.url), source.url, source.name);
+  if (source.parse === 'concertful') return parseConcertful(await firecrawlMarkdown(source.url), source.url);
+  return firecrawlExtract(source.url);
+}
+
 async function main() {
   let sources = [...SOURCES];
-  // Discover more prog event pages across the web (skip with --no-search or --limit).
-  if (!args.includes('--no-search') && !LIMIT) {
+  // Discover more prog event pages across the web (skip with --no-search, --limit or --only).
+  if (!args.includes('--no-search') && !LIMIT && !ONLY) {
     process.stdout.write('🔎 web discovery (Firecrawl search)… ');
     const discovered = await discoverSources(new Set(SOURCES.map((s) => hostOf(s.url))));
     console.log(`+${discovered.length} sources`);
     sources = [...SOURCES, ...discovered];
   }
   if (LIMIT > 0) sources = sources.slice(0, LIMIT);
+  if (ONLY) sources = sources.filter((s) => s.name.toLowerCase().includes(ONLY));
 
   console.log(
     `▶ ProgDealer event refresh — ${sources.length} sources · ` +
@@ -472,9 +512,7 @@ async function main() {
   for (const source of sources) {
     process.stdout.write(`• ${source.name} … `);
     try {
-      const raw = source.parse === 'gigpress'
-        ? parseGigpress(await firecrawlMarkdown(source.url), source.url)
-        : await firecrawlExtract(source.url);
+      const raw = await readSource(source);
       let kept = 0;
       for (const r of raw) {
         const { event, skip } = normalize(r, source);

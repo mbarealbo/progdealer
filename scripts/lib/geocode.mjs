@@ -11,7 +11,7 @@ export const CC_ALIAS = {
   ireland: 'IE',
   netherlands: 'NL', 'the netherlands': 'NL', holland: 'NL',
   france: 'FR', germany: 'DE', deutschland: 'DE',
-  italy: 'IT', italia: 'IT',
+  italy: 'IT', italia: 'IT', ita: 'IT',
   spain: 'ES', 'españa': 'ES', portugal: 'PT',
   belgium: 'BE', luxembourg: 'LU', switzerland: 'CH', austria: 'AT', monaco: 'MC',
   poland: 'PL', 'czech republic': 'CZ', czechia: 'CZ', slovakia: 'SK', hungary: 'HU',
@@ -25,7 +25,7 @@ export const CC_ALIAS = {
 };
 
 // US state codes, as in "Dallas, TX". Open-Meteo reports the state by name (admin1).
-const US_STATES = {
+export const US_STATES = {
   AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California', CO: 'Colorado', CT: 'Connecticut',
   DE: 'Delaware', DC: 'District of Columbia', FL: 'Florida', GA: 'Georgia', HI: 'Hawaii', ID: 'Idaho', IL: 'Illinois',
   IN: 'Indiana', IA: 'Iowa', KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland',
@@ -36,7 +36,7 @@ const US_STATES = {
   VT: 'Vermont', VA: 'Virginia', WA: 'Washington', WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming',
 };
 // Canadian provinces, as in "Toronto, ON".
-const CA_PROVINCES = {
+export const CA_PROVINCES = {
   ON: 'Ontario', QC: 'Quebec', BC: 'British Columbia', AB: 'Alberta', MB: 'Manitoba', SK: 'Saskatchewan',
   NS: 'Nova Scotia', NB: 'New Brunswick', NL: 'Newfoundland and Labrador', PE: 'Prince Edward Island',
 };
@@ -66,6 +66,9 @@ export const OVERRIDES = {
   'saint louis, mo, usa': { lat: 38.6273, lng: -90.1979, country: 'United States', cc: 'US' },
   'ciudad de méxico, mexico': { lat: 19.4285, lng: -99.1277, country: 'Mexico', cc: 'MX' }, // listed as "Mexico City"
   'dublin, uk':     { lat: 53.3331, lng: -6.2489, country: 'Ireland', cc: 'IE' }, // the source's "UK" is wrong; a Suffolk hamlet is also called Dublin
+  'warsawa, poland': { lat: 52.2297, lng: 21.0122, country: 'Poland', cc: 'PL' }, // Warszawa, misspelt by the source
+  'québec city, canada': { lat: 46.8139, lng: -71.208, country: 'Canada', cc: 'CA' }, // Open-Meteo only knows "Québec"
+  'city of zagreb, croatia': { lat: 45.815, lng: 15.9819, country: 'Croatia', cc: 'HR' }, // the city's official name
 };
 
 // "Unknown", "Various venues", "UK and Europe", "Miami - Cozumel - ...", a bare

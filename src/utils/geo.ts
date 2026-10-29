@@ -29,6 +29,7 @@ const COUNTRY_CITIES: Record<string, string[]> = {
   Australia: ['sydney', 'melbourne', 'brisbane', 'perth', 'adelaide', 'canberra'],
   Brazil: ['são paulo', 'sao paulo', 'rio de janeiro', 'brasília', 'salvador', 'belo horizonte', 'curitiba'],
   Mexico: ['mexico city', 'ciudad de méxico', 'guadalajara', 'monterrey', 'puebla'],
+  Argentina: ['buenos aires', 'córdoba', 'rosario', 'mendoza', 'la plata'],
 };
 
 // Country -> continent, for the location filter.
@@ -53,7 +54,7 @@ Object.assign(COUNTRY_ALIAS, {
   uk: 'United Kingdom', 'u.k.': 'United Kingdom', england: 'United Kingdom', scotland: 'United Kingdom',
   wales: 'United Kingdom', 'northern ireland': 'United Kingdom', 'great britain': 'United Kingdom',
   usa: 'United States', 'u.s.a.': 'United States', us: 'United States', 'united states of america': 'United States', america: 'United States',
-  'the netherlands': 'Netherlands', holland: 'Netherlands', deutschland: 'Germany', italia: 'Italy',
+  'the netherlands': 'Netherlands', holland: 'Netherlands', deutschland: 'Germany', italia: 'Italy', ita: 'Italy',
   'españa': 'Spain', catalonia: 'Spain', aus: 'Australia', jp: 'Japan', czechia: 'Czech Republic',
   'türkiye': 'Turkey', turkiye: 'Turkey', korea: 'South Korea', uae: 'United Arab Emirates',
 });
@@ -68,7 +69,7 @@ const ISO: Record<string, string> = {
   CZ: 'Czech Republic', SK: 'Slovakia', PL: 'Poland', HU: 'Hungary', SI: 'Slovenia', HR: 'Croatia', RS: 'Serbia',
   GR: 'Greece', CY: 'Cyprus', BG: 'Bulgaria', RO: 'Romania', UA: 'Ukraine', TR: 'Turkey',
   EE: 'Estonia', LV: 'Latvia', LT: 'Lithuania', SE: 'Sweden', NO: 'Norway', DK: 'Denmark', FI: 'Finland', IS: 'Iceland',
-  MX: 'Mexico', BR: 'Brazil', CL: 'Chile', UY: 'Uruguay', JP: 'Japan', AU: 'Australia', NZ: 'New Zealand',
+  MX: 'Mexico', BR: 'Brazil', AR: 'Argentina', CL: 'Chile', UY: 'Uruguay', JP: 'Japan', AU: 'Australia', NZ: 'New Zealand',
 };
 
 function cityListCountry(city: string): string | null {
@@ -77,7 +78,8 @@ function cityListCountry(city: string): string | null {
 }
 
 // `cityCountry` settles the codes that mean two places: "Toronto, CA" is
-// Canada (a city we know), "Anaheim, CA" is California.
+// Canada (a city we know), "Anaheim, CA" is California; "Buenos Aires, AR" is
+// Argentina, "Little Rock, AR" Arkansas.
 function countryFromToken(raw: string, allowCode: boolean, cityCountry: string | null): string | null {
   const t = raw.toLowerCase();
   if (COUNTRY_ALIAS[t]) return COUNTRY_ALIAS[t];

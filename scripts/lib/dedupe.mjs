@@ -54,8 +54,14 @@ export function sameEvent(a, b) {
   const sameCity = cityOf(a) === cityOf(b) || isUnknownCity(a) || isUnknownCity(b);
 
   if (isUnknownVenue(a) || isUnknownVenue(b)) {
+    if (!sameCity) return null;
     // No venue to compare — fall back to the headliner ("Opeth" vs "Opeth Tour").
-    return sameCity && nameOverlap >= 0.75 ? 'same day/city, venue unknown, same headliner' : null;
+    if (nameOverlap >= 0.75) return 'same day/city, venue unknown, same headliner';
+    // Some band sites put the venue in the title ("Islington Assembly Hall",
+    // venue TBA): then that title names the other row's venue.
+    const [blank, full] = isUnknownVenue(a) ? [a, b] : [b, a];
+    if (!isUnknownVenue(full) && overlap(tokens(blank.nome_evento), venueTokens(full)) >= 0.66) return 'venue in the title, venue unknown';
+    return null;
   }
 
   const venueOverlap = overlap(venueTokens(a), venueTokens(b));
