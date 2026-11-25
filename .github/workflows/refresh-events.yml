@@ -22,7 +22,10 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # A full run takes a little over 20 minutes since the wider coverage of
+    # 6a6bbf6, and Firecrawl latency varies: at 20 the 1 and 16 Nov 2026 runs
+    # were killed before finishing the import. 60 leaves ample headroom.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
