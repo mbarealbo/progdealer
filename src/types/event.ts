@@ -20,6 +20,20 @@ export interface Event {
   updated_at: string;
 }
 
+/**
+ * What list views need of an event (cards, map, search, near you). The home
+ * loads the whole upcoming catalog, so it selects only these columns: no
+ * descriptions, ticket links or audit fields, which halve the payload.
+ */
+export type EventSummary = Pick<
+  Event,
+  'id' | 'nome_evento' | 'data_ora' | 'venue' | 'città' | 'sottogenere' | 'immagine' | 'artisti' | 'lat' | 'lng'
+>;
+// Typed as string on purpose: supabase-js's select() type parser rejects the
+// accented column name (città), though PostgREST accepts it. Callers type the
+// rows with .overrideTypes<EventSummary[], { merge: false }>().
+export const EVENT_SUMMARY_COLUMNS: string = 'id,nome_evento,data_ora,venue,città,sottogenere,immagine,artisti,lat,lng';
+
 export interface EventFilters {
   città: string;
   sottogenere: string;

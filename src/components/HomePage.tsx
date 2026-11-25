@@ -5,8 +5,10 @@ import {
 } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import { supabase, fetchAllRows } from '../lib/supabase';
-import { Event } from '../types/event';
+import { EventSummary, EVENT_SUMMARY_COLUMNS } from '../types/event';
 import { useUserRole } from '../hooks/useUserRole';
+import { useUrlMirror } from '../hooks/useUrlMirror';
+import { useScrollRestore } from '../hooks/useScrollRestore';
 import { CONTINENT_LIST } from '../utils/geo';
 import { coordsForEvent, eventCountry, eventContinent } from '../utils/coords';
 import { isTonight, isThisWeek } from '../utils/eventText';
@@ -16,29 +18,43 @@ import SmartSearch from './SmartSearch';
 import PlacesAutocomplete from './PlacesAutocomplete';
 import NearYou from './home/NearYou';
 import EventCard, { CardView } from './home/EventCard';
+import BackToTop from './home/BackToTop';
 
 const EventsMap = lazy(() => import('./home/EventsMap'));
 import AddEventForm from './AddEventForm';
 import AuthRequiredModal from './AuthRequiredModal';
 
 const nf = new Intl.NumberFormat('en-US');
+// Catalog dates are shown in UTC, like event dates: 1 Nov 2026
+const dayFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+
+// Cards rendered per step. The full catalog stays in memory (map, counts,
+// search), but only this many cards reach the DOM until "Show more".
+// 48 fills complete rows at 2, 3, 4 and 6 columns.
+const PAGE_SIZE = 48;
 
 export default function HomePage() {
   const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { isAdmin } = useUserRole(currentUser);
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<EventSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<string | null>(null);
 
-  // Filters
-  const [searchQuery, setSearchQuery] = useState('');
-  const [continent, setContinent] = useState<string | null>(null);
-  const [country, setCountry] = useState<string | null>(null);
-  const [city, setCity] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [genre, setGenre] = useState('');
-  const [view, setView] = useState<CardView>('grid');
+  // Filters, view and cards shown start from the URL (see useUrlMirror below).
+  const [initial] = useState(() => new URLSearchParams(window.location.search));
+  const [searchQuery, setSearchQuery] = useState(initial.get('q') ?? '');
+  const [continent, setContinent] = useState<string | null>(initial.get('region'));
+  const [country, setCountry] = useState<string | null>(initial.get('country'));
+  const [city, setCity] = useState(initial.get('city') ?? '');
+  const [dateFrom, setDateFrom] = useState(initial.get('from') ?? '');
+  const [dateTo, setDateTo] = useState(initial.get('to') ?? '');
+  const [genre, setGenre] = useState(initial.get('genre') ?? '');
+  // Compact is the default: one light row per show, no artwork to draw.
+  const [view, setView] = useState<CardView>(() => {
+    const v = initial.get('view');
+    return v === 'grid' || v === 'list' ? v : 'compact';
+  });
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [locMenu, setLocMenu] = useState(false);
   const locRef = useRef<HTMLDivElement>(null);
@@ -50,17 +66,19 @@ export default function HomePage() {
     try {
       // Filter server-side and page through: an unpaged select caps at 1000
       // rows, so past events were crowding today's out of the response.
+      // Only the columns the list, map and search use (see EventSummary).
       const startOfToday = new Date();
       startOfToday.setHours(0, 0, 0, 0);
-      const data = await fetchAllRows<Event>((from, to) =>
+      const data = await fetchAllRows<EventSummary>((from, to) =>
         supabase
           .from('eventi_prog')
-          .select('*')
+          .select(EVENT_SUMMARY_COLUMNS)
           .gte('data_ora', startOfToday.toISOString())
           .or('status.eq.approved,status.is.null')
           .order('data_ora', { ascending: true })
           .order('id', { ascending: true })
-          .range(from, to),
+          .range(from, to)
+          .overrideTypes<EventSummary[], { merge: false }>(),
       );
       setEvents(data);
     } catch (err) {
@@ -68,6 +86,18 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Last change to the catalog (a scraper import, an approved or edited show):
+  // the real date, not the refresh schedule, so a missed run is visible.
+  const fetchLastUpdate = async () => {
+    const { data } = await supabase
+      .from('eventi_prog')
+      .select('updated_at')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data?.updated_at) setLastUpdate(data.updated_at);
   };
 
   const checkAuthStatus = async () => {
@@ -85,6 +115,7 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchEvents();
+    fetchLastUpdate();
     checkAuthStatus();
     const onApproved = () => fetchEvents();
     window.addEventListener('eventApproved', onApproved);
@@ -143,6 +174,35 @@ export default function HomePage() {
     return out;
   }, [events, continent, country, city, dateFrom, dateTo, genre, searchQuery]);
 
+  // How many cards to render. Tied to the filter set: any change in filters
+  // starts again from the first page, without an extra render via useEffect.
+  const filterKey = [continent, country, city, dateFrom, dateTo, genre, searchQuery].join('\u0001');
+  const [paging, setPaging] = useState(() => ({
+    key: filterKey,
+    count: Math.max(PAGE_SIZE, Math.floor(Number(initial.get('n'))) || PAGE_SIZE),
+  }));
+  const visibleCount = paging.key === filterKey ? paging.count : PAGE_SIZE;
+  const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+  const remaining = filtered.length - visible.length;
+  const showMore = () => setPaging({ key: filterKey, count: visibleCount + PAGE_SIZE });
+
+  // The list state lives in the URL (/?country=Italy&genre=Zeuhl&n=96) and the
+  // scroll offset in the history entry: Back from an event page, a reload or a
+  // shared link reopen the list as it was, even when the browser rebuilds the
+  // page instead of restoring it from its back/forward cache.
+  useUrlMirror({
+    q: searchQuery.trim() ? searchQuery : null,
+    region: continent,
+    country,
+    city: city.trim() ? city : null,
+    from: dateFrom,
+    to: dateTo,
+    genre,
+    view: view === 'compact' ? null : view,
+    n: visibleCount > PAGE_SIZE ? String(visibleCount) : null,
+  });
+  useScrollRestore(!loading);
+
   const stats = useMemo(() => ({
     week: filtered.filter((e) => isThisWeek(e.data_ora)).length,
     tonight: filtered.filter((e) => isTonight(e.data_ora)).length,
@@ -156,7 +216,6 @@ export default function HomePage() {
     setContinent(null); setCountry(null); setCity(''); setDateFrom(''); setDateTo(''); setGenre(''); setSearchQuery('');
   };
 
-  const handleSelectEvent = (e: Event) => { window.location.href = `/event/${e.id}`; };
   const handleRefresh = () => { setLoading(true); fetchEvents(); };
   const handleLogout = async () => { await supabase.auth.signOut(); setIsAuthenticated(false); setCurrentUser(null); };
   const requestAddEvent = () => { if (!isAuthenticated) setShowAuthRequired(true); else setShowAddEvent(true); };
@@ -170,9 +229,9 @@ export default function HomePage() {
       {/* ---------- Top bar ---------- */}
       <header className="topbar">
         <div className="wrap topbar-inner">
-          <button className="brand" onClick={() => (window.location.href = '/')} aria-label="ProgDealer home">
+          <a className="brand" href="/" aria-label="ProgDealer home">
             <Logo height={34} />
-          </button>
+          </a>
           <SmartSearch variant="bar" value={searchQuery} onChange={setSearchQuery} events={events} placeholder="A band, a city, a venue" />
           <nav className="topnav" aria-label="Main">
             <div className="loc-wrap" ref={locRef}>
@@ -223,6 +282,9 @@ export default function HomePage() {
             </div>
             <div className="hm-side">
               <p className="hm-intro">A hand-kept catalog of progressive concerts and festivals, from Canterbury to Zeuhl. Refreshed every 15 days.</p>
+              {lastUpdate && (
+                <p className="hm-updated">Last update <time dateTime={lastUpdate}>{dayFmt.format(new Date(lastUpdate))}</time></p>
+              )}
               <div className="hm-stats" aria-live="polite">
                 <div><b>{loading ? '…' : nf.format(filtered.length)}</b><span>{scope === 'Worldwide' ? 'Upcoming' : `In ${scope}`}</span></div>
                 <div><b>{loading ? '…' : nf.format(stats.week)}</b><span>This week</span></div>
@@ -283,15 +345,17 @@ export default function HomePage() {
               </select>
               {hasFilters && <button className="ctl-clear" onClick={clearAll}><X size={14} /> Clear</button>}
               <div className="viewtoggle" role="group" aria-label="View">
+                <button className={view === 'compact' ? 'on' : ''} aria-pressed={view === 'compact'} onClick={() => setView('compact')} aria-label="Compact view"><AlignJustify size={16} /><span className="vt-label">Compact</span></button>
                 <button className={view === 'grid' ? 'on' : ''} aria-pressed={view === 'grid'} onClick={() => setView('grid')} aria-label="Sleeves view"><LayoutGrid size={16} /><span className="vt-label">Sleeves</span></button>
                 <button className={view === 'list' ? 'on' : ''} aria-pressed={view === 'list'} onClick={() => setView('list')} aria-label="Tracklist view"><List size={16} /><span className="vt-label">Tracklist</span></button>
-                <button className={view === 'compact' ? 'on' : ''} aria-pressed={view === 'compact'} onClick={() => setView('compact')} aria-label="Compact view"><AlignJustify size={16} /><span className="vt-label">Compact</span></button>
               </div>
             </div>
           </div>
 
           {loading ? (
-            <div className="skgrid">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="sk" />)}</div>
+            view === 'grid'
+              ? <div className="skgrid">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="sk" />)}</div>
+              : <div className={view === 'list' ? 'skrows tall' : 'skrows'}>{Array.from({ length: 10 }).map((_, i) => <div key={i} className="sk" />)}</div>
           ) : filtered.length === 0 ? (
             <div className="empty">
               <h3>No shows match your filters</h3>
@@ -299,22 +363,37 @@ export default function HomePage() {
               {hasFilters && <button className="btn btn-ghost" onClick={clearAll} style={{ marginTop: 16 }}>Clear filters</button>}
             </div>
           ) : (
-            <div className={gridClass}>
-              {filtered.map((e, i) => <EventCard key={e.id} event={e} onSelect={handleSelectEvent} view={view} index={i} />)}
-            </div>
+            <>
+              <div className={gridClass}>
+                {visible.map((e, i) => <EventCard key={e.id} event={e} view={view} index={i} />)}
+              </div>
+              {remaining > 0 && (
+                <div className="more">
+                  <span className="more-count">{nf.format(visible.length)} of {nf.format(filtered.length)} {showWord(filtered.length)}</span>
+                  <button className="btn btn-ghost" onClick={showMore}>
+                    Show {nf.format(Math.min(PAGE_SIZE, remaining))} more
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>
 
       {/* ---------- Bonus track: near you ---------- */}
-      {!loading && events.length > 0 && <NearYou events={events} onSelect={handleSelectEvent} />}
+      {!loading && events.length > 0 && <NearYou events={events} />}
 
       {/* ---------- Footer ---------- */}
       <footer className="foot">
         <div className="wrap foot-top">
           <div className="foot-brand">
             <Logo height={34} />
-            <span className="foot-fresh"><span className="pulse" /> Catalog refreshed every 15 days</span>
+            <span className="foot-fresh">
+              <span className="pulse" />
+              {lastUpdate
+                ? <>Catalog updated <time dateTime={lastUpdate}>{dayFmt.format(new Date(lastUpdate))}</time></>
+                : 'Catalog refreshed every 15 days'}
+            </span>
           </div>
           <div className="foot-cols">
             <div>
@@ -342,6 +421,8 @@ export default function HomePage() {
           </p>
         </div>
       </footer>
+
+      <BackToTop after="map" />
 
       {/* ---------- Mobile bottom nav ---------- */}
       <nav className="bnav" aria-label="Quick">

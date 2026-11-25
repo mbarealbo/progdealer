@@ -133,6 +133,8 @@ export const GATEFOLD_STYLE: StyleSpecification = {
 
 export const FALLBACK_STYLE: StyleSpecification = {
   version: 8,
+  // The pin counts are a symbol layer: they need glyphs on this style too.
+  glyphs: 'https://tiles.versatiles.org/assets/glyphs/{fontstack}/{range}.pbf',
   sources: {
     osm: {
       type: 'raster',
