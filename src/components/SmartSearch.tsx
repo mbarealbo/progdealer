@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { Search as SearchIcon, MapPin, Music } from 'lucide-react';
-import { Event } from '../types/event';
+import { EventSummary } from '../types/event';
 
 // Shape of a Places API (New) autocomplete response, as far as we read it.
 type PlacePrediction = {
@@ -18,7 +18,7 @@ interface City { placeId: string; main: string; secondary: string; }
 interface Props {
   value: string;
   onChange: (v: string) => void;
-  events: Event[];
+  events: EventSummary[];
   variant?: 'bar' | 'hero';
   placeholder?: string;
 }
@@ -45,7 +45,7 @@ export default function SmartSearch({ value, onChange, events, variant = 'bar', 
     : [];
 
   // flat list for keyboard nav
-  const items: Array<{ type: 'event'; e: Event } | { type: 'city'; c: City }> = [
+  const items: Array<{ type: 'event'; e: EventSummary } | { type: 'city'; c: City }> = [
     ...eventMatches.map((e) => ({ type: 'event' as const, e })),
     ...cities.map((c) => ({ type: 'city' as const, c })),
   ];
@@ -91,7 +91,7 @@ export default function SmartSearch({ value, onChange, events, variant = 'bar', 
     debounceRef.current = setTimeout(() => fetchCities(v), 250);
   };
 
-  const pickEvent = (e: Event) => { window.location.href = `/event/${e.id}`; };
+  const pickEvent = (e: EventSummary) => { window.location.href = `/event/${e.id}`; };
   const pickCity = (name: string) => {
     onChange(name);
     setOpen(false); setCities([]); tokenRef.current = '';

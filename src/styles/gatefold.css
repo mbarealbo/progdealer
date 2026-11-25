@@ -182,6 +182,8 @@
 }
 .pd .hm-side { flex: 0 1 400px; display: flex; flex-direction: column; gap: 22px; }
 .pd .hm-intro { font-size: 1.1rem; line-height: 1.5; color: var(--ink-2); }
+.pd .hm-updated { margin-top: -12px; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+.pd .hm-updated time { color: var(--ink); font-variant-numeric: tabular-nums; }
 .pd .hm-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--ink); }
 .pd .hm-stats > div { padding: 12px 12px 0; border-left: 1px solid var(--line); }
 .pd .hm-stats > div:first-child { padding-left: 0; border-left: 0; }
@@ -219,15 +221,6 @@
 @media (max-width: 640px) { .pd .pd-map { height: 340px; } .pd .map-sleeve { padding: 12px 12px 14px; } }
 .pd .pd-map-empty { display: flex; align-items: center; justify-content: center; }
 
-.pd .pd-pin {
-  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
-  background: var(--teal); color: #fff; border: 2px solid var(--paper-2);
-  font-family: var(--mono); font-size: 0.64rem; font-weight: 600; line-height: 1;
-  cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
-  box-shadow: 0 0 0 1px rgba(36, 38, 31, 0.35);
-}
-.pd .pd-pin.big { min-width: 24px; height: 24px; font-size: 0.7rem; background: var(--ink); }
-.pd .pd-pin:hover { background: var(--mustard); color: var(--ink); }
 .pd .maplibregl-popup-content {
   border-radius: 0; padding: 10px 12px; background: var(--paper-2); border: 1px solid var(--ink);
   box-shadow: var(--print); font-family: var(--sans); font-size: 0.86rem; color: var(--ink);
@@ -294,7 +287,7 @@
 }
 .pd .ev:hover { transform: translate(-2px, -2px); box-shadow: var(--print); border-color: var(--ink); }
 .pd .ev-vis { position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: var(--sand); }
-.pd .ev-vis > svg, .pd .ev-vis > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.pd .ev-vis > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .pd .ev-vis .catno, .pd .dt-cover .catno { position: absolute; left: 10px; top: 10px; z-index: 2; padding: 2px 6px; color: var(--paper); background: rgba(36, 38, 31, 0.45); }
 .pd .ev-vis .catno.dark, .pd .dt-cover .catno.dark { color: var(--ink); background: rgba(236, 231, 220, 0.72); }
 .pd .soon {
@@ -323,7 +316,7 @@
 .pd .evl:hover { background: var(--paper-2); }
 .pd .evl-no { font-family: var(--mono); font-size: 0.8rem; color: var(--ink-3); }
 .pd .evl-vis { position: relative; width: 56px; height: 56px; overflow: hidden; background: var(--sand); }
-.pd .evl-vis > svg, .pd .evl-vis > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pd .evl-vis > img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pd .evl-date { font-family: var(--mono); font-size: 0.8rem; text-transform: uppercase; font-variant-numeric: tabular-nums; }
 .pd .evl-date .tonight { display: inline-block; margin-top: 4px; padding: 1px 6px; background: var(--mustard); font-size: 0.62rem; letter-spacing: 0.08em; }
 .pd .evl-main { min-width: 0; }
@@ -348,22 +341,40 @@
 /* ---------- Compact view ---------- */
 .pd .compact { display: flex; flex-direction: column; margin-top: -28px; }
 .pd .evc {
-  display: flex; align-items: center; gap: 16px; width: 100%; min-height: 48px; padding: 10px 6px; text-align: left;
+  /* A grid, not flex: every row keeps the same columns, with or without the Tonight badge. */
+  display: grid; grid-template-columns: 84px minmax(0, 1fr) 220px 150px 60px 16px; align-items: center; column-gap: 16px;
+  width: 100%; min-height: 48px; padding: 10px 6px; text-align: left;
   border: 0; border-bottom: 1px solid var(--line-2); background: transparent; color: var(--ink); cursor: pointer;
 }
 .pd .evc:hover { background: var(--paper-2); }
-.pd .evc-day { flex: 0 0 auto; width: 84px; font-family: var(--mono); font-size: 0.8rem; text-transform: uppercase; font-variant-numeric: tabular-nums; }
-.pd .evc-title { flex: 1 1 auto; min-width: 0; font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pd .evc-loc { flex: 0 0 auto; width: 220px; color: var(--ink-2); font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pd .evc-genre { flex: 0 0 auto; width: 150px; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
-.pd .evc-soon { flex: 0 0 auto; padding: 1px 6px; background: var(--mustard); font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; }
-.pd .evc-go { flex: 0 0 auto; color: var(--ink-3); display: inline-flex; }
-@media (max-width: 760px) { .pd .evc-loc { width: 120px; } .pd .evc-genre, .pd .evc-go { display: none; } }
+.pd .evc-day { grid-column: 1; font-family: var(--mono); font-size: 0.8rem; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+.pd .evc-title { grid-column: 2; min-width: 0; font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pd .evc-loc { grid-column: 3; min-width: 0; color: var(--ink-2); font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pd .evc-genre { grid-column: 4; min-width: 0; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+.pd .evc-soon { grid-column: 5; justify-self: start; padding: 1px 6px; background: var(--mustard); font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.pd .evc-go { grid-column: 6; color: var(--ink-3); display: inline-flex; }
+/* Phones: two lines, so the title gets the full width. Date and title on the
+   first, city (and the Tonight badge, under the date) on the second. */
+@media (max-width: 760px) {
+  .pd .evc { grid-template-columns: 84px minmax(0, 1fr); row-gap: 2px; align-items: baseline; }
+  .pd .evc-genre, .pd .evc-go { display: none; }
+  .pd .evc-title { grid-row: 1; }
+  .pd .evc-loc { grid-column: 2; grid-row: 2; font-size: 0.82rem; }
+  .pd .evc-soon { grid-column: 1; grid-row: 2; }
+}
+
+/* ---------- Show more (paged list) ---------- */
+.pd .more { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 40px; }
+.pd .more-count { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 
 /* ---------- States ---------- */
 .pd .loading, .pd .empty { padding: 64px 0; text-align: center; color: var(--ink-2); }
 .pd .empty h3 { font-size: 1.6rem; margin-bottom: 8px; color: var(--ink); }
 .pd .skgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 24px; }
+/* Row skeletons for the compact and tracklist views */
+.pd .skrows { display: flex; flex-direction: column; gap: 1px; }
+.pd .skrows .sk { aspect-ratio: auto; height: 48px; }
+.pd .skrows.tall .sk { height: 80px; }
 .pd .sk { aspect-ratio: 3 / 4; background: linear-gradient(100deg, var(--paper-3) 30%, var(--paper-2) 50%, var(--paper-3) 70%); background-size: 200% 100%; animation: pd-sh 1.3s infinite; }
 @keyframes pd-sh { to { background-position: -200% 0; } }
 .pd .page-center { min-height: calc(100vh - 73px); display: flex; align-items: center; justify-content: center; padding: 40px var(--gutter); }
@@ -416,6 +427,20 @@
 }
 .pd .foot-cols a:hover, .pd .foot-cols button:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 .pd .foot-note { margin-top: 30px; font-size: 0.86rem; color: var(--ink-3); max-width: 68ch; }
+
+/* ---------- Back to top ---------- */
+.pd .totop {
+  position: fixed; right: 20px; bottom: 20px; z-index: 45;
+  width: 48px; height: 48px; padding: 0; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--ink); color: var(--paper); border: 2px solid var(--paper-2); box-shadow: var(--print); cursor: pointer;
+  opacity: 0; visibility: hidden; transform: translateY(10px);
+  transition: opacity 0.18s, transform 0.18s, visibility 0s linear 0.18s;
+}
+.pd .totop.show { opacity: 1; visibility: visible; transform: none; transition: opacity 0.18s, transform 0.18s; }
+.pd .totop:hover { background: var(--teal); }
+/* Phones: clear the bottom nav (about 62px plus the safe area). */
+@media (max-width: 767px) { .pd .totop { right: 16px; bottom: calc(78px + env(safe-area-inset-bottom)); } }
 
 /* ---------- Mobile bottom nav ---------- */
 .pd .bnav {
@@ -477,7 +502,7 @@
 .pd .dt-vinyl .lbl::before { content: ''; position: absolute; left: 50%; top: 0; width: 50%; height: 50%; background: var(--teal); }
 .pd .dt-vinyl .hole { position: absolute; left: 50%; top: 50%; width: 4%; height: 4%; margin: -2% 0 0 -2%; border-radius: 50%; background: var(--paper); }
 .pd .dt-cover { position: absolute; left: 0; top: 0; width: 62%; aspect-ratio: 1 / 1; overflow: hidden; background: var(--sand); box-shadow: 1px 0 0 rgba(236, 231, 220, 0.45), 0 8px 0 rgba(36, 38, 31, 0.14); }
-.pd .dt-cover > svg, .pd .dt-cover > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.pd .dt-cover > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .pd .dt-head { min-width: 0; }
 .pd .detail-title { margin-top: 12px; font-size: clamp(2.2rem, 5.4vw, 4rem); line-height: 1.02; letter-spacing: -0.02em; text-wrap: balance; overflow-wrap: anywhere; }
 .pd .dt-sub { margin-top: 10px; font-size: 1.15rem; color: var(--ink-2); }

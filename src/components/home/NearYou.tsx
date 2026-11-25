@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MapPin, LocateFixed } from 'lucide-react';
-import { Event } from '../../types/event';
+import { EventSummary } from '../../types/event';
 import { coordsForEvent, haversineKm } from '../../utils/coords';
 
-type Located = { event: Event; dist: number; brng: number; lat: number; lng: number };
+type Located = { event: EventSummary; dist: number; brng: number; lat: number; lng: number };
 
 const monthFmt = new Intl.DateTimeFormat('en-GB', { month: 'short', timeZone: 'UTC' });
 
@@ -22,7 +22,7 @@ function fmtKm(km: number): string {
   return Math.round(km).toLocaleString('en-US');
 }
 
-export default function NearYou({ events, onSelect }: { events: Event[]; onSelect: (e: Event) => void }) {
+export default function NearYou({ events }: { events: EventSummary[] }) {
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [status, setStatus] = useState<'idle' | 'locating' | 'denied' | 'ready'>('idle');
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -144,7 +144,7 @@ export default function NearYou({ events, onSelect }: { events: Event[]; onSelec
               {located.slice(0, 6).map(({ event, dist }) => {
                 const d = new Date(event.data_ora);
                 return (
-                  <button key={event.id} className="nearrow" onClick={() => onSelect(event)}>
+                  <a key={event.id} className="nearrow" href={`/event/${event.id}`}>
                     <div className="when">
                       <div className="d">{String(d.getUTCDate()).padStart(2, '0')}</div>
                       <div className="m">{monthFmt.format(d)}</div>
@@ -157,7 +157,7 @@ export default function NearYou({ events, onSelect }: { events: Event[]; onSelec
                       <div className="km">{fmtKm(dist)}</div>
                       <div className="u">km</div>
                     </div>
-                  </button>
+                  </a>
                 );
               })}
             </div>

@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, type MouseEvent } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, Share2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { Event } from '../types/event';
+import { Event, EventSummary, EVENT_SUMMARY_COLUMNS } from '../types/event';
 import { useEventMeta } from '../hooks/useDocumentMeta';
 import { splitTitle, timeOf, fullDate } from '../utils/eventText';
 import EventCard, { Sleeve } from './home/EventCard';
@@ -10,9 +10,8 @@ import Logo from './brand/Logo';
 
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
-  const [relatedEvents, setRelatedEvents] = useState<Event[]>([]);
+  const [relatedEvents, setRelatedEvents] = useState<EventSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
@@ -33,12 +32,13 @@ export default function EventDetailPage() {
       if (data) {
         const { data: related } = await supabase
           .from('eventi_prog')
-          .select('*')
+          .select(EVENT_SUMMARY_COLUMNS)
           .eq('sottogenere', data.sottogenere)
           .neq('id', eventId)
           .gte('data_ora', new Date().toISOString())
           .order('data_ora', { ascending: true })
-          .limit(4);
+          .limit(4)
+          .overrideTypes<EventSummary[], { merge: false }>();
         setRelatedEvents(related || []);
       }
     } catch (err) {
@@ -46,6 +46,20 @@ export default function EventDetailPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // "Back to shows": when the reader came from the list, step back in history
+  // so the list returns as they left it (filters, cards, scroll). Otherwise,
+  // or on a modified click (new tab), it is a plain link home.
+  const backToList = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    try {
+      const from = new URL(document.referrer);
+      if (from.origin === window.location.origin && from.pathname === '/' && window.history.length > 1) {
+        e.preventDefault();
+        window.history.back();
+      }
+    } catch { /* no referrer: follow the link */ }
   };
 
   const handleShare = async () => {
@@ -64,12 +78,12 @@ export default function EventDetailPage() {
   const bar = (
     <div className="detail-bar">
       <div className="detail-bar-inner">
-        <button className="linkbtn" onClick={() => navigate('/')}>
+        <Link className="linkbtn" to="/" onClick={backToList}>
           <ArrowLeft size={18} /> <span className="hide-mob">Back to shows</span>
-        </button>
-        <button className="brand" onClick={() => navigate('/')} aria-label="ProgDealer home">
+        </Link>
+        <Link className="brand" to="/" aria-label="ProgDealer home">
           <Logo height={30} />
-        </button>
+        </Link>
         <button className="linkbtn" onClick={handleShare} disabled={!event}>
           <Share2 size={18} /> <span className="hide-mob">{copied ? 'Link copied' : 'Share'}</span>
         </button>
@@ -97,7 +111,7 @@ export default function EventDetailPage() {
             <div className="eyebrow">Out of print</div>
             <h1>Show not found</h1>
             <p>This show may have been removed, or the link is wrong.</p>
-            <button className="btn btn-accent" onClick={() => navigate('/')}>Back to shows</button>
+            <Link className="btn btn-accent" to="/" onClick={backToList}>Back to shows</Link>
           </div>
         </div>
       </div>
@@ -178,7 +192,7 @@ export default function EventDetailPage() {
             </div>
             <div className="rel-grid">
               {relatedEvents.map((r) => (
-                <EventCard key={r.id} event={r} onSelect={(e) => navigate(`/event/${e.id}`)} />
+                <EventCard key={r.id} event={r} />
               ))}
             </div>
           </div>
