@@ -19,9 +19,17 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>
 );
 
-// PWA: register the service worker (installable + offline app shell).
+// PWA: register the service worker (installable + offline app shell), on the
+// real site only. On localhost (dev server or `vite preview`) a worker would
+// keep serving cached modules across runs and projects sharing the port, so
+// there any leftover one is removed instead.
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  });
+  const local = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+  if (import.meta.env.PROD && !local) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+  } else {
+    navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister())).catch(() => {});
+  }
 }
