@@ -27,12 +27,12 @@ export interface Event {
  */
 export type EventSummary = Pick<
   Event,
-  'id' | 'nome_evento' | 'data_ora' | 'venue' | 'città' | 'sottogenere' | 'immagine' | 'artisti' | 'lat' | 'lng'
+  'id' | 'nome_evento' | 'data_ora' | 'venue' | 'città' | 'sottogenere' | 'immagine' | 'artisti' | 'lat' | 'lng' | 'fonte'
 >;
 // Typed as string on purpose: supabase-js's select() type parser rejects the
 // accented column name (città), though PostgREST accepts it. Callers type the
 // rows with .overrideTypes<EventSummary[], { merge: false }>().
-export const EVENT_SUMMARY_COLUMNS: string = 'id,nome_evento,data_ora,venue,città,sottogenere,immagine,artisti,lat,lng';
+export const EVENT_SUMMARY_COLUMNS: string = 'id,nome_evento,data_ora,venue,città,sottogenere,immagine,artisti,lat,lng,fonte';
 
 export interface EventFilters {
   città: string;

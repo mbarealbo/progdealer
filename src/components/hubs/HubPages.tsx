@@ -20,7 +20,7 @@ function toSummary(e: CatalogEvent): EventSummary {
   return {
     id: e.id, nome_evento: e.nome_evento, data_ora: e.data_ora, venue: e.venue, città: e.città,
     sottogenere: e.sottogenere || '', immagine: e.immagine || undefined, artisti: e.artisti ?? null,
-    lat: e.lat ?? null, lng: e.lng ?? null,
+    lat: e.lat ?? null, lng: e.lng ?? null, fonte: e.fonte || '',
   };
 }
 

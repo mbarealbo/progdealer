@@ -112,6 +112,25 @@ export function artistSlug(name: string): string {
   return safeSlug(name, 'artist');
 }
 
+// "BEAT: Performing the music of King Crimson", "A Tribute to Jethro Tull",
+// "The Great Progressive Rock Show": the bands whose music is played are not on stage.
+const TRIBUTE = /\b(tribute|music of|rock show)\b/i;
+
+/**
+ * On a tribute show, drop the honoured bands: the ones named after "music of"
+ * or "tribute to", and, when the name mentions none of the listed artists, the
+ * whole list (it is the repertoire, not the lineup).
+ */
+function tributeFilter(eventName: string, list: string[]): string[] {
+  const m = (eventName || '').match(TRIBUTE);
+  if (!m || !list.length) return list;
+  const name = ` ${norm(eventName)} `;
+  const tail = ` ${norm(eventName.slice((m.index || 0) + m[0].length))} `;
+  const mentioned = (a: string, text: string) => Boolean(norm(a)) && text.includes(` ${norm(a)} `);
+  if (!list.some((a) => mentioned(a, name))) return [];
+  return list.filter((a) => !mentioned(a, tail));
+}
+
 /** "www.marillion.com" or "https://marillion.com/tour" -> "marillion". */
 function sourceSlug(fonte?: string | null): string {
   const host = (fonte || '').trim().toLowerCase().replace(/^https?:\/\//, '').split('/')[0].replace(/^www\./, '');
@@ -126,7 +145,7 @@ function sourceSlug(fonte?: string | null): string {
  * event name mentions it. Support acts and festival bills count as listed.
  */
 export function billOf(e: Pick<CatalogEvent, 'nome_evento' | 'artisti' | 'fonte'>): string[] {
-  const list = cleanArtists(e.artisti);
+  const list = tributeFilter(e.nome_evento, cleanArtists(e.artisti));
   const source = sourceSlug(e.fonte);
   if (list.length <= 1 || !source) return list;
   const name = ` ${norm(e.nome_evento)} `;
@@ -393,15 +412,31 @@ export const CATALOG_COLUMNS = 'id,nome_evento,data_ora,venue,città,sottogenere
  */
 export async function fetchCatalogRows(supabaseUrl: string, anonKey: string, columns: string = CATALOG_COLUMNS): Promise<CatalogEvent[]> {
   const PAGE = 1000;
-  const rows: CatalogEvent[] = [];
-  for (let offset = 0; offset < 50000; offset += PAGE) {
-    const q = `${supabaseUrl}/rest/v1/eventi_prog?select=${encodeURIComponent(columns)}`
-      + `&or=(status.eq.approved,status.is.null)&order=data_ora.asc,id.asc&limit=${PAGE}&offset=${offset}`;
-    const r = await fetch(q, { headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` } });
+  const MAX = 50000;
+  const headers = { apikey: anonKey, Authorization: `Bearer ${anonKey}` };
+  const pageUrl = (offset: number) => `${supabaseUrl}/rest/v1/eventi_prog?select=${encodeURIComponent(columns)}`
+    + `&or=(status.eq.approved,status.is.null)&order=data_ora.asc,id.asc&limit=${PAGE}&offset=${offset}`;
+  const getPage = async (offset: number, extra: Record<string, string> = {}) => {
+    const r = await fetch(pageUrl(offset), { headers: { ...headers, ...extra } });
     if (!r.ok) throw new Error(`catalog fetch failed: ${r.status}`);
-    const page = (await r.json()) as CatalogEvent[];
-    rows.push(...page);
-    if (page.length < PAGE) break;
+    return r;
+  };
+
+  // The first page also returns the total (Content-Range: 0-999/2690), so the
+  // other pages can be fetched in parallel instead of one after the other.
+  const first = await getPage(0, { Prefer: 'count=exact' });
+  const rows = (await first.json()) as CatalogEvent[];
+  const total = Number((first.headers.get('content-range') || '').split('/')[1]);
+  if (Number.isFinite(total)) {
+    const offsets: number[] = [];
+    for (let o = PAGE; o < Math.min(total, MAX); o += PAGE) offsets.push(o);
+    const pages = await Promise.all(offsets.map(async (o) => (await (await getPage(o)).json()) as CatalogEvent[]));
+    for (const p of pages) rows.push(...p);
+    return rows;
+  }
+  // No total in the response: page through until a short page.
+  for (let offset = PAGE; rows.length === offset && offset < MAX; offset += PAGE) {
+    rows.push(...((await (await getPage(offset)).json()) as CatalogEvent[]));
   }
   return rows;
 }

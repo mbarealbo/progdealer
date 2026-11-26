@@ -809,7 +809,7 @@ html, body { overscroll-behavior-y: none; }
 .pd .hub-stats b { font-family: var(--serif); font-weight: 400; font-size: 1.7rem; line-height: 1; }
 .pd .hub-stats span { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
 .pd .hub-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
-.pd .hub-sec { margin-top: 48px; }
+.pd .hub-sec { margin-top: 48px; scroll-margin-top: 84px; }
 .pd .hub-sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--ink); }
 .pd .hub-sec-head h2 { font-size: clamp(1.4rem, 2.6vw, 1.9rem); line-height: 1.1; text-wrap: balance; }
 .pd .hub-sec-head .num { flex: 0 0 auto; color: var(--ink-3); font-size: 0.9rem; }
