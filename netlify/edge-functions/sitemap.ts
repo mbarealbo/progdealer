@@ -1,5 +1,5 @@
 // Netlify Edge Function: dynamic /sitemap.xml built from the live catalog of
-// approved events (anonymous Supabase read). Always current — no rebuild needed.
+// approved events (anonymous Supabase read). Always current: no rebuild needed.
 
 import type { Config } from '@netlify/edge-functions';
 import { SITE_URL } from '../../src/lib/seo.ts';
@@ -23,15 +23,19 @@ export default async function handler(): Promise<Response> {
   const key = Netlify.env.get('VITE_SUPABASE_ANON_KEY');
   if (key) {
     try {
-      // NOTE: PostgREST caps rows at its max-rows setting (commonly 1000). With the
-      // current catalog this returns everything; add Range-header pagination if the
-      // number of approved events grows past that cap.
-      const q = `${SUPABASE_URL}/rest/v1/eventi_prog`
-        + `?select=id,updated_at&status=eq.approved&order=data_ora.asc&limit=5000`;
-      const r = await fetch(q, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
-      if (r.ok) {
+      // PostgREST silently cuts any response to max-rows (1000), whatever the
+      // limit asked: page through. Newest dates first, so upcoming shows lead.
+      // Until Nov 2026 a single `order=data_ora.asc&limit=5000` returned only
+      // the 1000 oldest rows: with 2463 events, no upcoming show was listed.
+      const PAGE = 1000;
+      for (let offset = 0; offset < 50000; offset += PAGE) { // 50k: the sitemap URL limit
+        const q = `${SUPABASE_URL}/rest/v1/eventi_prog`
+          + `?select=id,updated_at&status=eq.approved&order=data_ora.desc,id.asc&limit=${PAGE}&offset=${offset}`;
+        const r = await fetch(q, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
+        if (!r.ok) break;
         const rows = (await r.json()) as Row[];
         for (const row of rows) entries.push(url(`${SITE_URL}/event/${row.id}`, row.updated_at, '0.7'));
+        if (rows.length < PAGE) break;
       }
     } catch {
       // Fall back to just the static URLs.
