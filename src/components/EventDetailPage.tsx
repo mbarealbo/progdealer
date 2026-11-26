@@ -4,6 +4,7 @@ import { ArrowLeft, ExternalLink, Share2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Event, EventSummary, EVENT_SUMMARY_COLUMNS } from '../types/event';
 import { useEventMeta } from '../hooks/useDocumentMeta';
+import { withUtm } from '../lib/outbound';
 import { splitTitle, timeOf, fullDate } from '../utils/eventText';
 import EventCard, { Sleeve } from './home/EventCard';
 import Logo from './brand/Logo';
@@ -138,7 +139,8 @@ export default function EventDetailPage() {
             {sub && <p className="dt-sub">{sub}</p>}
             <div className="dt-actions">
               {event.link && (
-                <a className="cta" href={event.link} target="_blank" rel="noopener noreferrer">
+                // UTM tags and the referrer (origin only, see Referrer-Policy) credit ProgDealer.
+                <a className="cta" href={withUtm(event.link)} target="_blank" rel="noopener">
                   Tickets &amp; info <ExternalLink size={16} />
                 </a>
               )}

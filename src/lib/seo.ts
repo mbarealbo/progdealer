@@ -3,6 +3,7 @@
 // (src/hooks/useDocumentMeta.ts) so server-injected and client-updated metadata
 // stay identical. Keep this file free of DOM/Node/Deno globals.
 import { getEventCountry } from '../utils/geo.ts';
+import { withUtm } from './outbound.ts';
 
 export const SITE_URL = 'https://progdealer.com';
 export const SITE_NAME = 'ProgDealer';
@@ -269,7 +270,7 @@ export function eventBodyHtml(e: SeoEvent): string {
   out.push(`<p>${escapeHtml(summary)}</p>`);
   out.push('<dl>' + rows.map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(v)}</dd>`).join('') + '</dl>');
   if (e.descrizione && e.descrizione.trim()) out.push(`<p>${escapeHtml(e.descrizione)}</p>`);
-  if (e.link) out.push(`<p><a href="${escapeHtml(e.link)}" rel="nofollow noopener">Tickets &amp; info</a></p>`);
+  if (e.link) out.push(`<p><a href="${escapeHtml(withUtm(e.link))}" rel="nofollow noopener">Tickets &amp; info</a></p>`);
   out.push(`</article>`);
   return out.join('');
 }
