@@ -1,4 +1,5 @@
 import { EventSummary } from '../../types/event';
+import { eventPath } from '../../lib/catalog';
 import { shouldUsePlaceholder } from '../../utils/imageUtils';
 import { splitTitle, shortDate, longDate, isTonight, isThisWeek } from '../../utils/eventText';
 import { sleeveSeed, sleeveArt, catNo } from './sleeveMotifs';
@@ -26,7 +27,7 @@ export function Sleeve({ event, showCatNo = true }: { event: EventSummary; showC
 export default function EventCard({
   event, view = 'grid', index,
 }: { event: EventSummary; view?: CardView; index?: number }) {
-  const href = `/event/${event.id}`;
+  const href = eventPath(event);
   const genre = event.sottogenere || 'Progressive Rock';
   const { main, sub } = splitTitle(event.nome_evento);
   const tonight = isTonight(event.data_ora);

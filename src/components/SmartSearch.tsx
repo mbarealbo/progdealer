@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { Search as SearchIcon, MapPin, Music } from 'lucide-react';
 import { EventSummary } from '../types/event';
+import { eventPath } from '../lib/catalog';
 
 // Shape of a Places API (New) autocomplete response, as far as we read it.
 type PlacePrediction = {
@@ -91,7 +92,7 @@ export default function SmartSearch({ value, onChange, events, variant = 'bar', 
     debounceRef.current = setTimeout(() => fetchCities(v), 250);
   };
 
-  const pickEvent = (e: EventSummary) => { window.location.href = `/event/${e.id}`; };
+  const pickEvent = (e: EventSummary) => { window.location.href = eventPath(e); };
   const pickCity = (name: string) => {
     onChange(name);
     setOpen(false); setCities([]); tokenRef.current = '';

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MapPin, LocateFixed } from 'lucide-react';
 import { EventSummary } from '../../types/event';
+import { eventPath } from '../../lib/catalog';
 import { coordsForEvent, haversineKm } from '../../utils/coords';
 
 type Located = { event: EventSummary; dist: number; brng: number; lat: number; lng: number };
@@ -144,7 +145,7 @@ export default function NearYou({ events }: { events: EventSummary[] }) {
               {located.slice(0, 6).map(({ event, dist }) => {
                 const d = new Date(event.data_ora);
                 return (
-                  <a key={event.id} className="nearrow" href={`/event/${event.id}`}>
+                  <a key={event.id} className="nearrow" href={eventPath(event)}>
                     <div className="when">
                       <div className="d">{String(d.getUTCDate()).padStart(2, '0')}</div>
                       <div className="m">{monthFmt.format(d)}</div>

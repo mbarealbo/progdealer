@@ -4,6 +4,7 @@ import {
   Shield, LayoutGrid, List, AlignJustify, X, MapPin, ChevronDown, SlidersHorizontal,
 } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/auth-js';
+import { Link } from 'react-router-dom';
 import { supabase, fetchAllRows } from '../lib/supabase';
 import { EventSummary, EVENT_SUMMARY_COLUMNS } from '../types/event';
 import { useUserRole } from '../hooks/useUserRole';
@@ -13,6 +14,8 @@ import { CONTINENT_LIST } from '../utils/geo';
 import { coordsForEvent, eventCountry, eventContinent } from '../utils/coords';
 import { isTonight, isThisWeek } from '../utils/eventText';
 import { openCookieSettings } from '../lib/consent';
+import { buildCatalog } from '../lib/catalog';
+import { browseLinks } from '../lib/seoHubs';
 import Logo from './brand/Logo';
 import SmartSearch from './SmartSearch';
 import PlacesAutocomplete from './PlacesAutocomplete';
@@ -203,6 +206,9 @@ export default function HomePage() {
   });
   useScrollRestore(!loading);
 
+  // Links into the hub pages, from the upcoming shows already loaded.
+  const browse = useMemo(() => (events.length ? browseLinks(buildCatalog(events)) : null), [events]);
+
   const stats = useMemo(() => ({
     week: filtered.filter((e) => isThisWeek(e.data_ora)).length,
     tonight: filtered.filter((e) => isTonight(e.data_ora)).length,
@@ -383,6 +389,47 @@ export default function HomePage() {
       {/* ---------- Bonus track: near you ---------- */}
       {!loading && events.length > 0 && <NearYou events={events} />}
 
+      {/* ---------- Browse: festivals, artists, places, subgenres ---------- */}
+      {!loading && browse && (
+        <section className="block browse" id="browse">
+          <div className="wrap">
+            <div className="shows-bar">
+              <div className="sb-title">
+                <div className="eyebrow">Liner notes</div>
+                <h2>Browse the catalog</h2>
+              </div>
+            </div>
+            <div className="browse-grid">
+              {browse.festivals.length > 0 && (
+                <div className="browse-col wide">
+                  <h3>Prog festivals</h3>
+                  <ul className="hub-rows">
+                    {browse.festivals.map((l) => (
+                      <li key={l.path}><Link to={l.path}><span className="hr-name">{l.name}</span>{l.note && <span className="hr-note">{l.note}</span>}</Link></li>
+                    ))}
+                  </ul>
+                  <Link className="browse-all" to="/festivals">All prog festivals</Link>
+                </div>
+              )}
+              {([
+                ['Artists on tour', browse.artists, { to: '/artists', label: 'All artists' }],
+                ['Cities', browse.cities, { to: '/cities', label: 'All cities and countries' }],
+                ['Countries', browse.countries, null],
+                ['Subgenres', browse.genres, null],
+              ] as const).map(([title, links, all]) => links.length > 0 && (
+                <div className="browse-col" key={title}>
+                  <h3>{title}</h3>
+                  <div className="hub-chips">
+                    {links.map((l) => <Link key={l.path} className="cty" to={l.path}>{l.name}<i>{l.note?.match(/^\d+/)?.[0]}</i></Link>)}
+                  </div>
+                  {all && <Link className="browse-all" to={all.to}>{all.label}</Link>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ---------- Footer ---------- */}
       <footer className="foot">
         <div className="wrap foot-top">
@@ -400,6 +447,9 @@ export default function HomePage() {
               <span className="label">Discover</span>
               <button onClick={gotoShows}>All shows</button>
               <button onClick={() => document.getElementById('map')?.scrollIntoView({ behavior: 'smooth' })}>Map</button>
+              <Link to="/festivals">Prog festivals</Link>
+              <Link to="/artists">Artists on tour</Link>
+              <Link to="/cities">Cities and countries</Link>
             </div>
             <div>
               <span className="label">Contribute</span>

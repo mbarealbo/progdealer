@@ -5,6 +5,7 @@ import { supabase } from './lib/supabase';
 import { useUserRole } from './hooks/useUserRole';
 import HomePage from './components/HomePage';
 import EventDetailPage from './components/EventDetailPage';
+import { HubPage, IndexPage } from './components/hubs/HubPages';
 import AdminPanel from './components/AdminPanel';
 import UserPanel from './components/UserPanel';
 import LoginPage from './components/LoginPage';
@@ -55,6 +56,14 @@ function App() {
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/event/:id" element={<EventDetailPage />} />
+        <Route path="/artist/:slug" element={<HubPage kind="artist" />} />
+        <Route path="/festival/:slug" element={<HubPage kind="festival" />} />
+        <Route path="/city/:slug" element={<HubPage kind="city" />} />
+        <Route path="/country/:slug" element={<HubPage kind="country" />} />
+        <Route path="/genre/:slug" element={<HubPage kind="genre" />} />
+        <Route path="/festivals" element={<IndexPage kind="festivals" />} />
+        <Route path="/artists" element={<IndexPage kind="artists" />} />
+        <Route path="/cities" element={<IndexPage kind="cities" />} />
         <Route path="/goodbye" element={<GoodbyePage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route
