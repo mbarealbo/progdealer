@@ -103,7 +103,7 @@ export function eventDay(e: CatalogEvent): string {
 
 // ---------- Artists ----------
 
-const NOT_AN_ARTIST = /^(tba|tbc|tbd|to be (announced|confirmed)|supports?|(very )?special guests?|guests?|various( \w+)?( artists| bands| acts)?|(multiple|many|several) (artists|bands|acts)|(and |plus )?(many )?more( tba| to be announced)?|plus guests|line-?up (tba|to be announced)|headliner|others)$/i;
+const NOT_AN_ARTIST = /^(tba|tbc|tbd|to be (announced|confirmed)|supports?|(very )?special guests?|guests?|various( \w+)?( artists| bands| acts)?|(multiple|many|several) (artists|bands|acts)|(and |plus )?(many )?more( tba| to be announced)?|plus guests|line-?up (tba|to be announced)|headliner|others|local (acts|bands|artists))$/i;
 // A source that lists the festival itself among the artists: "A New Day Festival (Event)".
 const EVENT_AS_ARTIST = /\(events?\)\s*$/i;
 // A project wedged into a person's name: "Rick (The English Rock Ensemble) Wakeman".
