@@ -24,7 +24,8 @@ import EventCard, { CardView } from './home/EventCard';
 import BackToTop from './home/BackToTop';
 
 const EventsMap = lazy(() => import('./home/EventsMap'));
-import AddEventForm from './AddEventForm';
+// Only opened from "Add a show": loaded on first use, not with the home.
+const AddEventForm = lazy(() => import('./AddEventForm'));
 import AuthRequiredModal from './AuthRequiredModal';
 
 const nf = new Intl.NumberFormat('en-US');
@@ -535,7 +536,11 @@ export default function HomePage() {
       )}
 
       {/* ---------- Modals ---------- */}
-      <AddEventForm isOpen={showAddEvent} onClose={() => setShowAddEvent(false)} onEventAdded={fetchEvents} onAuthRequired={() => setShowAuthRequired(true)} isAuthenticated={isAuthenticated} />
+      {showAddEvent && (
+        <Suspense fallback={null}>
+          <AddEventForm isOpen={showAddEvent} onClose={() => setShowAddEvent(false)} onEventAdded={fetchEvents} onAuthRequired={() => setShowAuthRequired(true)} isAuthenticated={isAuthenticated} />
+        </Suspense>
+      )}
       <AuthRequiredModal isOpen={showAuthRequired} onClose={() => setShowAuthRequired(false)} />
     </div>
   );

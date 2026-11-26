@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from './lib/supabase';
@@ -6,15 +6,22 @@ import { useUserRole } from './hooks/useUserRole';
 import HomePage from './components/HomePage';
 import EventDetailPage from './components/EventDetailPage';
 import { HubPage, IndexPage } from './components/hubs/HubPages';
-import WidgetPage from './components/WidgetPage';
-import AdminPanel from './components/AdminPanel';
-import UserPanel from './components/UserPanel';
-import LoginPage from './components/LoginPage';
-import ResetPasswordPage from './components/ResetPasswordPage';
 import ProtectedRoute from './components/ProtectedRoute';
-import GoodbyePage from './components/GoodbyePage';
-import PrivacyPolicyPage from './components/PrivacyPolicyPage';
 import CookieConsent from './components/CookieConsent';
+
+// Pages people rarely land on load on demand, so the home, event and hub pages
+// (where search traffic arrives) ship less JavaScript.
+const AdminPanel = lazy(() => import('./components/AdminPanel'));
+const UserPanel = lazy(() => import('./components/UserPanel'));
+const LoginPage = lazy(() => import('./components/LoginPage'));
+const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage'));
+const GoodbyePage = lazy(() => import('./components/GoodbyePage'));
+const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage'));
+const WidgetPage = lazy(() => import('./components/WidgetPage'));
+
+const PAGE_LOADING = (
+  <div className="pd"><div className="page-center"><div className="state-loading"><span className="spin dark" /></div></div></div>
+);
 
 function App() {
   const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
@@ -53,6 +60,7 @@ function App() {
 
   return (
     <Router>
+      <Suspense fallback={PAGE_LOADING}>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
@@ -125,6 +133,7 @@ function App() {
         {/* Catch all route - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
       <CookieConsent />
     </Router>
   );
