@@ -49,3 +49,6 @@ dist-ssr
 
 # Social graphics output (regenerate with npm run social:ads / social:weekly)
 social-out/
+
+# Claude Code worktrees
+.claude/worktrees/
