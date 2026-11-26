@@ -6,6 +6,7 @@ import { useUserRole } from './hooks/useUserRole';
 import HomePage from './components/HomePage';
 import EventDetailPage from './components/EventDetailPage';
 import { HubPage, IndexPage } from './components/hubs/HubPages';
+import WidgetPage from './components/WidgetPage';
 import AdminPanel from './components/AdminPanel';
 import UserPanel from './components/UserPanel';
 import LoginPage from './components/LoginPage';
@@ -64,6 +65,7 @@ function App() {
         <Route path="/festivals" element={<IndexPage kind="festivals" />} />
         <Route path="/artists" element={<IndexPage kind="artists" />} />
         <Route path="/cities" element={<IndexPage kind="cities" />} />
+        <Route path="/widget" element={<WidgetPage />} />
         <Route path="/goodbye" element={<GoodbyePage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route

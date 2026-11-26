@@ -454,6 +454,7 @@ export default function HomePage() {
             <div>
               <span className="label">Contribute</span>
               <button onClick={requestAddEvent}>Add a show</button>
+              <Link to="/widget">Widget for your site</Link>
             </div>
             <div>
               <span className="label">Project</span>

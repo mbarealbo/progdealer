@@ -30,7 +30,7 @@ function PageLink({ to, className, children }: { to: string; className?: string;
   return <Link className={className} to={to}>{children}</Link>;
 }
 
-function Shell({ children }: { children: ReactNode }) {
+export function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="pd">
       <div className="detail-bar">
@@ -55,6 +55,10 @@ function Shell({ children }: { children: ReactNode }) {
               <Link to="/festivals">Prog festivals</Link>
               <Link to="/artists">Artists on tour</Link>
               <Link to="/cities">Cities and countries</Link>
+            </div>
+            <div>
+              <span className="label">For your site</span>
+              <Link to="/widget">Free widget and badge</Link>
             </div>
             <div>
               <span className="label">Project</span>

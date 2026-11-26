@@ -14,12 +14,11 @@ import type { Context, Config } from '@netlify/edge-functions';
 import {
   eventHeadHtml, eventBodyHtml, siteHeadHtml, siteBodyHtml, type SeoEvent,
 } from '../../src/lib/seo.ts';
-import {
-  buildCatalog, fetchCatalogRows, parseEventParam, eventPath, hubsOf, canonicalEvent, type Catalog, type HubKind,
-} from '../../src/lib/catalog.ts';
+import { parseEventParam, eventPath, hubsOf, canonicalEvent, type HubKind } from '../../src/lib/catalog.ts';
+import { catalogLoader } from '../../src/lib/catalogCache.ts';
 import {
   hubMeta, hubBodyHtml, indexMeta, indexBodyHtml, pageHeadHtml, eventRelated, browseLinks, upcomingEvents,
-  type IndexKind,
+  widgetPageMeta, widgetPageBodyHtml, type IndexKind,
 } from '../../src/lib/seoHubs.ts';
 
 const HOME_LIST_LIMIT = 30;
@@ -47,32 +46,9 @@ function authHeaders(key: string) {
   return { apikey: key, Authorization: `Bearer ${key}` };
 }
 
-// The whole public catalog, kept in the isolate for a few minutes: every hub
-// page and every event page's links are built from it. Responses are also
-// cached by the CDN (see respond), so this runs a few times an hour at most.
-const CATALOG_TTL_MS = 10 * 60 * 1000;
-let cached: { at: number; catalog: Catalog } | null = null;
-let inflight: Promise<Catalog | null> | null = null;
-
-function getCatalog(): Promise<Catalog | null> {
-  if (cached && Date.now() - cached.at < CATALOG_TTL_MS) return Promise.resolve(cached.catalog);
-  const key = anonKey();
-  if (!key) return Promise.resolve(null);
-  if (!inflight) {
-    inflight = (async () => {
-      try {
-        const catalog = buildCatalog(await fetchCatalogRows(SUPABASE_URL, key));
-        cached = { at: Date.now(), catalog };
-        return catalog;
-      } catch {
-        return cached?.catalog ?? null; // stale beats nothing
-      } finally {
-        inflight = null;
-      }
-    })();
-  }
-  return inflight;
-}
+// The whole public catalog: every hub page and every event page's links are
+// built from it. Responses are also cached by the CDN (see respond).
+const getCatalog = catalogLoader(SUPABASE_URL, anonKey());
 
 async function fetchEvent(id: string): Promise<SeoEvent | null> {
   const key = anonKey();
@@ -174,6 +150,10 @@ export default async function handler(request: Request, context: Context): Promi
     return respond(inject(pageHeadHtml(hubMeta(catalog, h, origin)), hubBodyHtml(catalog, h)), res, 200);
   }
 
+  if (path === '/widget') {
+    return respond(inject(pageHeadHtml(widgetPageMeta(origin)), widgetPageBodyHtml()), res, 200);
+  }
+
   const index = path.slice(1) as IndexKind;
   if (INDEX_ROUTES.has(index)) {
     const catalog = await getCatalog();
@@ -188,7 +168,7 @@ export const config: Config = {
   path: [
     '/', '/event/*',
     '/artist/*', '/festival/*', '/city/*', '/country/*', '/genre/*',
-    '/artists', '/festivals', '/cities',
+    '/artists', '/festivals', '/cities', '/widget',
     '/login', '/userarea', '/adminarea', '/reset-password', '/goodbye',
   ],
   cache: 'manual',

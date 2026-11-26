@@ -850,3 +850,26 @@ html, body { overscroll-behavior-y: none; }
 .pd .browse-col .hub-chips { padding-top: 10px; }
 .pd .browse-all { margin-top: 12px; font-size: 0.92rem; text-decoration: underline; text-underline-offset: 3px; align-self: flex-start; }
 @media (max-width: 760px) { .pd .browse-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Widget page (/widget) ---------- */
+.pd .wg-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 32px; padding-top: 24px; align-items: start; }
+.pd .wg-form { display: flex; flex-direction: column; gap: 20px; }
+.pd .wg-field { display: flex; flex-direction: column; gap: 2px; }
+.pd .wg-field .hub-chips { padding-top: 8px; }
+.pd .wg-select { margin-top: 8px; height: 46px; padding: 0 14px; border: 1px solid var(--ink); border-radius: 10px; background: var(--paper-2); color: var(--ink); font: inherit; font-size: 0.98rem; max-width: 100%; }
+.pd .wg-select:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.pd .wg-preview { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.pd .wg-wait { color: var(--ink-3); }
+.pd .wg-code { margin-top: 28px; border: 1px solid var(--ink); border-radius: 12px; background: var(--paper-2); overflow: hidden; }
+.pd .wg-code-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px 10px 16px; border-bottom: 1px solid var(--line); }
+.pd .wg-code pre { margin: 0; padding: 16px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
+.pd .wg-text { margin-top: 16px; max-width: 64ch; color: var(--ink-2); }
+.pd .wg-text a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.pd .wg-badge { margin-top: 18px; }
+.pd .wg-faq { margin: 8px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0 32px; }
+.pd .wg-faq div { padding: 16px 0; border-bottom: 1px solid var(--line-2); }
+.pd .wg-faq dt { font-weight: 600; }
+.pd .wg-faq dd { margin: 6px 0 0; color: var(--ink-2); }
+@media (max-width: 760px) {
+  .pd .wg-grid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+}

@@ -6,7 +6,7 @@
 // pages, so both say the same thing. Pure: no DOM, Node or Deno globals.
 import {
   type Catalog, type CatalogEvent, type Hub, type HubKind,
-  hubPath, isIndexable, yearRange, topHubs, topValues, eventPath, eventDay,
+  hubPath, hubsOf, isIndexable, yearRange, topHubs, topValues, eventPath, eventDay,
   cityNameOf, countryNameOf, cleanArtists, artistSlug, festivalOf, hubsForEvent, slugify, venueName, placeLabel,
 } from './catalog.ts';
 import {
@@ -640,6 +640,110 @@ export function eventRelated(c: Catalog, e: CatalogEvent): EventRelated {
     nearby: nearby.map((x) => ({ name: x.nome_evento, path: eventPath(x), note: [fmtShortDate(x.data_ora), venueName(x)].filter(Boolean).join(' · ') })),
     nearbyTitle: cityName ? `More prog in ${cityName}` : undefined,
   };
+}
+
+// ---------- Embeddable widget (public/widget.js, /api/widget/<kind>/<slug>) ----------
+
+export interface WidgetEvent {
+  /** "2027-11-04" */
+  date: string;
+  /** Main line: the place for an artist, the show for everything else. */
+  title: string;
+  sub: string;
+  url: string;
+}
+
+export interface WidgetData {
+  kind: HubKind;
+  slug: string;
+  name: string;
+  /** "Marillion tour dates", "Prog concerts in London". */
+  title: string;
+  url: string;
+  /** Upcoming shows on the hub, more than `events` may hold. */
+  total: number;
+  events: WidgetEvent[];
+}
+
+export const WIDGET_MAX_EVENTS = 10;
+
+/** "Marillion tour dates", "Prog concerts in the UK": the widget's heading and its link text. */
+export function widgetTitle(kind: HubKind, name: string): string {
+  switch (kind) {
+    case 'artist': return `${name} tour dates`;
+    case 'festival': return name;
+    case 'genre': return `${name} concerts`;
+    case 'country': return `Prog concerts in ${theCountry(name)}`;
+    case 'city': return `Prog concerts in ${name}`;
+  }
+}
+
+/** The HTML a site pastes: the widget box (with a plain link, kept in the page) and the script. */
+export function widgetSnippet(kind: HubKind, slug: string, name: string, limit = 5, dark = false): string {
+  const attrs = ['class="progdealer-widget"', `data-${kind}="${escapeHtml(slug)}"`, `data-limit="${limit}"`, dark ? 'data-theme="dark"' : '']
+    .filter(Boolean).join(' ');
+  return `<div ${attrs}><a href="${SITE_URL}${hubPath(kind, slug)}">${escapeHtml(widgetTitle(kind, name))}</a> on ProgDealer</div>\n`
+    + `<script async src="${SITE_URL}/widget.js"></script>`;
+}
+
+/** "Listed on ProgDealer" badge linking to the page. */
+export function badgeSnippet(kind: HubKind, slug: string, name: string): string {
+  const alt = escapeHtml(`${name} on ProgDealer`);
+  return `<a href="${SITE_URL}${hubPath(kind, slug)}" title="${alt}"><img src="${SITE_URL}/badge.svg" alt="${alt}" width="188" height="48" /></a>`;
+}
+
+export const WIDGET_PAGE_COPY: PageCopy = {
+  eyebrow: 'For your site',
+  h1: 'Prog dates on your website',
+  intro: 'A free widget with the next shows of a band, a festival, a city or a country, kept up to date from the ProgDealer catalog. '
+    + 'Paste two lines of HTML: no account, no cookies, no ads.',
+  trail: [{ name: 'Widget', path: '/widget' }],
+};
+
+export const WIDGET_FAQ: [string, string][] = [
+  ['Is it free?', 'Yes. The widget and the badge are free for any site: bands, festivals, venues, blogs, radio shows and fan clubs.'],
+  ['How fresh are the dates?', 'The catalog is updated every day and the widget always shows the current list, so there is nothing to maintain on your side.'],
+  ['Where does it work?', 'On any page that accepts HTML: WordPress (Custom HTML block), Squarespace (Code block), Wix (Embed code), Webflow, Ghost or plain HTML.'],
+  ['Does it track my visitors?', 'No cookies and no personal data. Links to ProgDealer carry your site name as utm_source, so we can see which sites send visitors.'],
+  ['Why the link under the widget?', 'It credits ProgDealer and leads people to the full listings. Please keep it: it is what keeps the widget free.'],
+];
+
+export function widgetPageMeta(origin: string = SITE_URL): PageMeta {
+  return {
+    title: 'Free prog concerts widget for your website | ProgDealer',
+    description: 'Show the next prog rock and prog metal dates of a band, festival, city or country on your site. Free, always up to date, two lines of HTML.',
+    canonical: `${origin}/widget`,
+    image: origin + DEFAULT_IMAGE,
+    jsonLd: [
+      breadcrumbLd(WIDGET_PAGE_COPY.trail, origin),
+      {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: WIDGET_FAQ.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+      },
+    ],
+  };
+}
+
+export function widgetPageBodyHtml(): string {
+  const example = `<h2>Example</h2><pre>${escapeHtml(widgetSnippet('festival', 'arctangent', 'ArcTanGent'))}</pre>`;
+  const faq = '<h2>Good to know</h2><dl>' + WIDGET_FAQ.map(([q, a]) => `<dt>${escapeHtml(q)}</dt><dd>${escapeHtml(a)}</dd>`).join('') + '</dl>';
+  return pageBodyHtml(WIDGET_PAGE_COPY, [], example + faq);
+}
+
+export function widgetData(c: Catalog, kind: HubKind, slug: string, origin: string = SITE_URL): WidgetData | null {
+  const h = hubsOf(c, kind).get(slug.toLowerCase());
+  if (!h) return null;
+  const title = widgetTitle(kind, h.name);
+  const events = h.upcoming.slice(0, WIDGET_MAX_EVENTS).map((e): WidgetEvent => {
+    // No venue line when the venue only repeats the city.
+    const venue = venuePlace(e) === placeLabel(e) ? '' : venueName(e);
+    if (kind === 'artist') return { date: eventDay(e), title: placeLabel(e) || venue, sub: venue, url: origin + eventPath(e) };
+    if (kind === 'city') return { date: eventDay(e), title: e.nome_evento, sub: venue, url: origin + eventPath(e) };
+    if (kind === 'country') return { date: eventDay(e), title: e.nome_evento, sub: [venue, cityNameOf(e)].filter(Boolean).join(', '), url: origin + eventPath(e) };
+    return { date: eventDay(e), title: e.nome_evento, sub: venuePlace(e), url: origin + eventPath(e) };
+  });
+  return { kind, slug: h.slug, name: h.name, title, url: origin + hubPath(kind, h.slug), total: h.upcoming.length, events };
 }
 
 // ---------- Home ----------

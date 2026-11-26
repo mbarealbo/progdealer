@@ -28,6 +28,7 @@ export default async function handler(): Promise<Response> {
     url(`${SITE_URL}/festivals`, undefined, '0.9'),
     url(`${SITE_URL}/artists`, undefined, '0.8'),
     url(`${SITE_URL}/cities`, undefined, '0.7'),
+    url(`${SITE_URL}/widget`, undefined, '0.5'),
     url(`${SITE_URL}/privacy`, undefined, '0.2'),
   ];
 

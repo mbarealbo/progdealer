@@ -166,12 +166,15 @@ export function billOf(e: Pick<CatalogEvent, 'nome_evento' | 'artisti' | 'fonte'
 // ---------- Venues, cities and countries ----------
 
 /** Venue text without the markup some sources leave in it: "Sage\\(https://...)" -> "Sage". */
+const NO_VENUE = /^(venue )?(tba|tbc|tbd|to be (announced|confirmed))\.?$/i;
+
 export function venueName(e: Pick<CatalogEvent, 'venue'>): string {
-  return (e.venue || '')
+  const venue = (e.venue || '')
     .replace(/\\?\(\s*https?:\/\/[^)]*\)/g, '')
     .replace(/\\/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+  return NO_VENUE.test(venue) ? '' : venue;
 }
 
 // Local spellings and duplicates -> one English name (lowercase keys).

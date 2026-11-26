@@ -22,6 +22,7 @@ Events are also grouped into hub pages, each listing every upcoming date:
 - [Prog festivals](https://progdealer.com/festivals): every prog festival with dates and lineups
 - [Artists on tour](https://progdealer.com/artists): A to Z, with tour dates
 - [Cities and countries](https://progdealer.com/cities): prog concerts by place
+- [Widget](https://progdealer.com/widget): free embeddable widget and badge for other sites
 - [Sitemap](https://progdealer.com/sitemap.xml): every indexable URL
 - [Privacy policy](https://progdealer.com/privacy)
 
