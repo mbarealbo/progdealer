@@ -15,7 +15,7 @@ import {
   eventHeadHtml, eventBodyHtml, siteHeadHtml, siteBodyHtml, type SeoEvent,
 } from '../../src/lib/seo.ts';
 import {
-  buildCatalog, fetchCatalogRows, parseEventParam, eventPath, hubsOf, type Catalog, type HubKind,
+  buildCatalog, fetchCatalogRows, parseEventParam, eventPath, hubsOf, canonicalEvent, type Catalog, type HubKind,
 } from '../../src/lib/catalog.ts';
 import {
   hubMeta, hubBodyHtml, indexMeta, indexBodyHtml, pageHeadHtml, eventRelated, browseLinks, upcomingEvents,
@@ -128,6 +128,11 @@ export default async function handler(request: Request, context: Context): Promi
     const id = parseEventParam(ev[1]);
     event = id ? await fetchEvent(id) : null;
     if (event) {
+      // A show listed twice lives at the row the catalog keeps, with the merged lineup.
+      const catalog = await getCatalog();
+      const kept = catalog ? canonicalEvent(catalog, event.id) : undefined;
+      if (kept && kept.id !== event.id) return redirect(eventPath(kept) + url.search);
+      if (kept) event = { ...event, artisti: kept.artisti };
       const canonicalPath = eventPath(event);
       if (url.pathname !== canonicalPath) return redirect(canonicalPath + url.search);
     }

@@ -52,6 +52,8 @@ export interface Catalog {
   cities: Map<string, Hub>;
   countries: Map<string, Hub>;
   genres: Map<string, Hub>;
+  /** Id of a show listed twice -> id of the row the catalog keeps (see dedupeEvents). */
+  duplicateOf: Map<string, string>;
 }
 
 // ---------- Text helpers ----------
@@ -101,11 +103,17 @@ export function eventDay(e: CatalogEvent): string {
 
 // ---------- Artists ----------
 
-const NOT_AN_ARTIST = /^(tba|tbc|tbd|supports?|(very )?special guests?|guests?|various( artists)?|(multiple|many|several) (artists|bands|acts)|(and |plus )?(many )?more( tba| to be announced)?|plus guests|line-?up (tba|to be announced)|headliner|others)$/i;
+const NOT_AN_ARTIST = /^(tba|tbc|tbd|to be (announced|confirmed)|supports?|(very )?special guests?|guests?|various( \w+)?( artists| bands| acts)?|(multiple|many|several) (artists|bands|acts)|(and |plus )?(many )?more( tba| to be announced)?|plus guests|line-?up (tba|to be announced)|headliner|others)$/i;
+// A source that lists the festival itself among the artists: "A New Day Festival (Event)".
+const EVENT_AS_ARTIST = /\(events?\)\s*$/i;
+// A project wedged into a person's name: "Rick (The English Rock Ensemble) Wakeman".
+const WEDGED_NAME = /^(\p{Lu}[\p{L}'’-]+) \([^)]+\) (\p{Lu}[\p{L}'’-]+)$/u;
 
 /** The lineup without placeholders like "TBA" or "Special guests". */
 export function cleanArtists(list?: string[] | null): string[] {
-  return (list || []).map((a) => (a || '').trim()).filter((a) => a && !NOT_AN_ARTIST.test(a));
+  return (list || [])
+    .map((a) => (a || '').trim().replace(WEDGED_NAME, '$1 $2'))
+    .filter((a) => a && !NOT_AN_ARTIST.test(a) && !EVENT_AS_ARTIST.test(a));
 }
 
 export function artistSlug(name: string): string {
@@ -329,9 +337,84 @@ function finish(kind: HubKind, map: Map<string, Acc>, today: string): Map<string
   return out;
 }
 
+// ---------- Duplicates ----------
+
+/** A venue that only repeats the city ("Rome", "Roma", or nothing) says nothing about where. */
+function genericVenue(e: CatalogEvent): boolean {
+  const venue = venueName(e);
+  if (!venue) return true;
+  const city = cityNameOf(e);
+  return !!city && norm(cityNameOf({ città: venue }) || venue) === norm(city);
+}
+
+function richness(e: CatalogEvent): number {
+  return (genericVenue(e) ? 0 : 4) + (e.immagine ? 2 : 0) + (typeof e.lat === 'number' ? 1 : 0) + cleanArtists(e.artisti).length / 10;
+}
+
+/**
+ * The same show listed by two sources: same day, same city, same headliner (or
+ * festival), and the venues agree or one of them only names the city. Keeps the
+ * most complete row, with every artist either row lists; the others map to it,
+ * so their pages can redirect. Two different venues stay two shows.
+ */
+export function dedupeEvents(rows: CatalogEvent[]): { events: CatalogEvent[]; duplicateOf: Map<string, string> } {
+  const groups = new Map<string, CatalogEvent[]>();
+  for (const e of rows) {
+    const city = citySlugOf(e);
+    if (!city) continue;
+    const key = `${eventDay(e)}|${city}|${norm(eventLabel(e))}`;
+    const g = groups.get(key);
+    if (g) g.push(e); else groups.set(key, [e]);
+  }
+
+  const keep = new Map<string, CatalogEvent>(); // kept id -> merged row
+  const duplicateOf = new Map<string, string>();
+  for (const group of groups.values()) {
+    if (group.length < 2) continue;
+    const byVenue = new Map<string, CatalogEvent[]>();
+    const generic: CatalogEvent[] = [];
+    for (const e of group) {
+      if (genericVenue(e)) { generic.push(e); continue; }
+      const v = norm(venueName(e));
+      const list = byVenue.get(v);
+      if (list) list.push(e); else byVenue.set(v, [e]);
+    }
+    const clusters = [...byVenue.values()];
+    if (!clusters.length) clusters.push(generic);
+    else if (clusters.length === 1) clusters[0].push(...generic);
+    // Several real venues: a row naming only the city could be any of them, leave it alone.
+
+    for (const cluster of clusters) {
+      if (cluster.length < 2) continue;
+      const ranked = cluster.slice().sort((a, b) => richness(b) - richness(a) || a.id.localeCompare(b.id));
+      const best = ranked[0];
+      const artists: string[] = [];
+      const seen = new Set<string>();
+      for (const e of ranked) for (const a of e.artisti || []) { const k = norm(a); if (k && !seen.has(k)) { seen.add(k); artists.push(a); } }
+      const withImage = ranked.find((e) => e.immagine);
+      const withGeo = ranked.find((e) => typeof e.lat === 'number' && typeof e.lng === 'number');
+      keep.set(best.id, {
+        ...best,
+        artisti: artists.length ? artists : best.artisti,
+        immagine: best.immagine || withImage?.immagine || null,
+        lat: best.lat ?? withGeo?.lat ?? null,
+        lng: best.lng ?? withGeo?.lng ?? null,
+      });
+      for (const e of ranked.slice(1)) duplicateOf.set(e.id, best.id);
+    }
+  }
+
+  if (!duplicateOf.size) return { events: rows, duplicateOf };
+  return {
+    events: rows.filter((e) => !duplicateOf.has(e.id)).map((e) => keep.get(e.id) || e),
+    duplicateOf,
+  };
+}
+
 export function buildCatalog(rows: CatalogEvent[], now: Date = new Date()): Catalog {
   const today = todayUtc(now);
-  const events = rows.slice().sort((a, b) => a.data_ora.localeCompare(b.data_ora) || a.id.localeCompare(b.id));
+  const { events: unique, duplicateOf } = dedupeEvents(rows);
+  const events = unique.slice().sort((a, b) => a.data_ora.localeCompare(b.data_ora) || a.id.localeCompare(b.id));
   const artists = new Map<string, Acc>();
   const festivals = new Map<string, Acc>();
   const cities = new Map<string, Acc>();
@@ -359,7 +442,14 @@ export function buildCatalog(rows: CatalogEvent[], now: Date = new Date()): Cata
     cities: finish('city', cities, today),
     countries: finish('country', countries, today),
     genres: finish('genre', genres, today),
+    duplicateOf,
   };
+}
+
+/** The catalog row an event page should show: itself, or the row its duplicate was merged into. */
+export function canonicalEvent(c: Catalog, id: string): CatalogEvent | undefined {
+  const target = c.duplicateOf.get(id) || id;
+  return c.events.find((e) => e.id === target);
 }
 
 export function hubsOf(c: Catalog, kind: HubKind): Map<string, Hub> {

@@ -81,7 +81,8 @@ export function eventOgImage(e: SeoEvent, origin: string = SITE_URL): string {
   return hasValidImage(e.immagine) ? (e.immagine as string) : `${origin}/og-default.png`;
 }
 
-const TITLE_MAX = 65;
+// Google cuts titles at about 600px, roughly 60 characters.
+const TITLE_MAX = 60;
 
 /**
  * "Steve Hackett in Barcelona, 4 Nov 2027: tickets | ProgDealer". Headliner
@@ -108,13 +109,17 @@ export function venuePlace(e: Pick<SeoEvent, 'venue' | 'città'>): string {
 }
 
 export function eventDescription(e: SeoEvent): string {
-  // Use the stored description only when it's substantive; scraped rows often carry
-  // placeholders like "Concert"/"Live", for which a synthesized, fact-rich line ranks better.
-  if (e.descrizione && e.descrizione.trim().length >= 30) return clip(e.descrizione, 160);
   const date = fmtDate(e.data_ora);
+  const lead = `${eventLabel(e)} live at ${venuePlace(e)}${date ? ' on ' + date : ''}.`;
+  // A stored description is often shared by every date of a tour or every day of
+  // a festival, so it follows this show's own facts instead of replacing them:
+  // each page keeps a description of its own. Placeholders ("Concert", "Live")
+  // are too short to count, and get the synthesized line instead.
+  const stored = (e.descrizione || '').replace(/\s+/g, ' ').trim();
+  if (stored.length >= 30) return clip(`${lead} ${stored}`, 160);
   const who = cleanArtists(e.artisti).slice(0, 4).join(', ');
   const parts = [
-    `${eventLabel(e)} live at ${venuePlace(e)}${date ? ' on ' + date : ''}.`,
+    lead,
     who ? `Lineup: ${who}.` : '',
     e.sottogenere ? `${e.sottogenere} show.` : '',
     'Tickets and details on ProgDealer.',
@@ -284,6 +289,9 @@ export interface EventRelated {
   /** Other upcoming dates of the headliner (or festival). */
   moreDates: LinkItem[];
   moreDatesTitle?: string;
+  /** Other upcoming shows in the same city. */
+  nearby: LinkItem[];
+  nearbyTitle?: string;
 }
 
 function linkHtml(l: LinkItem): string {
@@ -337,6 +345,10 @@ export function eventBodyHtml(e: SeoEvent, related?: EventRelated): string {
   if (e.link) out.push(`<p><a href="${escapeHtml(withUtm(e.link))}" rel="nofollow noopener">Tickets &amp; info</a></p>`);
   if (related?.moreDates.length) {
     out.push(`<h2>${escapeHtml(related.moreDatesTitle || 'More dates')}</h2>`, linkListHtml(related.moreDates));
+  }
+  if (related?.nearby.length) {
+    out.push(`<h2>${escapeHtml(related.nearbyTitle || 'More shows nearby')}</h2>`, linkListHtml(related.nearby));
+    if (related.city) out.push(`<p>${linkHtml({ ...related.city, name: `All prog concerts in ${related.city.name}` })}</p>`);
   }
   out.push(`</article>`);
   return out.join('');

@@ -9,7 +9,7 @@ import { splitTitle, timeOf, fullDate } from '../utils/eventText';
 import EventCard, { Sleeve } from './home/EventCard';
 import Logo from './brand/Logo';
 import { useCatalog } from '../hooks/useCatalog';
-import { eventPath, parseEventParam, cityNameOf, countryNameOf, venueName } from '../lib/catalog';
+import { eventPath, parseEventParam, cityNameOf, countryNameOf, venueName, canonicalEvent, cleanArtists } from '../lib/catalog';
 import { eventRelated } from '../lib/seoHubs';
 
 export default function EventDetailPage() {
@@ -29,12 +29,14 @@ export default function EventDetailPage() {
     else setLoading(false);
   }, [id]);
 
-  // Old or stale URL: show the current one (the edge function already 301s crawlers).
+  // Old or stale URL, or a show listed twice: show the current one (the edge
+  // function already 301s crawlers).
   useEffect(() => {
-    if (event && location.pathname !== eventPath(event)) {
-      navigate(eventPath(event) + location.search, { replace: true });
-    }
-  }, [event, location.pathname, location.search, navigate]);
+    if (!event) return;
+    const kept = catalog ? canonicalEvent(catalog, event.id) : undefined;
+    const target = eventPath(kept || event);
+    if (location.pathname !== target) navigate(target + location.search, { replace: true });
+  }, [event, catalog, location.pathname, location.search, navigate]);
 
   // Where the show belongs: artist, festival, city, country and genre pages.
   const related = useMemo(() => (catalog && event ? eventRelated(catalog, event) : null), [catalog, event]);
@@ -141,6 +143,8 @@ export default function EventDetailPage() {
   const genre = event.sottogenere || 'Progressive';
   const { main, sub } = splitTitle(event.nome_evento);
   const artistLink = (name: string) => related?.artists.find((a) => a.name.toLowerCase() === name.toLowerCase());
+  // Same lineup as the edge SSR: placeholders out, a show listed twice with both lists.
+  const lineup = cleanArtists((catalog ? canonicalEvent(catalog, event.id) : undefined)?.artisti ?? event.artisti);
   const explore = related
     ? [related.festival, related.city, related.country, related.genre].filter((l): l is NonNullable<typeof l> => Boolean(l))
     : [];
@@ -209,11 +213,11 @@ export default function EventDetailPage() {
                 <p>{event.descrizione}</p>
               </div>
             )}
-            {event.artisti && event.artisti.length > 0 && (
+            {lineup.length > 0 && (
               <div className="detail-section">
                 <h2>Lineup</h2>
                 <div className="lineup">
-                  {event.artisti.map((artist, i) => {
+                  {lineup.map((artist, i) => {
                     const link = artistLink(artist);
                     return (
                       <span key={i}>
@@ -228,7 +232,7 @@ export default function EventDetailPage() {
           </div>
         </div>
 
-        {related && (related.moreDates.length > 0 || explore.length > 0) && (
+        {related && (related.moreDates.length > 0 || related.nearby.length > 0 || explore.length > 0) && (
           <div className="detail-related dt-more">
             {related.moreDates.length > 0 && (
               <>
@@ -240,6 +244,22 @@ export default function EventDetailPage() {
                 </div>
                 <ul className="hub-rows">
                   {related.moreDates.map((d) => (
+                    <li key={d.path}><Link to={d.path}><span className="hr-name">{d.name}</span>{d.note && <span className="hr-note">{d.note}</span>}</Link></li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {related.nearby.length > 0 && (
+              <>
+                <div className="head">
+                  <div>
+                    <div className="eyebrow">In town</div>
+                    <h2>{related.nearbyTitle}</h2>
+                  </div>
+                  {related.city && <Link className="linkbtn" to={related.city.path}>All shows</Link>}
+                </div>
+                <ul className="hub-rows">
+                  {related.nearby.map((d) => (
                     <li key={d.path}><Link to={d.path}><span className="hr-name">{d.name}</span>{d.note && <span className="hr-note">{d.note}</span>}</Link></li>
                   ))}
                 </ul>

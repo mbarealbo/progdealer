@@ -46,7 +46,8 @@ export interface Section {
 }
 
 const DEFAULT_IMAGE = '/og-default.png';
-const TITLE_MAX = 65;
+// Google cuts titles at about 600px, roughly 60 characters.
+const TITLE_MAX = 60;
 const DESC_MAX = 160;
 
 function clip(s: string, max: number): string {
@@ -266,6 +267,30 @@ function countedLinks(c: Catalog, kind: HubKind, events: CatalogEvent[], limit: 
   return hubsCounted(c, kind, events, exclude).slice(0, limit).map(({ hub, n }) => hubLink(hub, plural(n, 'show')));
 }
 
+/**
+ * Artists close to this one in the catalog: the ones it shares a bill with
+ * count most, then the ones on the same festivals, then the busiest of its
+ * genre. Only artists with upcoming shows, so every link leads to dates.
+ */
+function relatedArtists(c: Catalog, h: Hub, limit = 12): Hub[] {
+  const score = new Map<string, number>();
+  const bump = (events: CatalogEvent[], n: number) => {
+    for (const e of events) for (const a of hubsForEvent(c, e).artists) {
+      if (a.slug !== h.slug) score.set(a.slug, (score.get(a.slug) || 0) + n);
+    }
+  };
+  bump(h.events, 10);
+  for (const f of hubsFrom(c, 'festival', h.events)) bump(f.events, 3);
+  const genre = hubsFrom(c, 'genre', h.events)[0];
+  if (genre) bump(genre.upcoming, 0.01);
+  return [...score.entries()]
+    .map(([slug, n]) => ({ hub: c.artists.get(slug), n }))
+    .filter((x): x is { hub: Hub; n: number } => Boolean(x.hub && isIndexable(x.hub)))
+    .sort((a, b) => b.n - a.n || byUpcoming(a.hub, b.hub))
+    .slice(0, limit)
+    .map((x) => x.hub);
+}
+
 export function hubSections(c: Catalog, h: Hub): Section[] {
   const out: (Section | null)[] = [];
   switch (h.kind) {
@@ -273,6 +298,7 @@ export function hubSections(c: Catalog, h: Hub): Section[] {
       out.push(eventsSection('upcoming', `Upcoming ${h.name} dates`, h.upcoming, MAX_EVENTS));
       out.push(linksSection('festivals', `${h.name} at festivals`, hubsFrom(c, 'festival', h.upcoming).map(festivalIndexLink)));
       out.push(linksSection('cities', `Where ${h.name} plays`, countedLinks(c, 'city', h.upcoming, 24)));
+      out.push(linksSection('related', 'Related artists on tour', relatedArtists(c, h).map((x) => hubLink(x))));
       out.push(eventsSection('past', 'Past shows', h.past, MAX_PAST));
       out.push(linksSection('genre', 'More like this', hubsFrom(c, 'genre', h.events).slice(0, 3).map((g) => hubLink(g))));
       break;
@@ -590,6 +616,12 @@ export function eventRelated(c: Catalog, e: CatalogEvent): EventRelated {
     moreDates = lead.upcoming.filter((x) => x.id !== e.id);
     moreDatesTitle = `More ${lead.name} dates`;
   }
+  moreDates = moreDates.slice(0, 12);
+
+  // What else is on in town: the next shows in the same city, not already listed above.
+  const listed = new Set([e.id, ...moreDates.map((x) => x.id)]);
+  const nearby = (r.city?.upcoming || []).filter((x) => !listed.has(x.id)).slice(0, 6);
+  const cityName = r.city?.name || cityNameOf(e) || '';
 
   const link = (h?: Hub) => (h ? { name: h.name, path: hubPath(h.kind, h.slug) } : undefined);
   return {
@@ -603,8 +635,10 @@ export function eventRelated(c: Catalog, e: CatalogEvent): EventRelated {
     city: r.city && isIndexable(r.city) ? link(r.city) : undefined,
     country: r.country && isIndexable(r.country) ? link(r.country) : undefined,
     genre: r.genre && isIndexable(r.genre) ? link(r.genre) : undefined,
-    moreDates: moreDates.slice(0, 12).map(eventLink),
+    moreDates: moreDates.map(eventLink),
     moreDatesTitle,
+    nearby: nearby.map((x) => ({ name: x.nome_evento, path: eventPath(x), note: [fmtShortDate(x.data_ora), venueName(x)].filter(Boolean).join(' · ') })),
+    nearbyTitle: cityName ? `More prog in ${cityName}` : undefined,
   };
 }
 
