@@ -9,7 +9,7 @@ export const SITE_URL = 'https://progdealer.com';
 export const SITE_NAME = 'ProgDealer';
 export const CONTACT_EMAIL = 'hello@progdealer.com';
 export const DEFAULT_DESCRIPTION =
-  'Live progressive rock, metal and post-rock shows worldwide — on an interactive map, near you. Filter by city, country, date or genre.';
+  'Live progressive rock, metal and post-rock shows worldwide, on an interactive map and near you. Filter by city, country, date or genre.';
 
 const DEFAULT_CONCERTFUL_IMAGE = 'https://concertful.com/public/foto/large/default.jpg';
 
@@ -88,7 +88,7 @@ export function eventDescription(e: SeoEvent): string {
   const country = countryOf(e);
   const place = [e.venue, e.città, country].filter(Boolean).join(', ');
   const parts = [
-    `${e.nome_evento} — live at ${place}${date ? ' on ' + date : ''}.`,
+    `${e.nome_evento}, live at ${place}${date ? ' on ' + date : ''}.`,
     who ? `Lineup: ${who}.` : '',
     e.sottogenere ? `${e.sottogenere} show.` : '',
     'Full details on ProgDealer.',
@@ -98,7 +98,7 @@ export function eventDescription(e: SeoEvent): string {
 
 // ---------- JSON-LD (plain objects) ----------
 
-/** schema.org MusicEvent — enriched with geo coordinates and country for AI/answer engines. */
+/** schema.org MusicEvent, enriched with geo coordinates and country for AI/answer engines. */
 export function eventJsonLd(e: SeoEvent, origin: string = SITE_URL): Record<string, unknown> {
   const country = countryOf(e);
   const address: Record<string, unknown> = { '@type': 'PostalAddress', addressLocality: e.città };
@@ -289,7 +289,7 @@ export function siteBodyHtml(upcoming: SeoEvent[] = []): string {
       const where = [e.città, country].filter(Boolean).join(', ');
       const meta = [where, fmtDate(e.data_ora)].filter(Boolean).join(' · ');
       out.push(
-        `<li><a href="/event/${escapeHtml(e.id)}">${escapeHtml(e.nome_evento)}</a>${meta ? ' — ' + escapeHtml(meta) : ''}</li>`,
+        `<li><a href="/event/${escapeHtml(e.id)}">${escapeHtml(e.nome_evento)}</a>${meta ? ' · ' + escapeHtml(meta) : ''}</li>`,
       );
     }
     out.push(`</ul>`);

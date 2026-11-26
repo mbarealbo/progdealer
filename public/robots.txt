@@ -1,12 +1,12 @@
 # ProgDealer crawling policy.
 # All content is public. Search engines AND AI answer engines are welcome to crawl
-# and cite us. Private app routes are not Disallowed here on purpose — they are served
+# and cite us. Private app routes are not Disallowed here on purpose: they are served
 # a <meta name="robots" content="noindex"> by netlify/edge-functions/ssr-meta.ts, and a
 # crawler must be able to fetch a page to see that noindex and drop it.
 User-agent: *
 Allow: /
 
-# AI assistants / generative answer engines — explicitly welcomed (for citations).
+# AI assistants and generative answer engines: explicitly welcomed (for citations).
 User-agent: GPTBot
 Allow: /
 
