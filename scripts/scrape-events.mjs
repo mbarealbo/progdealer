@@ -283,6 +283,9 @@ const SEARCH_QUERIES = [
 ];
 // Skip social, aggregators-of-setlists and databases (the latter hallucinate dates).
 const JUNK_HOST = /facebook|instagram|twitter|x\.com|youtube|youtu\.be|spotify|wikipedia|reddit|tiktok|pinterest|last\.fm|discogs|apple\.com|amazon|progarchives|rateyourmusic|allmusic|genius\.com|setlist\.fm|bandcamp|\.pdf($|\?)/i;
+// Hosts the discovery found that gave only invented shows or acts outside prog
+// (audit of 27 November 2026): never scrape them again.
+const BLOCKED_HOST = /(^|\.)(thepsychedelicfurs\.com|jrocknews\.com|tokyonoizu\.com|tokyocheapo\.com|vividseats\.com|concerts50\.com|concerty\.com|concerts-metal\.com|ticketswap\.[a-z]+|treblezine\.com|stereoboard\.com)$/i;
 const MAX_DISCOVERED = 24;
 
 async function firecrawlSearch(query, limit = 6) {
@@ -304,7 +307,7 @@ async function discoverSources(knownHosts) {
     for (const url of await firecrawlSearch(q)) {
       const clean = url.split('#')[0];
       const host = hostOf(clean);
-      if (JUNK_HOST.test(clean) || knownHosts.has(host) || found.has(host)) continue;
+      if (JUNK_HOST.test(clean) || BLOCKED_HOST.test(host) || knownHosts.has(host) || found.has(host)) continue;
       found.set(host, clean);
     }
   }
