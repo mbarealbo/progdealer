@@ -14,6 +14,7 @@ import {
   SITE_URL, SITE_NAME, escapeHtml, jsonLdScript, ogTwitter, breadcrumbLd, linkListHtml, SSR_STYLE,
   fmtShortDate, venuePlace,
 } from './seo.ts';
+import { MEDIA } from '../data/media.ts';
 
 export type IndexKind = 'festivals' | 'artists' | 'cities';
 
@@ -333,6 +334,8 @@ export function hubSections(c: Catalog, h: Hub): Section[] {
       out.push(eventsSection('upcoming', `Upcoming shows in ${theCountry(h.name)}`, h.upcoming, MAX_EVENTS,
         { name: `All shows in ${theCountry(h.name)} on the map`, path: `/?country=${encodeURIComponent(h.name)}#shows` }));
       out.push(linksSection('artists', 'Bands on tour here', countedLinks(c, 'artist', h.upcoming, 40)));
+      out.push(linksSection('media', 'Prog news and reviews',
+        MEDIA.filter((m) => m.countries.includes(h.slug)).map((m) => ({ name: m.name, path: m.url, note: m.blurb }))));
       break;
     }
     case 'genre': {

@@ -26,6 +26,7 @@ function toSummary(e: CatalogEvent): EventSummary {
 
 /** Links that stay inside the app use the router, so the catalog stays loaded. */
 function PageLink({ to, className, children }: { to: string; className?: string; children: ReactNode }) {
+  if (/^https?:/.test(to)) return <a className={className} href={to} target="_blank" rel="noopener">{children}</a>;
   if (to.includes('?') || to.includes('#')) return <a className={className} href={to}>{children}</a>;
   return <Link className={className} to={to}>{children}</Link>;
 }
