@@ -32,6 +32,7 @@ import { parseGigpress } from './lib/gigpress.mjs';
 import { parseTourTable } from './lib/tourtable.mjs';
 import { parseConcertful } from './lib/concertful.mjs';
 import { fetchSeated } from './lib/seated.mjs';
+import { notOnPage, pageText } from './lib/onpage.mjs';
 
 // Load .env for local runs (plain `node` doesn't read it like Vite does).
 // Real environment variables / CI secrets always take precedence.
@@ -125,7 +126,6 @@ const SOURCES = [
   { name: "Spock's Beard", url: 'https://www.spocksbeard.com/tour/' },
   { name: 'Transatlantic', url: 'https://www.transatlanticweb.com/' },
   { name: 'Neal Morse', url: 'https://nealmorse.com/tour-dates/' },
-  { name: 'The Flower Kings', url: 'https://www.roinestolt.com/roinestolt-tour' },
   { name: 'Ayreon', url: 'https://www.arjenlucassen.com/live/' },
   { name: 'Fish', url: 'https://fishmusic.scot/' },
   { name: 'Mostly Autumn', url: 'https://www.mostly-autumn.com/tour-dates' },
@@ -136,11 +136,13 @@ const SOURCES = [
   { name: 'Karnivool', url: 'https://www.karnivool.com/' },
   { name: 'Tangerine Dream', url: 'https://www.tangerinedreammusic.com/en/concerts/index.asp' },
   { name: 'Airbag', url: 'https://www.airbagsound.com/' },
-  { name: 'Wobbler', url: 'https://www.wobblerofficial.com/' },
   { name: 'Sons of Apollo', url: 'https://sonsofapollo.com/' },
   { name: 'Nightwish', url: 'https://www.nightwish.com/tour/upcoming' },
   { name: 'Rosalie Cunningham', url: 'https://rosaliecunningham.com/tour-dates-2/' },
   { name: 'Anneke van Giersbergen', url: 'https://www.annekevangiersbergen.com/' },
+  // Removed in November 2026, both gave only invented shows: The Flower Kings
+  // (roinestolt.com/roinestolt-tour is the 2019 tour, with no years) and
+  // Wobbler (the homepage lists no dates). See lib/onpage.mjs.
 ];
 
 // --- CLI / env ---------------------------------------------------------------
@@ -202,8 +204,10 @@ const EXTRACT_PROMPT =
   // Without today's date the model guesses what "upcoming" means and which
   // year a bare "12 March" belongs to.
   `Today is ${new Date().toISOString().slice(0, 10)}: only events dated today or later. ` +
-  'Take the year from the date itself or from the section heading above it; only when the ' +
-  'page gives no year at all, use the first such date on or after today. ' +
+  'Take the year from the date itself or from the section heading above it. When the page ' +
+  'gives no year for a date, leave that date out: old tour pages often have none. ' +
+  'Only events written on this page: never add shows from your own knowledge, and return ' +
+  'an empty list when the page lists no dates. ' +
   'List every upcoming date on the page, one event per show, even when a tour has many. ' +
   'Return startDate in strict ISO format YYYY-MM-DD and time as 24h HH:MM when known.';
 
@@ -216,7 +220,9 @@ async function firecrawlExtract(url) {
     },
     body: JSON.stringify({
       url,
-      formats: ['json'],
+      // The markdown comes with the JSON at no extra cost: it is what the
+      // events are checked against (lib/onpage.mjs).
+      formats: ['json', 'markdown'],
       onlyMainContent: true,
       jsonOptions: { prompt: EXTRACT_PROMPT, schema: EXTRACT_SCHEMA },
     }),
@@ -229,7 +235,13 @@ async function firecrawlExtract(url) {
   }
   const status = body?.data?.metadata?.statusCode;
   if (status && status >= 400) throw new Error(`source returned HTTP ${status}`);
-  return body?.data?.json?.events || [];
+  const text = pageText(body?.data?.markdown);
+  // An event the page does not back is kept with the reason, so normalize()
+  // skips it and the run log counts it.
+  return (body?.data?.json?.events || []).map((e) => {
+    const why = notOnPage(e, text);
+    return why ? { ...e, _notOnPage: why } : e;
+  });
 }
 
 // Markdown-only scrape (1 credit) for sources with a deterministic parser.
@@ -316,6 +328,7 @@ const clean = (s) => {
 function normalize(raw, source) {
   const name = (raw.name || '').trim();
   if (!name) return { skip: 'no name' };
+  if (raw._notOnPage) return { skip: raw._notOnPage };
 
   let date = (raw.startDate || '').trim();
   if (!ISO_DATE.test(date)) {
