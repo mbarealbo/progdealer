@@ -10,6 +10,15 @@ import {
 export const SITE_URL = 'https://progdealer.com';
 export const SITE_NAME = 'ProgDealer';
 export const CONTACT_EMAIL = 'hello@progdealer.com';
+/** Who makes ProgDealer, and since when: colophon, llms.txt and JSON-LD. */
+export const CREATOR = { name: 'Alberto Abate', url: 'https://olab.quest' } as const;
+export const FOUNDED_YEAR = 2024;
+
+/** "2024-2026", or just the year while it is still the founding one. */
+export function yearsActive(now: Date = new Date()): string {
+  const year = now.getUTCFullYear();
+  return year > FOUNDED_YEAR ? `${FOUNDED_YEAR}-${year}` : String(year);
+}
 export const DEFAULT_DESCRIPTION =
   'Live progressive rock, metal and post-rock shows worldwide, on an interactive map and near you. Filter by city, country, date or genre.';
 
@@ -189,7 +198,13 @@ export function siteJsonLd(origin: string = SITE_URL): Record<string, unknown> {
     name: SITE_NAME,
     url: origin + '/',
     description: DEFAULT_DESCRIPTION,
+    isAccessibleForFree: true,
+    creator: creatorLd(),
   };
+}
+
+function creatorLd(): Record<string, unknown> {
+  return { '@type': 'Person', name: CREATOR.name, url: CREATOR.url };
 }
 
 export function organizationJsonLd(origin: string = SITE_URL): Record<string, unknown> {
@@ -202,6 +217,8 @@ export function organizationJsonLd(origin: string = SITE_URL): Record<string, un
     image: origin + '/og-default.png',
     description: DEFAULT_DESCRIPTION,
     email: CONTACT_EMAIL,
+    founder: creatorLd(),
+    foundingDate: String(FOUNDED_YEAR),
   };
 }
 
@@ -302,6 +319,12 @@ export function linkListHtml(items: LinkItem[]): string {
   return '<ul>' + items.map((l) => `<li>${linkHtml(l)}${l.note ? ' · ' + escapeHtml(l.note) : ''}</li>`).join('') + '</ul>';
 }
 
+/** The colophon for crawlers that read the server-rendered body (no JavaScript). */
+export function ssrFooterHtml(now: Date = new Date()): string {
+  return `<footer><p>© ${yearsActive(now)} ${SITE_NAME}. Created with love by <a href="${CREATOR.url}" rel="author">${CREATOR.name}</a>. This site will always be free.</p>`
+    + '<p><a href="/llms.txt">llms.txt</a> · <a href="/sitemap.xml">Sitemap</a> · <a href="/privacy">Privacy</a></p></footer>';
+}
+
 export const SSR_STYLE = 'max-width:760px;margin:0 auto;padding:24px;font-family:system-ui,sans-serif;line-height:1.5';
 
 export function eventBodyHtml(e: SeoEvent, related?: EventRelated): string {
@@ -350,7 +373,7 @@ export function eventBodyHtml(e: SeoEvent, related?: EventRelated): string {
     out.push(`<h2>${escapeHtml(related.nearbyTitle || 'More shows nearby')}</h2>`, linkListHtml(related.nearby));
     if (related.city) out.push(`<p>${linkHtml({ ...related.city, name: `All prog concerts in ${related.city.name}` })}</p>`);
   }
-  out.push(`</article>`);
+  out.push(ssrFooterHtml(), `</article>`);
   return out.join('');
 }
 
@@ -386,6 +409,6 @@ export function siteBodyHtml(upcoming: SeoEvent[] = [], browse?: BrowseLinks): s
     block('By country', browse.countries);
     block('By subgenre', browse.genres);
   }
-  out.push(`</section>`);
+  out.push(ssrFooterHtml(), `</section>`);
   return out.join('');
 }

@@ -37,4 +37,6 @@ Allow: /
 User-agent: CCBot
 Allow: /
 
+# Plain-text guide for AI assistants (llmstxt.org): https://progdealer.com/llms.txt
+# Every upcoming show, one per line: https://progdealer.com/llms-full.txt
 Sitemap: https://progdealer.com/sitemap.xml

@@ -22,6 +22,7 @@ import PlacesAutocomplete from './PlacesAutocomplete';
 import NearYou from './home/NearYou';
 import EventCard, { CardView } from './home/EventCard';
 import BackToTop from './home/BackToTop';
+import Colophon from './Colophon';
 
 const EventsMap = lazy(() => import('./home/EventsMap'));
 // Only opened from "Add a show": loaded on first use, not with the home.
@@ -461,6 +462,7 @@ export default function HomePage() {
               <span className="label">Project</span>
               <a href="/privacy">Privacy</a>
               <button onClick={openCookieSettings}>Cookie settings</button>
+              <a href="/llms.txt">llms.txt for AI</a>
               {isAuthenticated && <a href="/userarea">Your area</a>}
               {isAdmin && <a href="/adminarea"><Shield size={13} /> Admin</a>}
             </div>
@@ -471,6 +473,7 @@ export default function HomePage() {
             ProgDealer is for fans who still believe a fifteen-minute track with a flute solo deserves to be heard live.
             Worldwide catalog, aggregated automatically and curated by hand.
           </p>
+          <Colophon />
         </div>
       </footer>
 

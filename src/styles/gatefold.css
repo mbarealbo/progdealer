@@ -427,6 +427,10 @@
 }
 .pd .foot-cols a:hover, .pd .foot-cols button:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 .pd .foot-note { margin-top: 30px; font-size: 0.86rem; color: var(--ink-3); max-width: 68ch; }
+.pd .colophon { margin-top: 14px; font-size: 0.8rem; color: var(--ink-3); }
+.pd .colophon a { color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }
+.pd .colophon a:hover { color: var(--ink); }
+.pd .hub-foot .colophon { margin-top: 24px; }
 
 /* ---------- Back to top ---------- */
 .pd .totop {

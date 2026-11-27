@@ -12,7 +12,7 @@ import {
 import {
   type LinkItem, type EventRelated, type BrowseLinks,
   SITE_URL, SITE_NAME, escapeHtml, jsonLdScript, ogTwitter, breadcrumbLd, linkListHtml, SSR_STYLE,
-  fmtShortDate, venuePlace,
+  fmtShortDate, venuePlace, ssrFooterHtml,
 } from './seo.ts';
 import { MEDIA } from '../data/media.ts';
 
@@ -349,7 +349,7 @@ export function hubSections(c: Catalog, h: Hub): Section[] {
   return out.filter((s): s is Section => Boolean(s));
 }
 
-function festivalIndexLink(f: Hub): LinkItem {
+export function festivalIndexLink(f: Hub): LinkItem {
   const ed = festivalEdition(f);
   if (!ed) return hubLink(f);
   const place = festivalPlace(f, ed.events);
@@ -791,6 +791,7 @@ export function pageBodyHtml(copy: PageCopy, sections: Section[], extra = ''): s
     `<p>${escapeHtml(copy.intro)}</p>`,
     extra,
     ...sections.map(sectionHtml),
+    ssrFooterHtml(),
     `</article>`,
   ].join('');
 }

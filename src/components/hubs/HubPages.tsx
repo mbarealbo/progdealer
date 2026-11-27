@@ -13,6 +13,7 @@ import {
 import { fmtShortDate, type LinkItem } from '../../lib/seo';
 import type { EventSummary } from '../../types/event';
 import { openCookieSettings } from '../../lib/consent';
+import Colophon from '../Colophon';
 
 const nf = new Intl.NumberFormat('en-US');
 
@@ -65,8 +66,12 @@ export function Shell({ children }: { children: ReactNode }) {
               <span className="label">Project</span>
               <a href="/privacy">Privacy</a>
               <button onClick={openCookieSettings}>Cookie settings</button>
+              <a href="/llms.txt">llms.txt for AI</a>
             </div>
           </div>
+        </div>
+        <div className="wrap">
+          <Colophon />
         </div>
       </footer>
     </div>
