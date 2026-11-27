@@ -239,7 +239,7 @@ export function festivalOf(e: Pick<CatalogEvent, 'nome_evento'>): FestivalDef | 
 /**
  * What the show is, in a few words: the headliner when the name starts with
  * it ("Steve Hackett - Best Of Genesis tour" -> "Steve Hackett"), else the
- * festival, else the name before any " - " subtitle.
+ * festival, else the name before any ": " or " - " subtitle.
  */
 export function eventLabel(e: Pick<CatalogEvent, 'nome_evento' | 'artisti'>): string {
   const name = (e.nome_evento || '').replace(/\s*\(event\)\s*$/i, '').trim();

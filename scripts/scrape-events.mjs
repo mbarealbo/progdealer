@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // ---------------------------------------------------------------------------
-// ProgDealer — automated event refresh (Firecrawl → normalize → Supabase)
+// ProgDealer, automated event refresh (Firecrawl → normalize → Supabase)
 //
 // Scrapes a curated list of progressive-music listing/festival/artist pages via
 // the Firecrawl scrape API (schema-driven LLM extraction), normalizes the result
 // to the `eventi_prog` shape and upserts it into Supabase (duplicates are
-// recognised by day + city + venue — see lib/dedupe.mjs).
+// recognised by day + city + venue, see lib/dedupe.mjs).
 //
 // Run:  node scripts/scrape-events.mjs [--dry-run] [--limit=N] [--only=name] [--status=pending|approved]
 //
@@ -15,7 +15,7 @@
 // Env (required for a real run):
 //   FIRECRAWL_API_KEY            Firecrawl API key (fc-...)
 //   SUPABASE_URL                 Supabase project URL (falls back to VITE_SUPABASE_URL)
-//   SUPABASE_SERVICE_ROLE_KEY    Service-role key (bypasses RLS — server side only!)
+//   SUPABASE_SERVICE_ROLE_KEY    Service-role key (bypasses RLS, server side only!)
 // Optional:
 //   SCRAPED_STATUS               'pending' (default, → moderation) | 'approved'
 //
@@ -33,6 +33,7 @@ import { parseTourTable } from './lib/tourtable.mjs';
 import { parseConcertful } from './lib/concertful.mjs';
 import { fetchSeated } from './lib/seated.mjs';
 import { notOnPage, pageText } from './lib/onpage.mjs';
+import { noDashes } from './lib/text.mjs';
 
 // Load .env for local runs (plain `node` doesn't read it like Vite does).
 // Real environment variables / CI secrets always take precedence.
@@ -56,8 +57,8 @@ const SOURCES = [
   // The richest single source: TPA's UK gig guide lists the whole UK prog
   // long tail (~120 artists) and updates itself. The page is too big for the
   // LLM extractor (it returns zero events), so it gets a deterministic
-  // GigPress parser over the markdown render — 1 credit instead of 5.
-  { name: 'TPA — UK Gig Guide', url: 'https://theprogressiveaspect.net/uk-gig-guide-new/', parse: 'gigpress' },
+  // GigPress parser over the markdown render, 1 credit instead of 5.
+  { name: 'TPA, UK Gig Guide', url: 'https://theprogressiveaspect.net/uk-gig-guide-new/', parse: 'gigpress' },
   // Concertful artist pages: every upcoming date of one artist on one page,
   // read by a parser (lib/concertful.mjs, 1 credit). For prog acts whose own
   // site has no readable list (TesseracT, Soen, Periphery) or lists fewer
@@ -70,8 +71,8 @@ const SOURCES = [
   { name: 'Progressive Rock Central',     url: 'https://progressiverockcentral.com/' },
   { name: 'Music Festival Wizard',        url: 'https://www.musicfestivalwizard.com/festivals/' },
   // Continental-Europe agendas (the TPA guide above is UK-only)
-  { name: 'iO Pages — Concertagenda (NL/BE)', url: 'https://www.iopages.nl/agenda' },
-  { name: 'Eclipsed — Konzerte (DE)',         url: 'https://www.eclipsed.de/de/konzerte' },
+  { name: 'iO Pages, Concertagenda (NL/BE)', url: 'https://www.iopages.nl/agenda' },
+  { name: 'Eclipsed, Konzerte (DE)',         url: 'https://www.eclipsed.de/de/konzerte' },
   // Europe festivals
   { name: 'Festival Crescendo',           url: 'https://www.festival-crescendo.com/' },
   { name: 'ProgPower Europe',             url: 'https://www.progpowereurope.com/' },
@@ -80,7 +81,7 @@ const SOURCES = [
   { name: 'ProgPower USA',                url: 'https://www.progpowerusa.com/' },
   { name: 'ProgStock (US)',               url: 'https://www.progstock.com/' },
   { name: 'Cruise to the Edge',           url: 'https://cruisetotheedge.com/' },
-  // Artist tour pages — major worldwide prog acts (official sites, agent-verified)
+  // Artist tour pages, major worldwide prog acts (official sites, agent-verified)
   // A long plain table (92 dates): the LLM extractor stops partway, the table
   // parser reads it all (lib/tourtable.mjs). `name` is the headliner.
   { name: 'Rush', url: 'https://www.rush.com/tour/fifty-something/', parse: 'table' },
@@ -263,7 +264,7 @@ async function firecrawlMarkdown(url) {
 
 // --- Web discovery -----------------------------------------------------------
 // Beyond the fixed SOURCES, find prog event pages across the whole web via
-// Firecrawl search — so coverage isn't limited to a hand-picked list.
+// Firecrawl search, so coverage isn't limited to a hand-picked list.
 const YEAR = new Date().getFullYear();
 const SEARCH_QUERIES = [
   `progressive rock tour dates ${YEAR}`,
@@ -274,7 +275,7 @@ const SEARCH_QUERIES = [
   `psychedelic rock space rock tour ${YEAR}`,
   `art rock avant-prog fusion concert ${YEAR}`,
   `progressive rock festival ${YEAR + 1} lineup`,
-  // Non-English queries — English-only search skews coverage to UK/US
+  // Non-English queries, English-only search skews coverage to UK/US
   `concerti rock progressivo ${YEAR} italia`,
   `prog konzerte ${YEAR} deutschland tour`,
   `concert rock progressif ${YEAR} france`,
@@ -324,12 +325,12 @@ const VAGUE_VENUE = /\b(multiple|various|several)\b/i;
 const startOfToday = new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00');
 
 const clean = (s) => {
-  const v = String(s || '').trim();
+  const v = noDashes(String(s || '').trim());
   return !v || PLACEHOLDER.test(v) ? '' : v;
 };
 
 function normalize(raw, source) {
-  const name = (raw.name || '').trim();
+  const name = noDashes((raw.name || '').trim(), 'title');
   if (!name) return { skip: 'no name' };
   if (raw._notOnPage) return { skip: raw._notOnPage };
 
@@ -364,7 +365,7 @@ function normalize(raw, source) {
   const country = clean(raw.country);
   const venueClean = clean(raw.venue);
   // Quality gate: drop location-less entries (usually vague announcements with a
-  // placeholder first-of-month date) — keep anything with at least a city or venue.
+  // placeholder first-of-month date), keep anything with at least a city or venue.
   if (!city && !venueClean) return { skip: 'no location' };
   const città = [city, country].filter(Boolean).join(', ') || 'Unknown';
   const venue = venueClean || 'TBA';
@@ -372,9 +373,9 @@ function normalize(raw, source) {
   // USA", "UK, UK"). It gets no pin and its date is just the tour's first night.
   if (VAGUE_VENUE.test(venue) && hasNoCity(città)) return { skip: 'tour summary' };
   const artisti = Array.isArray(raw.artists)
-    ? raw.artists.map(a => String(a).trim()).filter(Boolean)
+    ? raw.artists.map(a => noDashes(String(a).trim(), 'title')).filter(Boolean)
     : [];
-  const descrizione = (raw.description || '').trim() || null;
+  const descrizione = noDashes((raw.description || '').trim()) || null;
   const link = (raw.url || '').trim() || source.url;
 
   return {
@@ -419,7 +420,7 @@ function classifySubgenre(eventName, description, artists) {
     'RIO (Rock in Opposition)': ['rio', 'henry cow', 'art bears', 'opposition'],
   };
   // Match keywords as whole words/phrases (word boundaries) to avoid false
-  // substring hits — e.g. "german" inside "Germany" or "can" inside "American".
+  // substring hits, e.g. "german" inside "Germany" or "can" inside "American".
   const matchesWord = (k) => {
     const esc = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return new RegExp('(^|[^a-z0-9])' + esc + '([^a-z0-9]|$)').test(text);
@@ -432,7 +433,7 @@ function classifySubgenre(eventName, description, artists) {
 
 // --- Supabase upsert (service role) ------------------------------------------
 // PostgREST caps every response at max-rows (1000 by default), so the existing
-// events must be read page by page — a single .limit(10000) silently returned
+// events must be read page by page, a single .limit(10000) silently returned
 // only the first 1000 rows, and everything past it was re-inserted on each run.
 async function loadExisting(sb) {
   const PAGE = 1000;
@@ -457,7 +458,7 @@ async function upsertAll(events) {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  // Every existing event (any source, any status) — auto-approved scrapes must
+  // Every existing event (any source, any status), auto-approved scrapes must
   // never create a visible duplicate.
   let index;
   try {
@@ -480,7 +481,7 @@ async function upsertAll(events) {
       index.get(bucket).push(ev); // guard the rest of this run too
       inserted++;
     } catch (err) {
-      // The DB's unique index caught a duplicate our fuzzy pass missed — the
+      // The DB's unique index caught a duplicate our fuzzy pass missed, the
       // concert is already in the table, so this is a skip, not a failure.
       if (err?.code === '23505' || /duplicate key/i.test(err?.message || '')) {
         skipped++;
@@ -519,7 +520,7 @@ async function main() {
   if (ONLY) sources = sources.filter((s) => s.name.toLowerCase().includes(ONLY));
 
   console.log(
-    `▶ ProgDealer event refresh — ${sources.length} sources · ` +
+    `▶ ProgDealer event refresh, ${sources.length} sources · ` +
     `${DRY_RUN ? 'DRY RUN' : `writing (status=${STATUS})`}\n`,
   );
 
@@ -542,7 +543,7 @@ async function main() {
     }
   }
 
-  // De-dup within this run with the same rule the DB pass uses — an exact
+  // De-dup within this run with the same rule the DB pass uses, an exact
   // name+date+venue match would let two spellings of one gig through.
   const index = indexByBucket([]);
   const events = [];
@@ -576,13 +577,13 @@ async function main() {
     const out = '.firecrawl/last-run.json';
     await mkdir(dirname(out), { recursive: true });
     await writeFile(out, JSON.stringify(events, null, 2));
-    console.log(`\n✓ Dry run — wrote ${events.length} events to ${out} (no DB write).`);
+    console.log(`\n✓ Dry run, wrote ${events.length} events to ${out} (no DB write).`);
     return;
   }
 
   if (!events.length) { console.log('\nNothing to write.'); return; }
   const { inserted, skipped, errors } = await upsertAll(events);
-  console.log(`\n✓ Done — inserted ${inserted}, skipped ${skipped} (duplicates), errors ${errors} (new rows status=${STATUS}).`);
+  console.log(`\n✓ Done, inserted ${inserted}, skipped ${skipped} (duplicates), errors ${errors} (new rows status=${STATUS}).`);
   if (errors) process.exitCode = 1;
 }
 

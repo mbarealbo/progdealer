@@ -2,8 +2,8 @@
 // Deterministic parser for GigPress listing pages (theprogressiveaspect.net's
 // UK gig guide) from their Firecrawl *markdown* render.
 //
-// The page is ~1.4MB — far past what the schema-driven LLM extraction can
-// digest (it silently returns zero events) — but GigPress markup is machine-
+// The page is ~1.4MB, far past what the schema-driven LLM extraction can
+// digest (it silently returns zero events), but GigPress markup is machine-
 // generated and regular, so a plain parse gets every gig for 1 credit
 // (markdown scrape) instead of 5 (LLM extraction) with nothing lost:
 //
@@ -16,8 +16,10 @@
 // of the pipeline (normalize → dedup → geocode) is shared.
 // ---------------------------------------------------------------------------
 
+// "WHA’S LIKE US" → "Wha’s Like Us": a lone letter after an apostrophe stays small.
 const titleCase = (s) =>
-  s.toLowerCase().replace(/(^|[\s\-'’(.])[a-z]/g, (m) => m.toUpperCase());
+  s.toLowerCase().replace(/(^|[\s\-'’(.])[a-z]/g, (m) => m.toUpperCase())
+    .replace(/([a-z])(['’])([A-Z])(?![a-z])/g, (m, p, q, c) => p + q + c.toLowerCase());
 
 // "CUNNINGHAM, Rosalie" → "Rosalie Cunningham";
 // "ANDERSON, Jon \[& the Band Geeks\]" → "Jon Anderson & The Band Geeks";
@@ -34,7 +36,10 @@ export function parseGigpress(md, pageUrl) {
   for (const sec of String(md || '').split(/^#### \[/m).slice(1)) {
     const nameEnd = sec.indexOf('](');
     if (nameEnd < 0) continue;
-    const artist = artistName(sec.slice(0, nameEnd));
+    const heading = artistName(sec.slice(0, nameEnd));
+    // A heading ending in "(Event)" is a festival (NVRF, Nene Valley Rock Festival), not a band.
+    const isEvent = /\(events?\)$/i.test(heading);
+    const artist = heading.replace(/\s*\(events?\)$/i, '').trim();
     if (!artist) continue;
     for (const line of sec.split('\n')) {
       // Gig rows are table lines that open with a DD/MM/YY date.
@@ -55,7 +60,7 @@ export function parseGigpress(md, pageUrl) {
         venue,
         city,
         country: 'UK',
-        artists: [artist],
+        artists: isEvent ? [] : [artist],
         url: vm ? vm[2] : pageUrl,
       });
     }

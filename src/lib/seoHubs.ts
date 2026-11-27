@@ -705,7 +705,7 @@ export const WIDGET_PAGE_COPY: PageCopy = {
 
 export const WIDGET_FAQ: [string, string][] = [
   ['Is it free?', 'Yes. The widget and the badge are free for any site: bands, festivals, venues, blogs, radio shows and fan clubs.'],
-  ['How fresh are the dates?', 'The catalog is updated every day and the widget always shows the current list, so there is nothing to maintain on your side.'],
+  ['How fresh are the dates?', 'The catalog is refreshed twice a month, on the 1st and the 16th, and shows sent in by fans are added once checked. The widget always shows the current list, so there is nothing to maintain on your side.'],
   ['Where does it work?', 'On any page that accepts HTML: WordPress (Custom HTML block), Squarespace (Code block), Wix (Embed code), Webflow, Ghost or plain HTML.'],
   ['Does it track my visitors?', 'No cookies and no personal data. Links to ProgDealer carry your site name as utm_source, so we can see which sites send visitors.'],
   ['Why the link under the widget?', 'It credits ProgDealer and leads people to the full listings. Please keep it: it is what keeps the widget free.'],

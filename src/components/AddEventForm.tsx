@@ -3,6 +3,7 @@ import { Plus, X, Check, ChevronDown, ChevronUp, Minus } from 'lucide-react';
 import { supabase, classifySubgenre } from '../lib/supabase';
 import { PROG_SUBGENRES } from '../types/event';
 import PlacesAutocomplete from './PlacesAutocomplete';
+import { noDashes } from '../utils/eventText';
 
 interface AddEventFormProps {
   isOpen?: boolean;
@@ -55,14 +56,15 @@ export default function AddEventForm({
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) throw new Error('User not authenticated');
 
+      // Same house style as the scraper: no em or en dashes in the catalog.
       const eventData = {
-        nome_evento: formData.nome_evento,
+        nome_evento: noDashes(formData.nome_evento, 'title'),
         data_ora: formData.data_ora,
-        venue: formData.venue,
-        città: formData.città,
+        venue: noDashes(formData.venue),
+        città: noDashes(formData.città),
         sottogenere: finalSubgenre,
-        descrizione: formData.descrizione || null,
-        artisti: artists.filter((a) => a.trim() !== ''),
+        descrizione: noDashes(formData.descrizione) || null,
+        artisti: artists.filter((a) => a.trim() !== '').map((a) => noDashes(a, 'title')),
         orario: formData.orario || null,
         link: formData.link || '',
         immagine: formData.immagine?.trim() || null,

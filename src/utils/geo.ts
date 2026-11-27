@@ -134,11 +134,13 @@ export function continentAt(lat: number, lng: number): string {
 // "Unknown", "Various venues", "UK and Europe", "Miami - Cozumel - ...": no single city.
 const NO_CITY = /\b(unknown|various|tba|tbc|tbd|multiple|several|online|virtual|livestream)\b|&|\sand\s|\s-\s/i;
 const CITY_STATES = new Set(['luxembourg', 'monaco', 'singapore', 'hong kong', 'san marino', 'andorra']);
+// "Various Locations, North America" is a whole tour, not a city.
+const CONTINENT = /^(europe|asia|africa|oceania|(north|south|central|latin) america)$/;
 
 /** True when `città` names no specific city (a placeholder, a tour, a bare country). */
 export function hasNoCity(città: string | null | undefined): boolean {
   const first = (città || '').split(',')[0].trim().toLowerCase();
   if (!first || NO_CITY.test(città || '')) return true;
   if (CITY_STATES.has(first)) return false;
-  return first === 'europe' || Boolean(COUNTRY_ALIAS[first]) || (first.length === 2 && Boolean(ISO[first.toUpperCase()]));
+  return CONTINENT.test(first) || Boolean(COUNTRY_ALIAS[first]) || (first.length === 2 && Boolean(ISO[first.toUpperCase()]));
 }

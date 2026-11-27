@@ -1,4 +1,8 @@
 /*! ProgDealer widget: the next prog shows of an artist, festival, city, country or genre. https://progdealer.com/widget */
+// Usage: <div class="progdealer-widget" data-artist="marillion" data-limit="5">…</div>
+// plus this script. The class is no style: it is the hook scan() looks for.
+// The widget draws itself in a Shadow DOM with its own short class names
+// (.w, .h, .t…), so the host page's CSS and the widget can't touch each other.
 (function () {
   'use strict';
   if (window.ProgDealerWidget) { window.ProgDealerWidget.scan(); return; }
@@ -76,7 +80,11 @@
     }
   }
 
+  // d: the page's data; null when the service is down; { missing: slug } when
+  // the snippet names a page ProgDealer doesn't have (usually a typo).
   function draw(box, d, limit, keepCredit) {
+    var missing = d && d.missing;
+    if (missing) d = null;
     box.textContent = '';
     var head = el('div', 'h');
     head.appendChild(link(d ? d.title : 'Prog concerts', d ? d.url : SITE + '/', 't'));
@@ -85,7 +93,8 @@
 
     var list = d && d.events ? d.events.slice(0, limit) : [];
     if (!list.length) {
-      box.appendChild(el('p', 'e', d ? 'No upcoming dates listed right now.' : 'Dates are not available right now.'));
+      box.appendChild(el('p', 'e', d ? 'No upcoming dates listed right now.'
+        : missing ? 'No ProgDealer page for “' + missing + '”.' : 'Dates are not available right now.'));
     } else {
       var ol = el('ol');
       list.forEach(function (ev) {
@@ -145,7 +154,13 @@
     root.appendChild(box);
 
     fetch(BASE + '/api/widget/' + kind + '/' + encodeURIComponent(slug))
-      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (r) {
+        if (r.status === 404) {
+          if (window.console) console.warn('ProgDealer widget: no ' + kind + ' page "' + slug + '". Copy the code again from ' + SITE + '/widget');
+          return { missing: slug };
+        }
+        return r.ok ? r.json() : null;
+      })
       .then(function (d) { draw(box, d, limit, keepCredit); })
       .catch(function () { draw(box, null, limit, keepCredit); });
   }

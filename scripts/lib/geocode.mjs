@@ -76,11 +76,13 @@ export const OVERRIDES = {
 // a hamlet called "Unknown" in Bangladesh or "Uk" in Siberia.
 const NO_CITY = /\b(unknown|various|tba|tbc|tbd|multiple|several|online|virtual|livestream)\b|&|\sand\s|\s-\s/i;
 const CITY_STATES = new Set(['luxembourg', 'monaco', 'singapore', 'san marino', 'andorra']);
+// "Various Locations, North America" is a whole tour, not a city.
+const CONTINENT = /^(europe|asia|africa|oceania|(north|south|central|latin) america)$/;
 export function hasNoCity(cityRaw) {
   const first = (cityRaw || '').split(',')[0].trim().toLowerCase();
   if (!first || NO_CITY.test(cityRaw || '')) return true;
   if (CITY_STATES.has(first)) return false;
-  return first === 'europe' || Boolean(CC_ALIAS[first]) || /^[a-z]{2}$/.test(first);
+  return CONTINENT.test(first) || Boolean(CC_ALIAS[first]) || /^[a-z]{2}$/.test(first);
 }
 
 // The places a token after the comma can mean, most likely first, as tests on

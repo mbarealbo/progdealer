@@ -6,11 +6,38 @@
 // the date from shifting for viewers in other timezones. 00:00 means "time not
 // announced" (the scraper's default when a listing has no start time).
 
-/** "Banco del Mutuo Soccorso - Storie Invisibili Tour" -> main + sub. */
+/**
+ * "Banco del Mutuo Soccorso: Storie Invisibili Tour" (or " - ") -> main + sub.
+ * Catalog names use a colon where sources put a dash, see noDashes().
+ */
 export function splitTitle(name: string): { main: string; sub: string } {
-  const m = (name || '').match(/^(.+?)\s+[-\u2013\u2014]\s+(.+)$/);
+  const s = (name || '').trim();
+  let m = s.match(/^(.+?)(?:\s+[-\u2013\u2014]\s+|:\s+)(.+)$/);
+  // "X Presents: Y" names the promoter, not the show.
+  if (m && /\bpresents?$/i.test(m[1])) m = s.match(/^(.+?)\s+[-\u2013\u2014]\s+(.+)$/);
   if (m) return { main: m[1].trim(), sub: m[2].trim() };
-  return { main: (name || '').trim(), sub: '' };
+  return { main: s, sub: '' };
+}
+
+/**
+ * House style: no em or en dashes in catalog text. A dash inside a word or
+ * a range ("2026\u20132027") becomes a hyphen. A dash between words becomes a
+ * colon after a title's first part ("BEAT \u2014 Performing the music of King
+ * Crimson" -> "BEAT: Performing\u2026"), a comma anywhere else, and goes away
+ * after punctuation ("BIG! \u2013 Premio" -> "BIG! Premio") or at either end.
+ * Mirrored in scripts/lib/text.mjs for the scraper: keep the two in step.
+ */
+export function noDashes(text: string, kind: 'title' | 'text' = 'text'): string {
+  if (!text || !/[\u2013\u2014]/.test(text)) return text;
+  const joined = text.replace(/(\S)[\u2013\u2014](?=\S)/g, '$1-');
+  let colon = kind === 'title' && !joined.includes(':');
+  return joined.replace(/\s*[\u2013\u2014]\s*/g, (dash, at: number, all: string) => {
+    const before = all.slice(0, at).trimEnd();
+    if (!before || !all.slice(at + dash.length).trim()) return '';
+    if (/[!?.,:;]$/.test(before)) return ' ';
+    if (colon) { colon = false; return ': '; }
+    return ', ';
+  }).trim();
 }
 
 const UTC = { timeZone: 'UTC' } as const;
